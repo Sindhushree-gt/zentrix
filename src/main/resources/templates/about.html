@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Zentrix</div>
+        <div class="nav-links">
+            <a href="/home">Home</a>
+            <a href="/events">Events</a>
+            <a href="/games">Games</a>
+            <a href="/about" class="active">About Us</a>
+            <a href="/support">Contact</a>
+        </div>
+        <a href="#" class="nav-btn">Sign In</a>
+    </nav>
+
+    <div class="about-hero">
+        <div style="text-align: center;">
+            <h1 style="font-size: 48px; margin-bottom: 20px;">About Us</h1>
+            <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto;">We are the world's leading
+                platform for booking tickets to your favorite movies, events, and sports matches.</p>
+        </div>
+    </div>
+
+    <section class="container">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; align-items: center;">
+            <div>
+                <h2 style="font-size: 32px; margin-bottom: 20px;">Our Story</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">Founded in 2024, BookMyTicket has
+                    revolutionized the way people experience entertainment. We believe in making it effortless for you
+                    to discover and book the best experiences in your city.</p>
+                <p style="color: var(--text-secondary);">From blockbuster movies to live concerts, stand-up comedy to
+                    sports events, we bring it all to your fingertips. Our mission is to connect people with the
+                    experiences they love.</p>
+            </div>
+            <div>
+                <img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?q=80&w=2069&auto=format&fit=crop"
+                    style="width: 100%; border-radius: 12px;" alt="Office">
+            </div>
+        </div>
+    </section>
+
+    <!-- Team -->
+    <section class="container" style="background: var(--card-bg); border-radius: 16px;">
+        <h2 style="text-align: center; margin-bottom: 40px;">Meet Our Team</h2>
+        <div class="team-grid">
+            <div class="team-member">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974&auto=format&fit=crop"
+                    class="team-img" alt="CEO">
+                <h3>John Doe</h3>
+                <p style="color: var(--text-secondary); font-size: 14px;">CEO & Founder</p>
+            </div>
+            <div class="team-member">
+                <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop"
+                    class="team-img" alt="CTO">
+                <h3>Jane Smith</h3>
+                <p style="color: var(--text-secondary); font-size: 14px;">CTO</p>
+            </div>
+            <div class="team-member">
+                <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1974&auto=format&fit=crop"
+                    class="team-img" alt="Designer">
+                <h3>Mike Johnson</h3>
+                <p style="color: var(--text-secondary); font-size: 14px;">Lead Designer</p>
+            </div>
+            <div class="team-member">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1974&auto=format&fit=crop"
+                    class="team-img" alt="Manager">
+                <h3>Sarah Wilson</h3>
+                <p style="color: var(--text-secondary); font-size: 14px;">Product Manager</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <h3>BookMyTicket</h3>
+                <a href="/about">About Us</a>
+                <a href="/features">Features</a>
+                <a href="/support">Support</a>
+                <a href="#">Careers</a>
+            </div>
+            <div class="footer-col">
+                <h3>Help</h3>
+                <a href="/support">Contact Us</a>
+                <a href="#">FAQs</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-col">
+                <h3>Social</h3>
+                <a href="#">Facebook</a>
+                <a href="#">Twitter</a>
+                <a href="#">Instagram</a>
+                <a href="#">LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

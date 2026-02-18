@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features | BookMyTicket</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Zentrix</div>
+        <div class="nav-links">
+            <a href="/home">Home</a>
+            <a href="/events">Events</a>
+            <a href="/games">Games</a>
+            <a href="/about">About Us</a>
+            <a href="/support">Contact</a>
+        </div>
+        <a href="#" class="nav-btn">Sign In</a>
+    </nav>
+
+    <div class="about-hero">
+        <h1 style="font-size: 48px;">Why Choose Us?</h1>
+    </div>
+
+    <!-- Features Grid -->
+    <section class="container">
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-ticket-alt feature-icon"></i>
+                <h3 style="margin-bottom: 15px; font-size: 22px;">Instant Booking</h3>
+                <p style="color: var(--text-secondary);">Book tickets in seconds with our lightning-fast interface. No
+                    waiting, no hassle.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-couch feature-icon"></i>
+                <h3 style="margin-bottom: 15px; font-size: 22px;">Choose Your Seats</h3>
+                <p style="color: var(--text-secondary);">Select the perfect seat with our interactive seating chart.
+                    Comfort guaranteed.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-star feature-icon"></i>
+                <h3 style="margin-bottom: 15px; font-size: 22px;">Exclusive Loyalty</h3>
+                <p style="color: var(--text-secondary);">Earn points with every booking and redeem them for free tickets
+                    and snacks.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-mobile-alt feature-icon"></i>
+                <h3 style="margin-bottom: 15px; font-size: 22px;">M-Ticket</h3>
+                <p style="color: var(--text-secondary);">Go paperless with our M-Ticket. Just scan your phone at the
+                    entrance.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-shield-alt feature-icon"></i>
+                <h3 style="margin-bottom: 15px; font-size: 22px;">Secure Payments</h3>
+                <p style="color: var(--text-secondary);">Your transactions are safe with our bank-grade security
+                    encryption.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-headset feature-icon"></i>
+                <h3 style="margin-bottom: 15px; font-size: 22px;">24/7 Support</h3>
+                <p style="color: var(--text-secondary);">We are always here to help you with any issues or queries,
+                    anytime.</p>
+            </div>
+        </div>
+
+        <div
+            style="margin-top: 80px; display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 40px; border-radius: 16px; border: 1px solid var(--glass-border);">
+            <div style="max-width: 50%;">
+                <h2 style="font-size: 36px; margin-bottom: 20px;">Experience the Future of Ticketing</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 30px;">Download our app for the best experience.
+                    Available on iOS and Android.</p>
+                <div style="display: flex; gap: 20px;">
+                    <button class="cta-btn"><i class="fab fa-apple"></i> App Store</button>
+                    <button class="cta-btn" style="background: transparent; border: 1px solid var(--accent);"><i
+                            class="fab fa-google-play"></i> Play Store</button>
+                </div>
+            </div>
+            <img src="https://images.unsplash.com/photo-1512428559087-560fa0db7901?q=80&w=2070&auto=format&fit=crop"
+                style="width: 400px; border-radius: 12px; transform: rotate(-5deg); box-shadow: 0 20px 40px rgba(0,0,0,0.5);"
+                alt="Mobile App">
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <h3>BookMyTicket</h3>
+                <a href="/about">About Us</a>
+                <a href="/features">Features</a>
+                <a href="/support">Support</a>
+                <a href="#">Careers</a>
+            </div>
+            <div class="footer-col">
+                <h3>Help</h3>
+                <a href="/support">Contact Us</a>
+                <a href="#">FAQs</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-col">
+                <h3>Social</h3>
+                <a href="#">Facebook</a>
+                <a href="#">Twitter</a>
+                <a href="#">Instagram</a>
+                <a href="#">LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

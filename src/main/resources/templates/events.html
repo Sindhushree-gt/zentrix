@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Zentrix</div>
+        <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
+            <input type="text" placeholder="Search for talents, events..." class="form-input"
+                style="background: var(--card-bg); border-radius: 20px; padding: 8px 15px;">
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="fas fa-home"></i></a>
+            <a href="/messages"><i class="fas fa-comment-dots"></i></a>
+            <a href="/notifications"><i class="fas fa-bell"></i></a>
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
+                class="user-avatar" style="width: 32px; height: 32px; border: none;">
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <a href="/dashboard" class="sidebar-link"><i class="fas fa-home"></i> Home</a>
+            <a href="/explore" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
+            <a href="/events" class="sidebar-link active"><i class="fas fa-calendar-alt"></i> Events</a>
+            <a href="/achievements" class="sidebar-link"><i class="fas fa-trophy"></i> Achievements</a>
+            <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
+            <a href="#" class="sidebar-link" onclick="openCreateModal()"><i class="fas fa-plus-circle"
+                    style="color: var(--accent);"></i> Create Post</a>
+            <a href="/logout" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
+                Logout</a>
+        </aside>
+
+        <!-- Center Content -->
+        <main class="social-feed" style="max-width: 800px;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1>Upcoming Events</h1>
+                <button class="nav-btn"><i class="fas fa-plus"></i> Create Event</button>
+            </div>
+
+            <!-- Filters -->
+            <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px;">
+                <button class="nav-btn" style="border-radius: 20px; flex-shrink: 0;">All</button>
+                <button class="nav-btn"
+                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 20px; flex-shrink: 0;">Sports</button>
+                <button class="nav-btn"
+                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 20px; flex-shrink: 0;">Cultural</button>
+                <button class="nav-btn"
+                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 20px; flex-shrink: 0;">E-Sports</button>
+                <button class="nav-btn"
+                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 20px; flex-shrink: 0;">Workshops</button>
+            </div>
+
+            <!-- Events Grid -->
+            <div class="events-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?q=80&w=1974&auto=format&fit=crop"
+                        class="card-img" style="height: 160px;">
+                    <div class="card-content">
+                        <div class="event-date">AUG 24 | 7:00 PM</div>
+                        <div class="card-title">Inter-College Fest</div>
+                        <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> Main Auditorium</div>
+                        <div
+                            style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <span class="event-price">Free</span>
+                            <button class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Register</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=2012&auto=format&fit=crop"
+                        class="card-img" style="height: 160px;">
+                    <div class="card-content">
+                        <div class="event-date">SEP 10 | 9:00 AM</div>
+                        <div class="card-title">Hackathon 2024</div>
+                        <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> Tech Block</div>
+                        <div
+                            style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <span class="event-price">$10 Entry</span>
+                            <button class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Register</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=2057&auto=format&fit=crop"
+                        class="card-img" style="height: 160px;">
+                    <div class="card-content">
+                        <div class="event-date">OCT 02 | 5:00 PM</div>
+                        <div class="card-title">Valorant Tournament</div>
+                        <div class="card-subtitle"><i class="fas fa-globe"></i> Online</div>
+                        <div
+                            style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <span class="event-price">$5 Entry</span>
+                            <button class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Register</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <img src="https://images.unsplash.com/photo-1514525253440-b393452e3383?q=80&w=1974&auto=format&fit=crop"
+                        class="card-img" style="height: 160px;">
+                    <div class="card-content">
+                        <div class="event-date">NOV 15 | 6:00 PM</div>
+                        <div class="card-title">Standup Comedy</div>
+                        <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> Amphitheatre</div>
+                        <div
+                            style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <span class="event-price">$2 Entry</span>
+                            <button class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Register</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>

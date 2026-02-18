@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Zentrix</div>
+        <!-- Search Bar -->
+        <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
+            <input type="text" placeholder="Search for talents, events..." class="form-input"
+                style="background: var(--card-bg); border-radius: 20px; padding: 8px 15px;">
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard" class="active"><i class="fas fa-home"></i></a>
+            <a href="/messages"><i class="fas fa-comment-dots"></i></a>
+            <a href="/notifications"><i class="fas fa-bell"></i></a>
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
+                class="user-avatar" style="width: 32px; height: 32px; border: none;">
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <a href="/dashboard" class="sidebar-link active"><i class="fas fa-home"></i> Home</a>
+            <a href="/explore" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
+            <a href="/events" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Events</a>
+            <a href="/achievements" class="sidebar-link"><i class="fas fa-trophy"></i> Achievements</a>
+            <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
+            <a href="#" class="sidebar-link" onclick="openCreateModal()"><i class="fas fa-plus-circle"
+                    style="color: var(--accent);"></i> Create Post</a>
+            <a href="/logout" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
+                Logout</a>
+        </aside>
+
+        <!-- Center Feed -->
+        <main class="social-feed">
+
+            <!-- Stories / Highlights (Optional) -->
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px;">
+                <div style="text-align: center; min-width: 70px;">
+                    <div
+                        style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); margin: 0 auto 5px; padding: 2px;">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
+                            style="width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--bg-color); object-fit: cover;">
+                    </div>
+                    <span style="font-size: 11px;">Your Story</span>
+                </div>
+                <!-- More stories... -->
+            </div>
+
+            <!-- Posts -->
+            <!-- Post 1 -->
+            <div class="post-card">
+                <div class="post-header">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format&fit=crop"
+                        class="user-avatar" alt="User">
+                    <div class="post-user-info">
+                        <h4>Sarah Jenkins</h4>
+                        <span>@sarah_j • 2h ago</span>
+                    </div>
+                    <i class="fas fa-ellipsis-h" style="margin-left: auto; color: var(--text-secondary);"></i>
+                </div>
+                <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop"
+                    class="post-image" alt="Running">
+                <div class="post-actions">
+                    <button class="action-btn"><i class="far fa-heart"></i></button>
+                    <button class="action-btn"><i class="far fa-comment"></i></button>
+                    <button class="action-btn"><i class="far fa-paper-plane"></i></button>
+                    <button class="action-btn" style="margin-left: auto;"><i class="far fa-bookmark"></i></button>
+                </div>
+                <div class="post-content">
+                    <div class="likes-count">1,245 likes</div>
+                    <div class="caption">
+                        <strong>sarah_j</strong> Include pain, gain, and glory! 🥇 Won the inter-college 5k marathon
+                        today! #running #marathon #champion #collegefest
+                    </div>
+                    <div class="hashtags">#sports #achievement</div>
+                </div>
+            </div>
+
+            <!-- Post 2 -->
+            <div class="post-card">
+                <div class="post-header">
+                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1887&auto=format&fit=crop"
+                        class="user-avatar" alt="User">
+                    <div class="post-user-info">
+                        <h4>David Chen</h4>
+                        <span>@dave_codes • 5h ago</span>
+                    </div>
+                    <i class="fas fa-ellipsis-h" style="margin-left: auto; color: var(--text-secondary);"></i>
+                </div>
+                <img src="https://images.unsplash.com/photo-1515879433151-3fa4b656106b?q=80&w=2072&auto=format&fit=crop"
+                    class="post-image" alt="Coding">
+                <div class="post-actions">
+                    <button class="action-btn"><i class="far fa-heart"></i></button>
+                    <button class="action-btn"><i class="far fa-comment"></i></button>
+                    <button class="action-btn"><i class="far fa-paper-plane"></i></button>
+                    <button class="action-btn" style="margin-left: auto;"><i class="far fa-bookmark"></i></button>
+                </div>
+                <div class="post-content">
+                    <div class="likes-count">856 likes</div>
+                    <div class="caption">
+                        <strong>dave_codes</strong> Just deployed my first full-stack app! 🚀 Check it out in my bio.
+                        Thanks to everyone who supported me.
+                    </div>
+                    <div class="hashtags">#coding #developer #webdev #showcase</div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="widgets">
+            <!-- Trending Events Widget -->
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3>Trending Events</h3>
+                    <a href="/events" class="see-all">See All</a>
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <img src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?q=80&w=1974&auto=format&fit=crop"
+                        style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                    <div>
+                        <h4 style="font-size: 14px; margin-bottom: 2px;">Neon Lights Fest</h4>
+                        <span style="font-size: 12px; color: var(--accent);">AUG 24</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=2012&auto=format&fit=crop"
+                        style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                    <div>
+                        <h4 style="font-size: 14px; margin-bottom: 2px;">Tech Summit 24</h4>
+                        <span style="font-size: 12px; color: var(--accent);">SEP 10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="widget-card">
+                <div class="widget-header">
+                    <h3>Suggested for you</h3>
+                    <a href="#" class="see-all">See All</a>
+                </div>
+                <div class="suggestion-item">
+                    <div class="suggestion-user">
+                        <img src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=1780&auto=format&fit=crop"
+                            class="user-avatar" style="width: 32px; height: 32px;">
+                        <span style="font-size: 13px; font-weight: 500;">alex_designs</span>
+                    </div>
+                    <button class="follow-btn">Follow</button>
+                </div>
+                <div class="suggestion-item">
+                    <div class="suggestion-user">
+                        <img src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=1780&auto=format&fit=crop"
+                            class="user-avatar" style="width: 32px; height: 32px;">
+                        <span style="font-size: 13px; font-weight: 500;">mike_comedy</span>
+                    </div>
+                    <button class="follow-btn">Follow</button>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Create Post Modal -->
+    <div class="overlay" id="overlay"></div>
+    <div class="modal" id="createModal">
+        <div class="modal-header">
+            <h3>Create New Post</h3>
+            <i class="fas fa-times close-modal" onclick="closeCreateModal()"></i>
+        </div>
+        <form>
+            <div class="form-group">
+                <textarea class="form-input" rows="4" placeholder="Share your achievement..."
+                    style="background: var(--bg-color);"></textarea>
+            </div>
+            <div class="form-group"
+                style="border: 2px dashed var(--glass-border); padding: 30px; text-align: center; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-cloud-upload-alt"
+                    style="font-size: 24px; color: var(--text-secondary); margin-bottom: 10px;"></i>
+                <p style="color: var(--text-secondary);">Drag photos or videos here</p>
+            </div>
+            <button type="button" class="cta-btn" style="width: 100%;">Post</button>
+        </form>
+    </div>
+
+    <script>
+        function openCreateModal() {
+            document.getElementById('createModal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>
