@@ -23,8 +23,13 @@
             <a href="/dashboard" class="active"><i class="fas fa-home"></i></a>
             <a href="/messages"><i class="fas fa-comment-dots"></i></a>
             <a href="/notifications"><i class="fas fa-bell"></i></a>
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
-                class="user-avatar" style="width: 32px; height: 32px; border: none;">
+            <a href="/profile" style="position: relative;">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
+                    class="user-avatar" style="width: 32px; height: 32px; border: none;">
+                <span th:if="${pendingCount != null && pendingCount > 0}"
+                    style="position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 5px; font-size: 10px; font-weight: bold;"
+                    th:text="${pendingCount}"></span>
+            </a>
         </div>
     </nav>
 
@@ -60,61 +65,41 @@
             </div>
 
             <!-- Posts -->
-            <!-- Post 1 -->
-            <div class="post-card">
+            <div th:each="post : ${posts}" class="post-card">
                 <div class="post-header">
-                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format&fit=crop"
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
                         class="user-avatar" alt="User">
                     <div class="post-user-info">
-                        <h4>Sarah Jenkins</h4>
-                        <span>@sarah_j • 2h ago</span>
+                        <h4>
+                            <span th:text="${post.user.username}">Username</span>
+                            <span th:each="collab : ${post.collaborations}"
+                                th:if="${collab.status.name() == 'ACCEPTED'}">
+                                & <span th:text="${collab.user.username}">CollabUser</span>
+                            </span>
+                        </h4>
+                        <span th:text="${#temporals.format(post.createdAt, 'dd-MM-yyyy HH:mm')}">Date</span>
                     </div>
-                    <i class="fas fa-ellipsis-h" style="margin-left: auto; color: var(--text-secondary);"></i>
                 </div>
-                <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop"
-                    class="post-image" alt="Running">
-                <div class="post-actions">
-                    <button class="action-btn"><i class="far fa-heart"></i></button>
-                    <button class="action-btn"><i class="far fa-comment"></i></button>
-                    <button class="action-btn"><i class="far fa-paper-plane"></i></button>
-                    <button class="action-btn" style="margin-left: auto;"><i class="far fa-bookmark"></i></button>
-                </div>
-                <div class="post-content">
-                    <div class="likes-count">1,245 likes</div>
-                    <div class="caption">
-                        <strong>sarah_j</strong> Include pain, gain, and glory! 🥇 Won the inter-college 5k marathon
-                        today! #running #marathon #champion #collegefest
-                    </div>
-                    <div class="hashtags">#sports #achievement</div>
-                </div>
-            </div>
 
-            <!-- Post 2 -->
-            <div class="post-card">
-                <div class="post-header">
-                    <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1887&auto=format&fit=crop"
-                        class="user-avatar" alt="User">
-                    <div class="post-user-info">
-                        <h4>David Chen</h4>
-                        <span>@dave_codes • 5h ago</span>
-                    </div>
-                    <i class="fas fa-ellipsis-h" style="margin-left: auto; color: var(--text-secondary);"></i>
+                <!-- Media Display -->
+                <div th:if="${post.mediaUrl != null}" style="margin-top: 10px;">
+                    <img th:if="${post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}" class="post-image"
+                        alt="Post Image" style="width: 100%; border-radius: 8px;">
+                    <video th:if="${post.mediaType == 'VIDEO'}" th:src="@{${post.mediaUrl}}" controls class="post-image"
+                        style="width: 100%; border-radius: 8px;"></video>
                 </div>
-                <img src="https://images.unsplash.com/photo-1515879433151-3fa4b656106b?q=80&w=2072&auto=format&fit=crop"
-                    class="post-image" alt="Coding">
+
                 <div class="post-actions">
                     <button class="action-btn"><i class="far fa-heart"></i></button>
                     <button class="action-btn"><i class="far fa-comment"></i></button>
                     <button class="action-btn"><i class="far fa-paper-plane"></i></button>
-                    <button class="action-btn" style="margin-left: auto;"><i class="far fa-bookmark"></i></button>
                 </div>
                 <div class="post-content">
-                    <div class="likes-count">856 likes</div>
-                    <div class="caption">
-                        <strong>dave_codes</strong> Just deployed my first full-stack app! 🚀 Check it out in my bio.
-                        Thanks to everyone who supported me.
-                    </div>
-                    <div class="hashtags">#coding #developer #webdev #showcase</div>
+                    <p th:text="${post.content}"
+                        style="white-space: pre-wrap; font-size: 15px; color: var(--text-primary); margin-bottom: 5px;">
+                        Post content...</p>
+                    <div th:if="${post.hashtags != null}" class="hashtags" th:text="${post.hashtags}"
+                        style="color: var(--accent);">#hashtags</div>
                 </div>
             </div>
 

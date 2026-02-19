@@ -101,7 +101,7 @@
             <div class="stat-card">
                 <div class="stat-icon"><i class="fas fa-users"></i></div>
                 <div>
-                    <h3 style="font-size: 24px;">1,250</h3>
+                    <h3 style="font-size: 24px;" th:text="${users.size()}">0</h3>
                     <span style="color: var(--text-secondary); font-size: 14px;">Total Users</span>
                 </div>
             </div>
@@ -142,30 +142,17 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                <tr th:each="user : ${users}">
                     <td style="display: flex; align-items: center; gap: 10px;">
                         <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
                             style="width: 32px; height: 32px; border-radius: 50%;">
-                        John Doe
+                        <span th:text="${user.username}">Username</span>
                     </td>
-                    <td>john@example.com</td>
-                    <td>Student</td>
-                    <td>Oct 12, 2024</td>
+                    <td th:text="${user.email}">user@example.com</td>
+                    <td>User</td>
+                    <td th:text="${user.dob}">2024-01-01</td>
                     <td><span class="status-badge status-active">Active</span></td>
                     <td><button class="nav-btn" style="padding: 4px 10px; font-size: 12px;">Edit</button></td>
-                </tr>
-                <tr>
-                    <td style="display: flex; align-items: center; gap: 10px;">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format&fit=crop"
-                            style="width: 32px; height: 32px; border-radius: 50%;">
-                        Sarah Smith
-                    </td>
-                    <td>sarah@example.com</td>
-                    <td>Student</td>
-                    <td>Oct 11, 2024</td>
-                    <td><span class="status-badge status-pending">Pending</span></td>
-                    <td><button class="nav-btn"
-                            style="padding: 4px 10px; font-size: 12px; background: #2ecc71;">Approve</button></td>
                 </tr>
             </tbody>
         </table>
