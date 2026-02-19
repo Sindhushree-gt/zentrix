@@ -26,4 +26,32 @@ public class AuthController {
         userRepository.save(user);
         return "redirect:/home";
     }
+
+    @GetMapping("/login")
+    public String showLoginForm() {
+        return "login";
+    }
+
+    @PostMapping("/login")
+    public String loginUser(@org.springframework.web.bind.annotation.RequestParam String username,
+            @org.springframework.web.bind.annotation.RequestParam String password,
+            jakarta.servlet.http.HttpSession session) {
+        if ("admin".equals(username) && "admin123".equals(password)) {
+            session.setAttribute("user", "admin");
+            return "redirect:/admin";
+        }
+        User user = userRepository.findByUsername(username);
+        if (user != null && user.getPassword().equals(password)) {
+            session.setAttribute("user", user);
+            return "redirect:/dashboard";
+        } else {
+            return "redirect:/login?error";
+        }
+    }
+
+    @GetMapping("/logout")
+    public String logout(jakarta.servlet.http.HttpSession session) {
+        session.invalidate();
+        return "redirect:/login";
+    }
 }
