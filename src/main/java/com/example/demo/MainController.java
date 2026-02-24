@@ -67,6 +67,21 @@ public class MainController {
         return "games";
     }
 
+    @GetMapping("/play-chess")
+    public String playChess() {
+        return "chess";
+    }
+
+    @GetMapping("/play-uno")
+    public String playUno() {
+        return "uno";
+    }
+
+    @GetMapping("/play-ludo")
+    public String playLudo() {
+        return "ludo";
+    }
+
     @Transactional
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpSession session) {

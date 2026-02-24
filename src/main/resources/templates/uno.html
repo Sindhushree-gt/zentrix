@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Uno | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- React and Babel Standalone -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background-color: #060e0a;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #root {
+            min-height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" th:inline="none">
+        /*<![CDATA[*/
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        /* --- Constants --- */
+        const COLORS = ["red", "green", "blue", "yellow"];
+        const VALUES = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "Skip", "Reverse", "Draw Two"];
+        const WILDS = ["Wild", "Wild Draw Four"];
+
+        const THEME = {
+            red: { main: "#d62828", light: "#f77f7f", dark: "#8b0000", text: "#fff" },
+            green: { main: "#2d6a4f", light: "#74c69d", dark: "#1b4332", text: "#fff" },
+            blue: { main: "#1d3557", light: "#6daed6", dark: "#0d1f33", text: "#fff" },
+            yellow: { main: "#e9b000", light: "#ffd166", dark: "#a67700", text: "#1a1a1a" },
+            wild: { main: "#1a1a2e", light: "#9b5de5", dark: "#0a0a18", text: "#fff" },
+        };
+
+        const SYMBOL = { Skip: "⊘", Reverse: "↺", "Draw Two": "+2", Wild: "★", "Wild Draw Four": "★+4" };
+
+        /* --- Deck --- */
+        let _id = 0;
+        function createDeck() {
+            const deck = [];
+            COLORS.forEach(c => {
+                VALUES.forEach(v => {
+                    const n = v === "0" ? 1 : 2;
+                    for (let i = 0; i < n; i++) deck.push({ id: _id++, color: c, value: v });
+                });
+            });
+            WILDS.forEach(v => { for (let i = 0; i < 4; i++) deck.push({ id: _id++, color: "wild", value: v }); });
+            return deck;
+        }
+        function shuffle(a) { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[b[i], b[j]] = [b[j], b[i]]; } return b; }
+        function canPlay(card, top, color) { return card.color === "wild" || card.color === color || card.value === top.value; }
+
+        /* --- Card SVG art --- */
+        function CardFace({ card, width = 72, height = 108 }) {
+            const t = THEME[card.color] || THEME.wild;
+            const isWild = card.color === "wild";
+            const sym = SYMBOL[card.value] || card.value;
+            const isAction = !!SYMBOL[card.value];
+            const fontSize = isWild ? 10 : isAction ? (card.value === "Draw Two" ? 12 : 20) : 28;
+
+            return (
+                <svg width={width} height={height} viewBox="0 0 72 108" style={{ display: "block", filter: "drop-shadow(0 4px 12px #0009)" }}>
+                    <defs>
+                        <linearGradient id={`bg-${card.id}`} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={t.light} />
+                            <stop offset="100%" stopColor={t.dark} />
+                        </linearGradient>
+                        <linearGradient id={`oval-${card.id}`} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={isWild ? "#fff" : t.main} stopOpacity="0.95" />
+                            <stop offset="100%" stopColor={isWild ? "#ddd" : t.dark} stopOpacity="0.85" />
+                        </linearGradient>
+                        <radialGradient id={`shine-${card.id}`} cx="35%" cy="25%" r="60%">
+                            <stop offset="0%" stopColor="#fff" stopOpacity="0.3" />
+                            <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+                        </radialGradient>
+                        {isWild && (
+                            <linearGradient id="wild-quarters" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stopColor="#d62828" />
+                                <stop offset="33%" stopColor="#e9b000" />
+                                <stop offset="66%" stopColor="#2d6a4f" />
+                                <stop offset="100%" stopColor="#1d3557" />
+                            </linearGradient>
+                        )}
+                    </defs>
+
+                    <rect x="0" y="0" width="72" height="108" rx="8" fill={`url(#bg-${card.id})`} />
+
+                    {isWild && <>
+                        <path d="M36 54 L36 4 Q36 2 38 2 L70 2 Q72 2 72 4 L72 54 Z" fill="#d62828" opacity="0.9" />
+                        <path d="M36 54 L72 54 L72 104 Q72 106 70 106 L38 106 Q36 106 36 104 Z" fill="#e9b000" opacity="0.9" />
+                        <path d="M36 54 L36 104 Q36 106 34 106 L2 106 Q0 106 0 104 L0 54 Z" fill="#2d6a4f" opacity="0.9" />
+                        <path d="M36 54 L0 54 L0 4 Q0 2 2 2 L34 2 Q36 2 36 4 Z" fill="#1d3557" opacity="0.9" />
+                        <circle cx="36" cy="54" r="22" fill="#1a1a2e" stroke="#fff" strokeWidth="2" />
+                    </>}
+
+                    <rect x="2" y="2" width="68" height="104" rx="7" fill="none" stroke="#fff" strokeWidth="1.5" opacity="0.5" />
+
+                    {!isWild && (
+                        <ellipse cx="36" cy="54" rx="22" ry="34" fill={`url(#oval-${card.id})`} transform="rotate(-30 36 54)" opacity="0.95" />
+                    )}
+
+                    <text
+                        x="36" y={isWild ? 58 : 62}
+                        textAnchor="middle"
+                        fill={isWild ? "#fff" : t.text}
+                        fontSize={fontSize}
+                        fontFamily="'Arial Black', 'Impact', sans-serif"
+                        fontWeight="900"
+                        style={{ textShadow: "0 2px 4px #0006" }}
+                    >{sym}</text>
+
+                    {isWild && (
+                        <text x="36" y="70" textAnchor="middle" fill="#fff" fontSize="7" fontFamily="Arial Black" fontWeight="900" opacity="0.9">
+                            {card.value === "Wild Draw Four" ? "DRAW FOUR" : "WILD"}
+                        </text>
+                    )}
+
+                    <text x="5" y="16" fill={t.text} fontSize={isAction || isWild ? 7 : 11} fontFamily="Arial Black" fontWeight="900" opacity="0.95">{sym}</text>
+                    <text x="67" y="99" fill={t.text} fontSize={isAction || isWild ? 7 : 11} fontFamily="Arial Black" fontWeight="900" opacity="0.95"
+                        textAnchor="middle" transform="rotate(180 67 96)">{sym}</text>
+
+                    <rect x="0" y="0" width="72" height="108" rx="8" fill={`url(#shine-${card.id})`} />
+                </svg>
+            );
+        }
+
+        function CardBack({ width = 72, height = 108, small = false }) {
+            const w = small ? 44 : width, h = small ? 66 : height;
+            return (
+                <svg width={w} height={h} viewBox="0 0 72 108" style={{ display: "block", filter: "drop-shadow(0 3px 8px #0008)" }}>
+                    <defs>
+                        <linearGradient id="back-grad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="#c1121f" />
+                            <stop offset="100%" stopColor="#6a0572" />
+                        </linearGradient>
+                        <pattern id="back-pattern" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+                            <rect width="8" height="8" fill="url(#back-grad)" />
+                            <path d="M0 4 L4 0 L8 4 L4 8 Z" fill="#fff" opacity="0.08" />
+                        </pattern>
+                    </defs>
+                    <rect x="0" y="0" width="72" height="108" rx="8" fill="url(#back-pattern)" />
+                    <rect x="4" y="4" width="64" height="100" rx="6" fill="none" stroke="#fff" strokeWidth="1.5" opacity="0.4" />
+                    <rect x="8" y="8" width="56" height="92" rx="5" fill="none" stroke="#fff" strokeWidth="0.5" opacity="0.3" />
+                    <ellipse cx="36" cy="54" rx="18" ry="28" fill="none" stroke="#fff" strokeWidth="1.5" opacity="0.5" transform="rotate(-20 36 54)" />
+                    <text x="36" y="60" textAnchor="middle" fill="#fff" fontSize="16" fontFamily="Arial Black" fontWeight="900" opacity="0.9">UNO</text>
+                </svg>
+            );
+        }
+
+        /* --- Color Picker --- */
+        function ColorPicker({ onPick }) {
+            return (
+                <div style={{ position: "fixed", inset: 0, background: "#000c", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200 }}>
+                    <div style={{
+                        background: "linear-gradient(145deg,#1c1c2e,#2a2a4a)",
+                        borderRadius: 20, padding: 36, textAlign: "center",
+                        boxShadow: "0 20px 60px #000a,0 0 0 1px #fff2",
+                        backdropFilter: "blur(10px)",
+                    }}>
+                        <div style={{ color: "#fff", fontSize: 22, fontFamily: "'Arial Black',sans-serif", fontWeight: 900, marginBottom: 6, letterSpacing: 2 }}>
+                            CHOOSE COLOR
+                        </div>
+                        <div style={{ color: "#aaa", fontSize: 12, marginBottom: 24 }}>Select the active color for your Wild card</div>
+                        <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
+                            {COLORS.map(c => {
+                                const t = THEME[c];
+                                return (
+                                    <button key={c} onClick={() => onPick(c)} style={{
+                                        width: 70, height: 70, borderRadius: 35,
+                                        background: `linear-gradient(135deg,${t.light},${t.dark})`,
+                                        border: "3px solid #fff3", cursor: "pointer",
+                                        boxShadow: `0 6px 20px ${t.main}88`,
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        flexDirection: "column", gap: 4, transition: "transform 0.15s,box-shadow 0.15s",
+                                    }}
+                                        onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.15)"; e.currentTarget.style.boxShadow = `0 10px 28px ${t.main}cc`; }}
+                                        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = `0 6px 20px ${t.main}88`; }}>
+                                        <span style={{ fontSize: 24 }}>
+                                            {c === "red" ? "🔴" : c === "green" ? "🟢" : c === "blue" ? "🔵" : "🟡"}
+                                        </span>
+                                        <span style={{ color: "#fff", fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1 }}>{c}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        /* --- UNO Toast --- */
+        function UnoToast({ who }) {
+            return (
+                <div style={{
+                    position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+                    zIndex: 300, pointerEvents: "none",
+                    animation: "unoPop 1.2s ease forwards",
+                }}>
+                    <style>{`@keyframes unoPop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3) rotate(-10deg)}
+                20%{opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(4deg)}
+                40%{transform:translate(-50%,-50%) scale(0.95) rotate(-2deg)}
+                60%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}
+                80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}`}
+                    </style>
+                    <div style={{
+                        background: "linear-gradient(135deg,#c1121f,#e63946)",
+                        color: "#fff", fontFamily: "'Arial Black',sans-serif",
+                        fontSize: 72, fontWeight: 900, padding: "16px 40px",
+                        borderRadius: 16, boxShadow: "0 0 60px #e6394688,0 8px 32px #000a",
+                        border: "4px solid #fff4", letterSpacing: 6,
+                        textShadow: "0 4px 12px #0008",
+                    }}>UNO!</div>
+                    <div style={{ textAlign: "center", color: "#fff", marginTop: 8, fontSize: 16, opacity: 0.8 }}>{who}</div>
+                </div>
+            );
+        }
+
+        /* --- Main Game Component --- */
+        function UnoGame() {
+            const [deck, setDeck] = useState([]);
+            const [playerHand, setPlayerHand] = useState([]);
+            const [cpuHand, setCpuHand] = useState([]);
+            const [discard, setDiscard] = useState([]);
+            const [color, setColor] = useState("red");
+            const [turn, setTurn] = useState("player");
+            const [direction, setDir] = useState(1);
+            const [msg, setMsg] = useState("🃏 Your turn — select a card to play");
+            const [gameOver, setGameOver] = useState(null);
+            const [pickingColor, setPickingColor] = useState(null);
+            const [selectedCard, setSelectedCard] = useState(null);
+            const [drewCard, setDrewCard] = useState(false);
+            const [unoToast, setUnoToast] = useState(null);
+            const [cpuThinking, setCpuThinking] = useState(false);
+            const [animCard, setAnimCard] = useState(null);
+            const [deckBounce, setDeckBounce] = useState(false);
+            const cpuTimerRef = useRef(null);
+
+            const drawCards = useCallback((deckS, discardS, count) => {
+                let d = [...deckS], disc = [...discardS], drawn = [];
+                for (let i = 0; i < count; i++) {
+                    if (d.length === 0) { const top = disc.pop(); d = shuffle(disc); disc = [top]; }
+                    if (d.length > 0) drawn.push(d.shift());
+                }
+                return { drawn, newDeck: d, newDiscard: disc };
+            }, []);
+
+            const triggerUno = (who) => { setUnoToast(who); setTimeout(() => setUnoToast(null), 1300); };
+
+            const applyEffect = useCallback((card, by, deckS, discardS, ph, ch, dir, colorOver) => {
+                let nd = [...deckS], ndisc = [...discardS, card], np = [...ph], nc = [...ch];
+                let ndir = dir, nc2 = colorOver || card.color, next = by === "player" ? "cpu" : "player", emsg = "";
+
+                if (card.value === "Skip") {
+                    next = by; emsg = by === "player" ? "⊘ CPU skipped!" : "⊘ You were skipped!";
+                } else if (card.value === "Reverse") {
+                    ndir = dir * -1; next = by; emsg = "↺ Direction reversed!";
+                } else if (card.value === "Draw Two") {
+                    const tgt = by === "player" ? "cpu" : "player";
+                    const { drawn, newDeck, newDiscard } = drawCards(nd, ndisc, 2);
+                    nd = newDeck; ndisc = newDiscard;
+                    if (tgt === "cpu") nc = [...nc, ...drawn]; else np = [...np, ...drawn];
+                    next = by; emsg = tgt === "cpu" ? "CPU draws 2 cards!" : "You draw 2 cards!";
+                } else if (card.value === "Wild Draw Four") {
+                    const tgt = by === "player" ? "cpu" : "player";
+                    const { drawn, newDeck, newDiscard } = drawCards(nd, ndisc, 4);
+                    nd = newDeck; ndisc = newDiscard;
+                    if (tgt === "cpu") nc = [...nc, ...drawn]; else np = [...np, ...drawn];
+                    next = by; emsg = tgt === "cpu" ? "CPU draws 4 cards!" : "You draw 4 cards!";
+                }
+                return { nd, ndisc, np, nc, ndir, nc2, next, emsg };
+            }, [drawCards]);
+
+            const cpuPlay = useCallback((deckS, discardS, ph, ch, dir, col) => {
+                setCpuThinking(true);
+                cpuTimerRef.current = setTimeout(() => {
+                    setCpuThinking(false);
+                    const top = discardS[discardS.length - 1];
+                    const playable = ch.filter(c => canPlay(c, top, col));
+                    let nd = [...deckS], ndisc = [...discardS], np = [...ph], nc = [...ch];
+                    let ncolor = col, nextTurn = "player", ndir = dir, message = "";
+
+                    if (playable.length === 0) {
+                        const { drawn, newDeck, newDiscard } = drawCards(nd, ndisc, 1);
+                        nd = newDeck; ndisc = newDiscard; nc = [...nc, ...drawn];
+                        message = "🤖 CPU had no play — drew a card";
+                    } else {
+                        const card = playable.find(c => c.color !== "wild") || playable[0];
+                        nc = nc.filter(c => c.id !== card.id);
+                        let co = card.color;
+                        if (card.color === "wild") {
+                            const cnt = {}; COLORS.forEach(c => cnt[c] = 0);
+                            nc.forEach(c => { if (c.color !== "wild") cnt[c.color]++; });
+                            co = COLORS.reduce((a, b) => cnt[a] >= cnt[b] ? a : b);
+                        }
+                        setAnimCard({ card, from: "cpu" });
+                        setTimeout(() => setAnimCard(null), 500);
+                        const eff = applyEffect(card, "cpu", nd, ndisc, np, nc, dir, co);
+                        nd = eff.nd; ndisc = eff.ndisc; np = eff.np; nc = eff.nc;
+                        ndir = eff.ndir; ncolor = eff.nc2; nextTurn = eff.next;
+                        const val = card.value; const clr = card.color !== "wild" ? card.color : "";
+                        message = eff.emsg || `🤖 CPU played ${clr} ${val}`;
+                        if (nc.length === 1) triggerUno("CPU says UNO!");
+                        if (nc.length === 0) {
+                            setDeck(nd); setDiscard(ndisc); setPlayerHand(np); setCpuHand(nc);
+                            setColor(ncolor); setDir(ndir); setGameOver("cpu"); setMsg("🤖 CPU wins!");
+                            return;
+                        }
+                    }
+                    setDeck(nd); setDiscard(ndisc); setPlayerHand(np); setCpuHand(nc);
+                    setColor(ncolor); setDir(ndir); setTurn(nextTurn);
+                    setMsg(nextTurn === "player" ? (message ? " " + message + " — Your turn!" : "🃏 Your turn!") : message);
+                    setDrewCard(false);
+                }, 1400);
+            }, [drawCards, applyEffect]);
+
+            const initGame = useCallback(() => {
+                if (cpuTimerRef.current) clearTimeout(cpuTimerRef.current);
+                const d = shuffle(createDeck());
+                const ph = d.splice(0, 7), ch = d.splice(0, 7);
+                let si = d.findIndex(c => c.color !== "wild");
+                const start = d.splice(si, 1)[0];
+                setDeck(d); setPlayerHand(ph); setCpuHand(ch);
+                setDiscard([start]); setColor(start.color); setDir(1);
+                setTurn("player"); setMsg("🃏 Your turn — select a card to play");
+                setGameOver(null); setPickingColor(null); setSelectedCard(null);
+                setDrewCard(false); setUnoToast(null); setCpuThinking(false);
+            }, []);
+
+            useEffect(() => { initGame(); }, [initGame]);
+
+            const topCard = discard[discard.length - 1];
+
+            const handleCardClick = (card) => {
+                if (turn !== "player" || gameOver) return;
+                if (!canPlay(card, topCard, color)) {
+                    setMsg("❌ That card can't be played here"); return;
+                }
+                if (selectedCard?.id === card.id) {
+                    const np = playerHand.filter(c => c.id !== card.id);
+                    if (card.color === "wild") { setPickingColor({ card, np }); setSelectedCard(null); return; }
+                    setAnimCard({ card, from: "player" });
+                    setTimeout(() => setAnimCard(null), 400);
+                    const eff = applyEffect(card, "player", deck, [...discard], np, cpuHand, direction, null);
+                    setDeck(eff.nd); setDiscard(eff.ndisc); setPlayerHand(eff.np); setCpuHand(eff.nc);
+                    setColor(eff.nc2); setDir(eff.ndir); setSelectedCard(null); setDrewCard(false);
+                    if (eff.np.length === 1) triggerUno("UNO!");
+                    if (eff.np.length === 0) { setGameOver("player"); setMsg("🎉 You win!"); return; }
+                    const m = eff.emsg || `✅ You played ${card.color} ${card.value}`;
+                    setMsg(eff.next === "cpu" ? m + " — CPU's turn…" : m);
+                    setTurn(eff.next);
+                    if (eff.next === "cpu") cpuPlay(eff.nd, eff.ndisc, eff.np, eff.nc, eff.ndir, eff.nc2);
+                } else {
+                    setSelectedCard(card);
+                    setMsg(`🃏 Click again to play ${card.color !== "wild" ? card.color + " " : ""}${card.value}`);
+                }
+            };
+
+            const handleColorPick = (c) => {
+                const { card, np } = pickingColor;
+                setAnimCard({ card, from: "player" });
+                setTimeout(() => setAnimCard(null), 400);
+                const eff = applyEffect(card, "player", deck, [...discard], np, cpuHand, direction, c);
+                setDeck(eff.nd); setDiscard(eff.ndisc); setPlayerHand(eff.np); setCpuHand(eff.nc);
+                setColor(eff.nc2); setDir(eff.ndir); setPickingColor(null); setSelectedCard(null); setDrewCard(false);
+                if (eff.np.length === 1) triggerUno("UNO!");
+                if (eff.np.length === 0) { setGameOver("player"); setMsg("🎉 You win!"); return; }
+                const m = eff.emsg || `✅ Wild played — color changed to ${c}`;
+                setMsg(eff.next === "cpu" ? m + " — CPU's turn…" : m);
+                setTurn(eff.next);
+                if (eff.next === "cpu") cpuPlay(eff.nd, eff.ndisc, eff.np, eff.nc, eff.ndir, eff.nc2);
+            };
+
+            const handleDraw = () => {
+                if (turn !== "player" || gameOver || drewCard) return;
+                setDeckBounce(true); setTimeout(() => setDeckBounce(false), 300);
+                const { drawn, newDeck, newDiscard } = drawCards(deck, discard, 1);
+                const newHand = [...playerHand, ...drawn];
+                setDeck(newDeck); setDiscard(newDiscard); setPlayerHand(newHand); setDrewCard(true);
+                const drew = drawn[0];
+                if (drew && canPlay(drew, topCard, color)) {
+                    setSelectedCard(drew);
+                    setMsg(`Drew ${drew.color !== "wild" ? drew.color + " " : ""}${drew.value} — you can play it!`);
+                } else {
+                    setMsg("Drew a card — no play available, pass your turn");
+                }
+            };
+
+            const handlePass = () => {
+                if (!drewCard || gameOver) return;
+                setTurn("cpu"); setDrewCard(false); setSelectedCard(null);
+                setMsg("🤖 CPU is thinking…");
+                cpuPlay(deck, discard, playerHand, cpuHand, direction, color);
+            };
+
+            const colT = THEME[color] || THEME.wild;
+
+            return (
+                <div style={{
+                    minHeight: "100vh", display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center",
+                    background: "radial-gradient(ellipse at 50% 20%, #1a472a 0%, #0d2818 50%, #060e0a 100%)",
+                    padding: "16px 8px", overflow: "hidden", position: "relative",
+                    fontFamily: "'Arial Narrow','Arial',sans-serif",
+                }}>
+                    <style>{`
+                @keyframes dealCard{from{transform:translateY(-60px) scale(0.8);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+                @keyframes playCard{0%{transform:scale(1)}50%{transform:scale(1.15) translateY(-8px)}100%{transform:scale(1)}}
+                @keyframes deckBounce{0%,100%{transform:scale(1)}50%{transform:scale(0.93)}}
+                @keyframes cpuThink{0%,100%{opacity:0.5}50%{opacity:1}}
+                @keyframes glowPulse{0%,100%{box-shadow:0 0 12px ${colT.main}55}50%{box-shadow:0 0 28px ${colT.main}aa}}
+                .card-hover:hover{transform:translateY(-14px) scale(1.06)!important;z-index:10;}
+              `}</style>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20, zIndex: 1 }}>
+                        <div style={{
+                            fontSize: 52, fontWeight: 900, fontFamily: "'Arial Black',sans-serif",
+                            color: "#fff", letterSpacing: 6,
+                            textShadow: "0 0 40px #c1121fcc,0 4px 12px #000,0 -1px 0 #e63946",
+                            background: "linear-gradient(135deg,#e63946,#c1121f)",
+                            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                            filter: "drop-shadow(0 0 20px #e6394688)",
+                        }}>UNO</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            <div style={{
+                                background: `linear-gradient(135deg,${colT.light},${colT.main})`,
+                                padding: "3px 12px", borderRadius: 20,
+                                color: "#fff", fontSize: 11, fontWeight: 700,
+                                boxShadow: `0 2px 10px ${colT.main}66`,
+                                textTransform: "uppercase", letterSpacing: 2,
+                                animation: "glowPulse 2s infinite",
+                            }}>
+                                {color} active
+                            </div>
+                            <div style={{ color: "#fff6", fontSize: 11, textAlign: "center" }}>
+                                {direction === 1 ? "↓ Normal order" : "↑ Reversed"}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ marginBottom: 20, zIndex: 1, width: "100%", maxWidth: 600 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: 16, background: "linear-gradient(135deg,#444,#222)", border: "2px solid #fff2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🤖</div>
+                            <div>
+                                <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>CPU Player</div>
+                                <div style={{ color: "#aaa", fontSize: 11 }}>{cpuHand.length} cards
+                                    {cpuThinking && <span style={{ color: "#6daed6", marginLeft: 6, animation: "cpuThink 0.6s infinite" }}>thinking…</span>}
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", height: 74, position: "relative" }}>
+                            {cpuHand.map((_, i) => {
+                                const total = cpuHand.length, center = (total - 1) / 2;
+                                const offset = (i - center), angle = offset * 2.5, tx = offset * 14;
+                                return (
+                                    <div key={i} style={{
+                                        position: "absolute", transformOrigin: "bottom center",
+                                        transform: `translateX(${tx}px) rotate(${angle}deg)`,
+                                        transition: "transform 0.3s",
+                                    }}>
+                                        <CardBack small />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div style={{
+                        display: "flex", gap: 36, alignItems: "center", marginBottom: 20, zIndex: 1,
+                        background: "rgba(0,0,0,0.25)", padding: "20px 36px", borderRadius: 24,
+                        border: "1px solid #fff1", backdropFilter: "blur(4px)",
+                        boxShadow: "0 8px 32px #00000066",
+                    }}>
+                        <div style={{ textAlign: "center" }}>
+                            <div style={{ color: "#fff8", fontSize: 11, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Draw Pile</div>
+                            <div
+                                onClick={turn === "player" && !drewCard && !gameOver ? handleDraw : undefined}
+                                style={{
+                                    cursor: turn === "player" && !drewCard && !gameOver ? "pointer" : "default",
+                                    animation: deckBounce ? "deckBounce 0.3s ease" : undefined,
+                                    transform: "rotate(-5deg)", transition: "transform 0.2s",
+                                    filter: turn === "player" && !drewCard && !gameOver ? "drop-shadow(0 0 12px #fff4)" : "none",
+                                }}
+                            >
+                                <CardBack />
+                            </div>
+                            <div style={{ color: "#fff5", fontSize: 10, marginTop: 4 }}>{deck.length} left</div>
+                        </div>
+                        <div style={{ fontSize: 28, color: "#fff6", transform: direction === 1 ? "scaleX(1)" : "scaleX(-1)", transition: "transform 0.4s" }}>⇄</div>
+                        <div style={{ textAlign: "center" }}>
+                            <div style={{ color: "#fff8", fontSize: 11, marginBottom: 6, letterSpacing: 1, textTransform: "uppercase" }}>Discard Pile</div>
+                            <div style={{ transform: "rotate(3deg)", filter: `drop-shadow(0 0 20px ${colT.main}88)`, animation: "glowPulse 2s infinite" }}>
+                                {topCard && <CardFace card={topCard} />}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{
+                        color: "#fff", background: "rgba(0,0,0,0.4)", padding: "10px 24px",
+                        borderRadius: 12, fontSize: 13, marginBottom: 16, zIndex: 1,
+                        border: `1px solid ${colT.main}44`, maxWidth: 480, textAlign: "center",
+                        backdropFilter: "blur(8px)", minHeight: 40, display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                        {msg}
+                    </div>
+
+                    {turn === "player" && !gameOver && (
+                        <div style={{ display: "flex", gap: 12, marginBottom: 16, zIndex: 1 }}>
+                            <button onClick={handleDraw} disabled={drewCard} style={{
+                                padding: "10px 24px", borderRadius: 10, border: "none", cursor: "pointer",
+                                background: drewCard ? "#333" : "linear-gradient(135deg,#e9b000,#a67700)",
+                                color: drewCard ? "#666" : "#1a1a1a", fontWeight: 900, fontSize: 13,
+                                fontFamily: "'Arial Black',sans-serif", opacity: drewCard ? 0.4 : 1,
+                            }}>DRAW</button>
+                            <button onClick={handlePass} disabled={!drewCard} style={{
+                                padding: "10px 24px", borderRadius: 10, border: "none", cursor: "pointer",
+                                background: drewCard ? "linear-gradient(135deg,#6daed6,#1d3557)" : "#333",
+                                color: drewCard ? "#fff" : "#666", fontWeight: 900, fontSize: 13,
+                                fontFamily: "'Arial Black',sans-serif", opacity: drewCard ? 1 : 0.4,
+                            }}>PASS</button>
+                        </div>
+                    )}
+
+                    <div style={{ zIndex: 1, width: "100%", maxWidth: 700 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+                            <div style={{ width: 32, height: 32, borderRadius: 16, background: "linear-gradient(135deg,#2d6a4f,#1b4332)", border: "2px solid #52b78844", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🧑</div>
+                            <div>
+                                <div style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>Your Hand</div>
+                                <div style={{ color: "#aaa", fontSize: 11 }}>{playerHand.length} cards</div>
+                            </div>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "flex-end", flexWrap: "wrap", gap: 6, minHeight: 120, position: "relative", paddingTop: 20 }}>
+                            {playerHand.map((card, i) => {
+                                const playable = turn === "player" && !gameOver && canPlay(card, topCard, color);
+                                const isSel = selectedCard?.id === card.id;
+                                return (
+                                    <div
+                                        key={card.id}
+                                        className={playable && !isSel ? "card-hover" : ""}
+                                        onClick={() => handleCardClick(card)}
+                                        style={{
+                                            cursor: playable ? "pointer" : "default",
+                                            transform: isSel ? "translateY(-20px) scale(1.1)" : "translateY(0) scale(1)",
+                                            transition: "transform 0.2s, filter 0.2s",
+                                            filter: isSel ? `drop-shadow(0 0 18px ${THEME[card.color]?.main || "#9b5de5"})` :
+                                                playable ? "drop-shadow(0 4px 8px #0006)" :
+                                                    "brightness(0.55) saturate(0.5)",
+                                            animation: gameOver ? "none" : `dealCard 0.3s ease ${i * 0.04}s both`,
+                                        }}
+                                    >
+                                        <CardFace card={card} />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 12, marginTop: 20, zIndex: 1 }}>
+                        <a href="/games" style={{
+                            padding: "10px 28px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)",
+                            background: "rgba(255,255,255,0.05)", color: "white", fontSize: 13, fontWeight: 600,
+                            textDecoration: "none", letterSpacing: 2, textTransform: "uppercase"
+                        }}>Exit Game</a>
+                    </div>
+
+                    {gameOver && (
+                        <div style={{ position: "fixed", inset: 0, background: "#000c", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 400 }}>
+                            <div style={{ background: "linear-gradient(145deg,#1c1c2e,#2a2a4a)", borderRadius: 24, padding: 48, textAlign: "center", boxShadow: "0 20px 80px #000b" }}>
+                                <div style={{ fontSize: 80, marginBottom: 12 }}>{gameOver === "player" ? "🏆" : "💀"}</div>
+                                <div style={{ color: "#fff", fontSize: 38, fontFamily: "'Arial Black',sans-serif", fontWeight: 900, marginBottom: 8 }}>{gameOver === "player" ? "YOU WIN!" : "CPU WINS!"}</div>
+                                <button onClick={initGame} style={{ padding: "14px 40px", borderRadius: 12, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#e63946,#c1121f)", color: "#fff", fontWeight: 900, fontSize: 16 }}>PLAY AGAIN</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {pickingColor && <ColorPicker onPick={handleColorPick} />}
+                    {unoToast && <UnoToast who={unoToast} />}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<UnoGame />);
+        /*]]>*/
+    </script>
+</body>
+
+</html>
