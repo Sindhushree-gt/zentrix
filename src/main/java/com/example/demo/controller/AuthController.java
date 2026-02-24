@@ -22,14 +22,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-<<<<<<< HEAD
     public String registerUser(@ModelAttribute("user") User user, Model model) {
         if (userRepository.findByUsername(user.getUsername()) != null) {
             return "redirect:/register?error=duplicate";
         }
-=======
-    public String registerUser(@ModelAttribute("user") User user) {
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
         userRepository.save(user);
         return "redirect:/home";
     }

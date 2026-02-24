@@ -1,6 +1,5 @@
 package com.example.demo;
 
-<<<<<<< HEAD
 import com.example.demo.model.User;
 import com.example.demo.model.PostCollaboration;
 import com.example.demo.model.CollaborationStatus;
@@ -17,15 +16,10 @@ import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-=======
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
 
 @Controller
 public class MainController {
 
-<<<<<<< HEAD
     @Autowired
     private PostRepository postRepository;
 
@@ -38,8 +32,6 @@ public class MainController {
     @Autowired
     private NotificationRepository notificationRepository;
 
-=======
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
     @GetMapping("/")
     public String root() {
         return "home";
@@ -75,7 +67,6 @@ public class MainController {
         return "games";
     }
 
-<<<<<<< HEAD
     @Transactional
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpSession session) {
@@ -112,32 +103,6 @@ public class MainController {
 
     @GetMapping("/admin")
     public String admin(Model model) {
-=======
-    @org.springframework.beans.factory.annotation.Autowired
-    private com.example.demo.repository.PostRepository postRepository;
-
-    @org.springframework.beans.factory.annotation.Autowired
-    private com.example.demo.repository.PostCollaborationRepository postCollaborationRepository;
-
-    @GetMapping("/dashboard")
-    public String dashboard(org.springframework.ui.Model model, jakarta.servlet.http.HttpSession session) {
-        Object sessionUser = session.getAttribute("user");
-        if (sessionUser instanceof com.example.demo.model.User) {
-            com.example.demo.model.User user = (com.example.demo.model.User) sessionUser;
-            java.util.List<com.example.demo.model.PostCollaboration> pendingRequests = postCollaborationRepository
-                    .findByUserAndStatus(user, com.example.demo.model.CollaborationStatus.PENDING);
-            model.addAttribute("pendingCount", pendingRequests.size());
-        }
-        model.addAttribute("posts", postRepository.findAllByOrderByCreatedAtDesc());
-        return "dashboard";
-    }
-
-    @org.springframework.beans.factory.annotation.Autowired
-    private com.example.demo.repository.UserRepository userRepository;
-
-    @GetMapping("/admin")
-    public String admin(org.springframework.ui.Model model) {
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
         model.addAttribute("users", userRepository.findAll());
         return "admin-dashboard";
     }

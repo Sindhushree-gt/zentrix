@@ -1,23 +1,17 @@
 package com.example.demo.controller;
 
-<<<<<<< HEAD
 import com.example.demo.model.FollowRequest;
 import com.example.demo.model.Notification;
 import com.example.demo.model.Post;
 import com.example.demo.model.User;
 import com.example.demo.repository.FollowRequestRepository;
 import com.example.demo.repository.NotificationRepository;
-=======
-import com.example.demo.model.Post;
-import com.example.demo.model.User;
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
 import com.example.demo.repository.PostRepository;
 import com.example.demo.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-<<<<<<< HEAD
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,12 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
-=======
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
 
 @Controller
 @RequestMapping("/profile")
@@ -45,7 +33,6 @@ public class ProfileController {
     @Autowired
     private com.example.demo.repository.PostCollaborationRepository postCollaborationRepository;
 
-<<<<<<< HEAD
     @Autowired
     private NotificationRepository notificationRepository;
 
@@ -105,59 +92,23 @@ public class ProfileController {
         return "profile";
     }
 
-=======
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
     @GetMapping
     public String showProfile(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
             return "redirect:/login";
         }
-<<<<<<< HEAD
         return showPublicProfile(user.getUsername(), session, model);
-    }
-
-    @PostMapping("/update")
-    public String updateProfile(@RequestParam String email,
-            @RequestParam(required = false) String profilePhotoUrl,
-            @RequestParam(required = false) String aboutMe,
-            @RequestParam(required = false) String skills,
-=======
-
-        // Refresh user data from DB
-        user = userRepository.findById(user.getId()).orElse(user);
-
-        model.addAttribute("user", user);
-
-        // Fetch posts where user is owner
-        java.util.List<Post> myPosts = postRepository.findByUserOrderByCreatedAtDesc(user);
-
-        // Fetch posts where user is a collaborator (ACCEPTED)
-        java.util.List<com.example.demo.model.PostCollaboration> collaborations = postCollaborationRepository
-                .findByUserAndStatus(user, com.example.demo.model.CollaborationStatus.ACCEPTED);
-        for (com.example.demo.model.PostCollaboration col : collaborations) {
-            myPosts.add(col.getPost());
-        }
-
-        // Sort combinad list by createdAt desc
-        myPosts.sort((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()));
-
-        model.addAttribute("posts", myPosts);
-
-        // Fetch pending collaboration requests
-        java.util.List<com.example.demo.model.PostCollaboration> pendingRequests = postCollaborationRepository
-                .findByUserAndStatus(user, com.example.demo.model.CollaborationStatus.PENDING);
-        model.addAttribute("pendingRequests", pendingRequests);
-
-        return "profile";
     }
 
     @PostMapping("/update")
     public String updateProfile(@RequestParam String username,
             @RequestParam String email,
-            @RequestParam String dob,
-            @RequestParam String gender,
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
+            @RequestParam(required = false) String dob,
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) String profilePhotoUrl,
+            @RequestParam(required = false) String aboutMe,
+            @RequestParam(required = false) String skills,
             HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -166,29 +117,19 @@ public class ProfileController {
 
         User dbUser = userRepository.findById(user.getId()).orElse(null);
         if (dbUser != null) {
-<<<<<<< HEAD
+            dbUser.setUsername(username);
             dbUser.setEmail(email);
+            if (dob != null && !dob.isEmpty()) {
+                dbUser.setDob(java.time.LocalDate.parse(dob));
+            }
+            if (gender != null)
+                dbUser.setGender(gender);
             if (profilePhotoUrl != null)
                 dbUser.setProfilePhotoUrl(profilePhotoUrl);
             if (aboutMe != null)
                 dbUser.setAboutMe(aboutMe);
             if (skills != null)
                 dbUser.setSkills(skills);
-=======
-            dbUser.setUsername(username);
-            dbUser.setEmail(email);
-            // Assuming dob is stored as String for now based on previous code or convert if
-            // needed
-            // If User entity has LocalDate, we need to parse. Based on register.html input
-            // type="date", it sends a string.
-            // Let's assume User entity has LocalDate and we need to parse it.
-            // Checking User entity... it has LocalDate dob.
-            // So we need to parse the string to LocalDate.
-            if (dob != null && !dob.isEmpty()) {
-                dbUser.setDob(java.time.LocalDate.parse(dob));
-            }
-            dbUser.setGender(gender);
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
             userRepository.save(dbUser);
             session.setAttribute("user", dbUser);
         }
@@ -214,10 +155,7 @@ public class ProfileController {
     public String createPost(@RequestParam String content,
             @RequestParam(required = false) org.springframework.web.multipart.MultipartFile file,
             @RequestParam(required = false) String hashtags,
-<<<<<<< HEAD
             @RequestParam(required = false) String collaborators,
-=======
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
             HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
@@ -236,11 +174,8 @@ public class ProfileController {
                     java.nio.file.Files.createDirectories(uploadPath);
                 }
 
-<<<<<<< HEAD
-=======
                 // Also save to target to be immediately available without restart in some
                 // setups
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
                 String targetUploadDir = "target/classes/static/uploads/";
                 java.nio.file.Path targetUploadPath = java.nio.file.Paths.get(targetUploadDir);
                 if (!java.nio.file.Files.exists(targetUploadPath)) {
@@ -261,7 +196,6 @@ public class ProfileController {
                 }
             } catch (java.io.IOException e) {
                 e.printStackTrace();
-<<<<<<< HEAD
             }
         }
 
@@ -406,74 +340,30 @@ public class ProfileController {
     @PostMapping("/collaboration/{id}/accept")
     public String acceptCollaboration(@PathVariable Long id, HttpSession session) {
         User user = (User) session.getAttribute("user");
-        if (user == null)
-            return "redirect:/login";
-=======
-                // Handle error
-            }
-        }
-
-        Post post = new Post(content, user, mediaUrl, mediaType, hashtags);
-        postRepository.save(post);
-
-        // Handle mentions for collaboration
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("@(\\w+)");
-        java.util.regex.Matcher matcher = pattern.matcher(content);
-        while (matcher.find()) {
-            String username = matcher.group(1);
-            User mentionedUser = userRepository.findByUsername(username);
-            if (mentionedUser != null && !mentionedUser.getId().equals(user.getId())) {
-                com.example.demo.model.PostCollaboration collaboration = new com.example.demo.model.PostCollaboration(
-                        post, mentionedUser, com.example.demo.model.CollaborationStatus.PENDING);
-                postCollaborationRepository.save(collaboration);
-            }
-        }
-
-        return "redirect:/profile";
-    }
-
-    @PostMapping("/collaboration/{id}/accept")
-    public String acceptCollaboration(@org.springframework.web.bind.annotation.PathVariable Long id,
-            HttpSession session) {
-        User user = (User) session.getAttribute("user");
         if (user == null) {
             return "redirect:/login";
         }
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
 
         com.example.demo.model.PostCollaboration collaboration = postCollaborationRepository.findById(id).orElse(null);
         if (collaboration != null && collaboration.getUser().getId().equals(user.getId())) {
             collaboration.setStatus(com.example.demo.model.CollaborationStatus.ACCEPTED);
             postCollaborationRepository.save(collaboration);
         }
-<<<<<<< HEAD
-=======
-
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
         return "redirect:/profile";
     }
 
     @PostMapping("/collaboration/{id}/reject")
-<<<<<<< HEAD
     public String rejectCollaboration(@PathVariable Long id, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
-            return "redirect:/login";
-=======
-    public String rejectCollaboration(@org.springframework.web.bind.annotation.PathVariable Long id,
-            HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) {
             return "redirect:/login";
         }
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
 
         com.example.demo.model.PostCollaboration collaboration = postCollaborationRepository.findById(id).orElse(null);
         if (collaboration != null && collaboration.getUser().getId().equals(user.getId())) {
             collaboration.setStatus(com.example.demo.model.CollaborationStatus.REJECTED);
             postCollaborationRepository.save(collaboration);
         }
-<<<<<<< HEAD
         return "redirect:/profile";
     }
 
@@ -531,9 +421,6 @@ public class ProfileController {
         if (fr != null && fr.getReceiver().getId().equals(user.getId())) {
             followRequestRepository.delete(fr);
         }
-=======
-
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
         return "redirect:/profile";
     }
 }

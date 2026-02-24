@@ -1,6 +1,5 @@
 package com.example.demo.model;
 
-<<<<<<< HEAD
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -8,32 +7,19 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
-=======
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import java.time.LocalDate;
-
-@Entity
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-<<<<<<< HEAD
     @Column(unique = true)
-=======
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
     private String username;
     private String email;
     private String password;
     private LocalDate dob;
     private String gender;
 
-<<<<<<< HEAD
     @Column(length = 300)
     private String bio;
 
@@ -49,8 +35,6 @@ public class User {
     @ManyToMany(mappedBy = "followers")
     private Set<User> following = new HashSet<>();
 
-=======
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
     public User() {
     }
 
@@ -109,7 +93,6 @@ public class User {
     public void setGender(String gender) {
         this.gender = gender;
     }
-<<<<<<< HEAD
 
     public String getBio() {
         return bio;
@@ -173,6 +156,4 @@ public class User {
     public int hashCode() {
         return 31;
     }
-=======
->>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
 }
