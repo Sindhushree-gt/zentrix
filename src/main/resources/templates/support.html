@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Zentrix</div>
+        <div class="nav-links">
+            <a href="/home">Home</a>
+            <a href="/events">Events</a>
+            <a href="/games">Games</a>
+            <a href="/about">About Us</a>
+            <a href="/support" class="active">Contact</a>
+        </div>
+        <a href="#" class="nav-btn">Sign In</a>
+    </nav>
+
+    <div class="about-hero">
+        <h1 style="font-size: 48px;">How can we help?</h1>
+    </div>
+
+    <!-- Contact Form & FAQ -->
+    <section class="container">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px;">
+            <div>
+                <h2 style="margin-bottom: 30px;">Send us a message</h2>
+                <form>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Name</label>
+                        <input type="text" class="form-input" placeholder="Your Name">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Email</label>
+                        <input type="email" class="form-input" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Subject</label>
+                        <select class="form-input">
+                            <option>Booking Issue</option>
+                            <option>Refund Request</option>
+                            <option>General Inquiry</option>
+                            <option>Feedback</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500;">Message</label>
+                        <textarea class="form-input" rows="5" placeholder="How can we help you?"></textarea>
+                    </div>
+                    <button type="submit" class="cta-btn" style="width: 100%; border: none;">Send Message</button>
+                </form>
+            </div>
+
+            <div>
+                <h2 style="margin-bottom: 30px;">Frequently Asked Questions</h2>
+
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 10px; color: var(--accent);">How do I cancel a booking?</h3>
+                    <p style="color: var(--text-secondary);">You can cancel your booking up to 4 hours before the
+                        showtime from the 'My Orders' section. Cancellation charges may apply.</p>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 10px; color: var(--accent);">Where is my refund?</h3>
+                    <p style="color: var(--text-secondary);">Refunds are processed within 5-7 business days and credited
+                        back to the original payment method.</p>
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 10px; color: var(--accent);">Do I need to print my ticket?</h3>
+                    <p style="color: var(--text-secondary);">No! BookMyTicket is completely paperless. Just show the QR
+                        code on your app at the cinema entrance.</p>
+                </div>
+
+                <div
+                    style="background: var(--card-bg); padding: 30px; border-radius: 12px; margin-top: 40px; border: 1px solid var(--glass-border);">
+                    <h3 style="margin-bottom: 15px;"><i class="fas fa-phone-alt"
+                            style="margin-right: 10px; color: var(--accent);"></i> Customer Care</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 10px;">Call us at: <strong
+                            style="color: var(--text-primary);">1800-123-4567</strong></p>
+                    <p style="color: var(--text-secondary);">Email: <strong
+                            style="color: var(--text-primary);">help@bookmyticket.com</strong></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <h3>BookMyTicket</h3>
+                <a href="/about">About Us</a>
+                <a href="/features">Features</a>
+                <a href="/support">Support</a>
+                <a href="#">Careers</a>
+            </div>
+            <div class="footer-col">
+                <h3>Help</h3>
+                <a href="/support">Contact Us</a>
+                <a href="#">FAQs</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-col">
+                <h3>Social</h3>
+                <a href="#">Facebook</a>
+                <a href="#">Twitter</a>
+                <a href="#">Instagram</a>
+                <a href="#">LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

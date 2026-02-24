@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games & Sports | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Zentrix</div>
+        <div class="nav-links">
+            <a href="/home">Home</a>
+            <a href="/events">Events</a>
+            <a href="/games" class="active">Games</a>
+            <a href="/about">About Us</a>
+            <a href="/support">Contact</a>
+        </div>
+        <a href="#" class="nav-btn">Sign In</a>
+    </nav>
+
+    <div class="about-hero">
+        <h1 style="font-size: 48px;">Esports & Gaming Events</h1>
+    </div>
+
+    <!-- Games Grid -->
+    <section class="container">
+        <div class="games-grid">
+            <div class="game-card">
+                <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"
+                    class="game-img" alt="Esports">
+                <div class="game-content">
+                    <h3 style="margin-bottom: 10px;">Valorant Championship 2024</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Watch the top teams battle it out for
+                        the ultimate trophy. Live from Los Angeles.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--accent); font-weight: 600;">$50 Entry</span>
+                        <a href="#" class="nav-btn"
+                            style="padding: 6px 15px; font-size: 12px; background: transparent; border: 1px solid var(--accent);">Register
+                            Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card">
+                <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=2071&auto=format&fit=crop"
+                    class="game-img" alt="Gaming Setup">
+                <div class="game-content">
+                    <h3 style="margin-bottom: 10px;">PC Gaming Expo</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Experience the latest hardware and
+                        games. Meet your favorite streamers.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--accent); font-weight: 600;">$20 Entry</span>
+                        <a href="#" class="nav-btn"
+                            style="padding: 6px 15px; font-size: 12px; background: transparent; border: 1px solid var(--accent);">Get
+                            Tickets</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card">
+                <img src="https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=2057&auto=format&fit=crop"
+                    class="game-img" alt="VR">
+                <div class="game-content">
+                    <h3 style="margin-bottom: 10px;">VR World Cup</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Step into the metaverse and compete in
+                        the first-ever VR global tournament.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--accent); font-weight: 600;">Front Row Seat</span>
+                        <a href="#" class="nav-btn"
+                            style="padding: 6px 15px; font-size: 12px; background: transparent; border: 1px solid var(--accent);">Book
+                            Slot</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-card">
+                <img src="https://images.unsplash.com/photo-1548686013-c97800c73229?q=80&w=2070&auto=format&fit=crop"
+                    class="game-img" alt="Chess">
+                <div class="game-content">
+                    <h3 style="margin-bottom: 10px;">International Chess Open</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Witness the grandmasters make their
+                        moves. A battle of intellects.</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--accent); font-weight: 600;">Free Viewing</span>
+                        <a href="#" class="nav-btn"
+                            style="padding: 6px 15px; font-size: 12px; background: transparent; border: 1px solid var(--accent);">Watch
+                            Live</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <h3>BookMyTicket</h3>
+                <a href="/about">About Us</a>
+                <a href="/features">Features</a>
+                <a href="/support">Support</a>
+                <a href="#">Careers</a>
+            </div>
+            <div class="footer-col">
+                <h3>Help</h3>
+                <a href="/support">Contact Us</a>
+                <a href="#">FAQs</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-col">
+                <h3>Social</h3>
+                <a href="#">Facebook</a>
+                <a href="#">Twitter</a>
+                <a href="#">Instagram</a>
+                <a href="#">LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>
