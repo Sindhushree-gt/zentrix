@@ -20,12 +20,15 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<PostCollaboration> collaborations = new java.util.ArrayList<>();
 
+<<<<<<< HEAD
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<PostLike> likes = new java.util.ArrayList<>();
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<PostComment> comments = new java.util.ArrayList<>();
 
+=======
+>>>>>>> 48ba3e1bd8a64e1e2f5d106ce5ab45ebc4657ac0
     private LocalDateTime createdAt;
 
     private String mediaUrl;
