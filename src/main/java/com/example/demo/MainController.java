@@ -72,6 +72,47 @@ public class MainController {
         return "snake-and-ladder";
     }
 
+    @GetMapping("/play-chess")
+    public String playChess() {
+        return "chess";
+    }
+
+    @GetMapping("/play-uno")
+    public String playUno() {
+        return "uno";
+    }
+
+    @GetMapping("/play-ludo")
+    public String playLudo() {
+        return "ludo";
+    }
+
+    @GetMapping("/play-mario")
+    public String playMario() {
+        return "mario";
+    }
+
+    @GetMapping("/play-bubble-shooter")
+    public String playBubbleShooter() {
+        return "bubble-shooter";
+    }
+
+    @GetMapping("/play-candy-crush")
+    public String playCandyCrush() {
+        return "candy-crush";
+    }
+
+    @GetMapping("/play-runner")
+    public String playRunner() {
+        return "runner";
+    }
+
+    @GetMapping("/play-car-game")
+    public String playCarGame() {
+        return "car-game";
+
+    }
+
     @Transactional
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpSession session) {
