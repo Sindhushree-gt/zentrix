@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events | Zentrix</title>
+    <title>Explore Events | Zentrix</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -15,14 +15,14 @@
     <nav class="navbar">
         <div class="logo">Zentrix</div>
         <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
-            <input type="text" placeholder="Search for talents, events..." class="form-input"
-                style="background: var(--card-bg); border-radius: 20px; padding: 8px 15px;">
+            <input type="text" placeholder="Search for events..." class="form-input" id="eventSearch"
+                style="background: var(--card-bg); border-radius: 20px; padding: 8px 15px;" onkeyup="filterEvents()">
         </div>
         <div class="nav-links">
             <a href="/dashboard"><i class="fas fa-home"></i></a>
             <a href="/messages"><i class="fas fa-comment-dots"></i></a>
             <a href="/notifications"><i class="fas fa-bell"></i></a>
-            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
+            <img th:src="${user.profilePhotoUrl != null ? user.profilePhotoUrl : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop'}"
                 class="user-avatar" style="width: 32px; height: 32px; border: none;">
         </div>
     </nav>
@@ -38,94 +38,80 @@
             <a href="/messages" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
             <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
             <a href="/games" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
-            <a href="#" class="sidebar-link" onclick="openCreateModal()"><i class="fas fa-plus-circle"
-                    style="color: var(--accent);"></i> Create Post</a>
             <a href="/logout" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
                 Logout</a>
         </aside>
 
         <!-- Center Content -->
-        <main class="social-feed" style="max-width: 800px;">
+        <main class="social-feed" style="max-width: 1000px;">
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1>Upcoming Events</h1>
-                <button class="nav-btn"><i class="fas fa-plus"></i> Create Event</button>
+                <h1 style="font-size: 2rem; font-weight: 800;">Upcoming Events</h1>
             </div>
 
-            <!-- Filters -->
-            <div style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px;">
-                <button class="nav-btn" style="border-radius: 20px; flex-shrink: 0;">All</button>
-                <button class="nav-btn"
-                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 20px; flex-shrink: 0;">Sports</button>
-                <button class="nav-btn"
-                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 20px; flex-shrink: 0;">Cultural</button>
-                <button class="nav-btn"
-                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 20px; flex-shrink: 0;">E-Sports</button>
-                <button class="nav-btn"
-                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 20px; flex-shrink: 0;">Workshops</button>
+            <!-- Category Filters -->
+            <div style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 30px;"
+                class="custom-scrollbar">
+                <a th:href="@{/events(category='All')}" class="nav-btn"
+                    th:classappend="${activeCategory == 'All'} ? 'active' : ''"
+                    style="border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">All</a>
+
+                <a th:href="@{/events(category='Sports')}" class="nav-btn"
+                    th:classappend="${activeCategory == 'Sports'} ? 'active' : ''"
+                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">Sports</a>
+
+                <a th:href="@{/events(category='Cultural')}" class="nav-btn"
+                    th:classappend="${activeCategory == 'Cultural'} ? 'active' : ''"
+                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">Cultural</a>
+
+                <a th:href="@{/events(category='Tech')}" class="nav-btn"
+                    th:classappend="${activeCategory == 'Tech'} ? 'active' : ''"
+                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">Tech</a>
+
+                <a th:href="@{/events(category='Workshop')}" class="nav-btn"
+                    th:classappend="${activeCategory == 'Workshop'} ? 'active' : ''"
+                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">Workshops</a>
             </div>
 
             <!-- Events Grid -->
-            <div class="events-grid" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));">
+            <div class="events-grid"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;"
+                id="eventContainer">
 
-                <div class="card">
-                    <img src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?q=80&w=1974&auto=format&fit=crop"
-                        class="card-img" style="height: 160px;">
-                    <div class="card-content">
-                        <div class="event-date">AUG 24 | 7:00 PM</div>
-                        <div class="card-title">Inter-College Fest</div>
-                        <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> Main Auditorium</div>
+                <div th:each="event : ${events}" class="card event-card" th:data-title="${event.title}">
+                    <div style="position: relative;">
+                        <img th:src="${event.imageUrl}" class="card-img"
+                            style="height: 200px; object-fit: cover; width: 100%;">
+                        <div style="position: absolute; top: 15px; right: 15px; background: var(--accent); color: #fff; padding: 5px 12px; border-radius: 12px; font-weight: 700; font-size: 12px;"
+                            th:text="${event.category}">Category</div>
+                    </div>
+                    <div class="card-content" style="padding: 20px;">
+                        <div class="event-date"
+                            style="color: var(--accent); font-weight: 700; font-size: 13px; margin-bottom: 8px;">
+                            <span
+                                th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'MMM dd | hh:mm a') : 'TBA'}">Date</span>
+                        </div>
+                        <h3 class="card-title" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 10px;"
+                            th:text="${event.title}">Event Title</h3>
+                        <div class="card-subtitle" style="color: var(--text-secondary); margin-bottom: 15px;">
+                            <i class="fas fa-map-marker-alt"></i> <span th:text="${event.venue}">Venue</span>
+                        </div>
                         <div
-                            style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                            <span class="event-price">Free</span>
-                            <button class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Register</button>
+                            style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 15px; border-top: 1px solid var(--glass-border);">
+                            <span class="event-price" style="font-weight: 800; font-size: 16px;"
+                                th:text="${event.price}">Free</span>
+                            <a th:href="@{'/events/' + ${event.id}}" class="nav-btn"
+                                style="padding: 8px 20px; font-size: 13px; text-decoration: none;">Details</a>
                         </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=2012&auto=format&fit=crop"
-                        class="card-img" style="height: 160px;">
-                    <div class="card-content">
-                        <div class="event-date">SEP 10 | 9:00 AM</div>
-                        <div class="card-title">Hackathon 2024</div>
-                        <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> Tech Block</div>
-                        <div
-                            style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                            <span class="event-price">$10 Entry</span>
-                            <button class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Register</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <img src="https://images.unsplash.com/photo-1593305841991-05c297ba4575?q=80&w=2057&auto=format&fit=crop"
-                        class="card-img" style="height: 160px;">
-                    <div class="card-content">
-                        <div class="event-date">OCT 02 | 5:00 PM</div>
-                        <div class="card-title">Valorant Tournament</div>
-                        <div class="card-subtitle"><i class="fas fa-globe"></i> Online</div>
-                        <div
-                            style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                            <span class="event-price">$5 Entry</span>
-                            <button class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Register</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <img src="https://images.unsplash.com/photo-1514525253440-b393452e3383?q=80&w=1974&auto=format&fit=crop"
-                        class="card-img" style="height: 160px;">
-                    <div class="card-content">
-                        <div class="event-date">NOV 15 | 6:00 PM</div>
-                        <div class="card-title">Standup Comedy</div>
-                        <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> Amphitheatre</div>
-                        <div
-                            style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-                            <span class="event-price">$2 Entry</span>
-                            <button class="nav-btn" style="padding: 5px 10px; font-size: 12px;">Register</button>
-                        </div>
-                    </div>
+                <!-- Empty State -->
+                <div th:if="${#lists.isEmpty(events)}" style="grid-column: 1 / -1; text-align: center; padding: 60px;">
+                    <i class="fas fa-calendar-times"
+                        style="font-size: 48px; color: var(--text-secondary); margin-bottom: 20px;"></i>
+                    <h2 style="color: #fff;">No events found in this category.</h2>
+                    <p style="color: var(--text-secondary);">Check back later for more exciting updates!</p>
                 </div>
 
             </div>
@@ -133,6 +119,48 @@
         </main>
 
     </div>
+
+    <script>
+        function filterEvents() {
+            let input = document.getElementById('eventSearch').value.toLowerCase();
+            let cards = document.getElementsByClassName('event-card');
+
+            for (let card of cards) {
+                let title = card.getAttribute('data-title').toLowerCase();
+                if (title.includes(input)) {
+                    card.style.display = "";
+                } else {
+                    card.style.display = "none";
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .nav-btn.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .event-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .event-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+    </style>
 
 </body>
 

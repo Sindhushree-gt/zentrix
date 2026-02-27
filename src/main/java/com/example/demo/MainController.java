@@ -57,14 +57,19 @@ public class MainController {
         return "about";
     }
 
-    @GetMapping("/events")
-    public String events() {
-        return "events";
-    }
-
     @GetMapping("/games")
     public String games() {
         return "games";
+    }
+
+    @GetMapping("/games/rock-paper-scissors")
+    public String rockPaperScissors() {
+        return "rock-paper-scissors";
+    }
+
+    @GetMapping("/games/snake-and-ladder")
+    public String snakeAndLadder() {
+        return "snake-and-ladder";
     }
 
     @Transactional
