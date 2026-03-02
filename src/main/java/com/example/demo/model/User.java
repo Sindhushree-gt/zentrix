@@ -18,16 +18,19 @@ public class User {
     private String password;
     private LocalDate dob;
     private String gender;
+    private String profilePicture;
+    private java.time.LocalDateTime lastActiveAt;
 
     public User() {
     }
 
-    public User(String username, String email, String password, LocalDate dob, String gender) {
+    public User(String username, String email, String password, LocalDate dob, String gender, String profilePicture) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.dob = dob;
         this.gender = gender;
+        this.profilePicture = profilePicture;
     }
 
     public Long getId() {
@@ -76,5 +79,36 @@ public class User {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
+
+    public java.time.LocalDateTime getLastActiveAt() {
+        return lastActiveAt;
+    }
+
+    public void setLastActiveAt(java.time.LocalDateTime lastActiveAt) {
+        this.lastActiveAt = lastActiveAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        User user = (User) o;
+        return id != null && id.equals(user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 }

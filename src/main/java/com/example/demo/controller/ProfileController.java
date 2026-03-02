@@ -28,10 +28,11 @@ public class ProfileController {
 
     @GetMapping
     public String showProfile(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
+        Object sessionUser = session.getAttribute("user");
+        if (!(sessionUser instanceof User)) {
             return "redirect:/login";
         }
+        User user = (User) sessionUser;
 
         // Refresh user data from DB
         user = userRepository.findById(user.getId()).orElse(user);
@@ -67,10 +68,11 @@ public class ProfileController {
             @RequestParam String dob,
             @RequestParam String gender,
             HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
+        Object sessionUser = session.getAttribute("user");
+        if (!(sessionUser instanceof User)) {
             return "redirect:/login";
         }
+        User user = (User) sessionUser;
 
         User dbUser = userRepository.findById(user.getId()).orElse(null);
         if (dbUser != null) {
@@ -95,10 +97,11 @@ public class ProfileController {
 
     @PostMapping("/reset-password")
     public String resetPassword(@RequestParam String newPassword, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
+        Object sessionUser = session.getAttribute("user");
+        if (!(sessionUser instanceof User)) {
             return "redirect:/login";
         }
+        User user = (User) sessionUser;
 
         User dbUser = userRepository.findById(user.getId()).orElse(null);
         if (dbUser != null) {
@@ -113,10 +116,11 @@ public class ProfileController {
             @RequestParam(required = false) org.springframework.web.multipart.MultipartFile file,
             @RequestParam(required = false) String hashtags,
             HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
+        Object sessionUser = session.getAttribute("user");
+        if (!(sessionUser instanceof User)) {
             return "redirect:/login";
         }
+        User user = (User) sessionUser;
 
         String mediaUrl = null;
         String mediaType = null;

@@ -50,8 +50,13 @@ public class MainController {
     @GetMapping("/dashboard")
     public String dashboard(org.springframework.ui.Model model, jakarta.servlet.http.HttpSession session) {
         Object sessionUser = session.getAttribute("user");
+        if (sessionUser == null) {
+            return "redirect:/login";
+        }
+
         if (sessionUser instanceof com.example.demo.model.User) {
             com.example.demo.model.User user = (com.example.demo.model.User) sessionUser;
+            model.addAttribute("currentUser", user);
             java.util.List<com.example.demo.model.PostCollaboration> pendingRequests = postCollaborationRepository
                     .findByUserAndStatus(user, com.example.demo.model.CollaborationStatus.PENDING);
             model.addAttribute("pendingCount", pendingRequests.size());

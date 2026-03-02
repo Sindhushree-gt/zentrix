@@ -92,7 +92,8 @@
                 <div class="post-actions">
                     <button class="action-btn"><i class="far fa-heart"></i></button>
                     <button class="action-btn"><i class="far fa-comment"></i></button>
-                    <button class="action-btn"><i class="far fa-paper-plane"></i></button>
+                    <button class="action-btn" th:onclick="'openShareModal(' + ${post.id} + ')'"><i
+                            class="far fa-paper-plane"></i></button>
                 </div>
                 <div class="post-content">
                     <p th:text="${post.content}"
@@ -160,35 +161,62 @@
 
     <!-- Create Post Modal -->
     <div class="overlay" id="overlay"></div>
-    <div class="modal" id="createModal">
+    <!-- Share Modal -->
+    <div class="modal" id="shareModal" style="display:none; z-index:1100;">
         <div class="modal-header">
-            <h3>Create New Post</h3>
-            <i class="fas fa-times close-modal" onclick="closeCreateModal()"></i>
+            <h3>Share to Chat</h3>
+            <i class="fas fa-times close-modal" onclick="closeShareModal()"></i>
         </div>
-        <form>
-            <div class="form-group">
-                <textarea class="form-input" rows="4" placeholder="Share your achievement..."
-                    style="background: var(--bg-color);"></textarea>
+        <div style="padding: 15px;">
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 10px;">Select a conversation to
+                share this post:</p>
+            <div id="shareConvList" style="max-height: 300px; overflow-y: auto;">
+                <!-- Conversations will be loaded here via JS -->
             </div>
-            <div class="form-group"
-                style="border: 2px dashed var(--glass-border); padding: 30px; text-align: center; border-radius: 8px; cursor: pointer;">
-                <i class="fas fa-cloud-upload-alt"
-                    style="font-size: 24px; color: var(--text-secondary); margin-bottom: 10px;"></i>
-                <p style="color: var(--text-secondary);">Drag photos or videos here</p>
-            </div>
-            <button type="button" class="cta-btn" style="width: 100%;">Post</button>
-        </form>
+        </div>
     </div>
 
     <script>
-        function openCreateModal() {
-            document.getElementById('createModal').style.display = 'block';
+        let currentSharePostId = null;
+
+        async function openShareModal(postId) {
+            currentSharePostId = postId;
+            document.getElementById('shareModal').style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
+
+            // Load conversations
+            const res = await fetch('/api/chat/conversations');
+            const convs = await res.json();
+            const container = document.getElementById('shareConvList');
+            container.innerHTML = convs.map(c => {
+                const isGroup = c.type === 'GROUP';
+                const name = isGroup ? c.name : (c.participants.find(p => p.username !== '[[${currentUser != null ? currentUser.username : ""}]]')?.username || 'One-to-One');
+                return `
+                    <div style="padding: 10px; border-bottom: 1px solid #eee; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="shareToConv(${c.id})">
+                        <span>${name}</span>
+                        <i class="fas fa-chevron-right" style="color:#ccc;"></i>
+                    </div>
+                `;
+            }).join('');
         }
 
-        function closeCreateModal() {
-            document.getElementById('createModal').style.display = 'none';
+        function closeShareModal() {
+            document.getElementById('shareModal').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
+        }
+
+        async function shareToConv(convId) {
+            const res = await fetch('/api/chat/share-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ postId: currentSharePostId, conversationId: convId })
+            });
+            if (res.ok) {
+                alert('Post shared successfully!');
+                closeShareModal();
+            } else {
+                alert('Failed to share post.');
+            }
         }
     </script>
 </body>
