@@ -651,14 +651,13 @@
             document.getElementById('shots-el').textContent = shots;
         }
 
-        // Full game Loop
+        // ── Main Game Loop ────────────────────────────────────────────────
         function loop(ts) {
             requestAnimationFrame(loop);
-            // simplified draw
             ctx.clearRect(0, 0, W, H);
             if (bgCanvas) ctx.drawImage(bgCanvas, 0, 0);
 
-            // draw grid
+            // Draw grid
             grid.forEach((row, r) => {
                 if (!row) return;
                 row.forEach((p, c) => {
@@ -668,66 +667,166 @@
                 });
             });
 
+            // Handle Projectile
             if (proj) {
                 if (proj.moving) {
-                    proj.x += proj.dx; proj.y += proj.dy;
-                    // logic...
+                    proj.x += proj.dx;
+                    proj.y += proj.dy;
+
+                    // Wall bounce
+                    if (proj.x < R || proj.x > W - R) {
+                        proj.dx *= -1;
+                        proj.x = proj.x < R ? R : W - R;
+                    }
+
+                    // Collision check
+                    let hit = false;
+                    if (proj.y <= TOP + R) hit = true;
+                    else {
+                        for (let r = 0; r < grid.length; r++) {
+                            if (!grid[r]) continue;
+                            for (let c = 0; c < grid[r].length; c++) {
+                                if (!grid[r][c]) continue;
+                                const { x, y } = g2xy(r, c);
+                                if (Math.hypot(proj.x - x, proj.y - y) < R * 1.8) {
+                                    hit = true; break;
+                                }
+                            }
+                            if (hit) break;
+                        }
+                    }
+
+                    if (hit) snapProj();
                 }
                 drawRealisticBubble(ctx, proj.x, proj.y, proj.pal);
             }
+
+            // Particles
+            particles.forEach((p, i) => {
+                p.x += p.dx; p.y += p.dy;
+                p.dy += 0.15; // gravity
+                p.life -= p.decay;
+                if (p.life <= 0) particles.splice(i, 1);
+                else {
+                    ctx.save();
+                    ctx.globalAlpha = p.life;
+                    drawRealisticBubble(ctx, p.x, p.y, p.pal, p.r);
+                    ctx.restore();
+                }
+            });
+
+            // Sparkles
+            sparkles.forEach((s, i) => {
+                s.x += s.dx; s.y += s.dy;
+                s.life -= s.decay;
+                if (s.life <= 0) sparkles.splice(i, 1);
+                else {
+                    ctx.fillStyle = s.pal.hi;
+                    ctx.fillRect(s.x, s.y, s.size, s.size);
+                }
+            });
+
+            // Ripples
+            ripples.forEach((r, i) => {
+                r.r += 2;
+                r.life -= 0.05;
+                if (r.life <= 0) ripples.splice(i, 1);
+                else {
+                    ctx.strokeStyle = r.color;
+                    ctx.globalAlpha = r.life;
+                    ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2); ctx.stroke();
+                    ctx.globalAlpha = 1;
+                }
+            });
 
             // Cannon
             drawCannon(SX, SY, angle);
             drawAimGuide();
         }
 
-        function drawNextBubble() {
-            nctx.clearRect(0, 0, 40, 40);
-            if (nextPal) drawRealisticBubble(nctx, 20, 20, nextPal, 16, 1);
-        }
-
-        function drawRealisticBubble(cx, x, y, pal, radius = R, alpha = 1) {
-            cx.save(); cx.globalAlpha = alpha;
-            const base = cx.createRadialGradient(x - radius * .2, y - radius * .15, radius * .05, x, y, radius);
-            base.addColorStop(0, pal.mid); base.addColorStop(0.3, pal.base); base.addColorStop(1, pal.dark);
-            cx.fillStyle = base; cx.beginPath(); cx.arc(x, y, radius, 0, Math.PI * 2); cx.fill();
-            cx.restore();
-        }
-
-        function drawCannon(x, y, ang) {
-            ctx.save(); ctx.translate(x, y); ctx.rotate(ang + Math.PI / 2);
-            ctx.fillStyle = '#444'; ctx.fillRect(-10, -40, 20, 40);
-            ctx.restore();
-        }
-
-        function drawAimGuide() {
-            if (state !== 'playing') return;
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.setLineDash([5, 5]);
-            ctx.beginPath(); ctx.moveTo(SX, SY);
-            ctx.lineTo(SX + Math.cos(angle) * 500, SY + Math.sin(angle) * 500); ctx.stroke();
-            ctx.setLineDash([]);
-        }
-
-        buildBG();
-        initGrid(); nextPal = randPal(); proj = newProj();
-        updateHUD();
-        startGame();
-        requestAnimationFrame(loop);
-
+        let bgCanvas;
         function buildBG() {
             bgCanvas = document.createElement('canvas');
             bgCanvas.width = W; bgCanvas.height = H;
             const bx = bgCanvas.getContext('2d');
-            bx.fillStyle = '#060e22'; bx.fillRect(0, 0, W, H);
+            bx.fillStyle = '#060d1a'; bx.fillRect(0, 0, W, H);
+            // subtle grid
+            bx.strokeStyle = 'rgba(255,255,255,0.03)';
+            for (let x = 0; x < W; x += 40) { bx.beginPath(); bx.moveTo(x, 0); bx.lineTo(x, H); bx.stroke(); }
+            for (let y = 0; y < H; y += 40) { bx.beginPath(); bx.moveTo(0, y); bx.lineTo(W, y); bx.stroke(); }
         }
 
+        function drawNextBubble() {
+            nctx.clearRect(0, 0, 40, 40);
+            if (nextPal) drawRealisticBubble(nctx, 20, 20, nextPal, 16);
+        }
+
+        function drawRealisticBubble(cx, x, y, pal, radius = R) {
+            const grad = cx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
+            grad.addColorStop(0, pal.hi || '#fff');
+            grad.addColorStop(0.3, pal.mid);
+            grad.addColorStop(1, pal.dark);
+            cx.fillStyle = grad;
+            cx.beginPath();
+            cx.arc(x, y, radius, 0, Math.PI * 2);
+            cx.fill();
+            // Rim light
+            cx.strokeStyle = pal.rim;
+            cx.lineWidth = 1;
+            cx.stroke();
+        }
+
+        function drawCannon(x, y, ang) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(ang + Math.PI / 2);
+            // base
+            ctx.fillStyle = '#333';
+            ctx.beginPath(); ctx.arc(0, 0, 30, Math.PI, 0); ctx.fill();
+            // barrel
+            const grad = ctx.createLinearGradient(-12, 0, 12, 0);
+            grad.addColorStop(0, '#222'); grad.addColorStop(0.5, '#555'); grad.addColorStop(1, '#222');
+            ctx.fillStyle = grad;
+            ctx.fillRect(-12, -45, 24, 45);
+            ctx.strokeStyle = '#666'; ctx.strokeRect(-12, -45, 24, 45);
+            ctx.restore();
+        }
+
+        function drawAimGuide() {
+            if (state !== 'playing' || (proj && proj.moving)) return;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,200,100,0.15)';
+            ctx.setLineDash([6, 8]);
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(SX, SY);
+            ctx.lineTo(SX + Math.cos(angle) * 1000, SY + Math.sin(angle) * 1000);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // ── Input ─────────────────────────────────────────────────────────
         C.onmousemove = e => {
             const rect = C.getBoundingClientRect();
-            const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+            const mx = (e.clientX - rect.left) * (W / rect.width);
+            const my = (e.clientY - rect.top) * (H / rect.height);
             angle = Math.atan2(my - SY, mx - SX);
         };
-        C.onclick = e => { shootProj(e.clientX, e.clientY); };
+
+        C.onclick = e => {
+            if (state !== 'playing') return;
+            const rect = C.getBoundingClientRect();
+            const ax = (e.clientX - rect.left) * (W / rect.width);
+            const ay = (e.clientY - rect.top) * (H / rect.height);
+            shootProj(ax, ay);
+        };
+
         document.getElementById('play-btn').onclick = startGame;
+
+        buildBG();
+        updateHUD();
+        requestAnimationFrame(loop);
+        showOv('BUBBLE SHOT', 'Match 3 bubbles to win!', null, 'PLAY');
 
         /*]]>*/
     </script>
