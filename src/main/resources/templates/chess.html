@@ -4,21 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Play Chess | Zentrix</title>
+    <title>Chess Multiplayer | Zentrix</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    <!-- React and Babel Standalone -->
+    <!-- React -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- SockJS + STOMP (WebSocket) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 
     <style>
         body {
             margin: 0;
             background-color: #1a0e05;
-            color: #ffffff;
-            font-family: 'Inter', sans-serif;
+            color: #fff;
+            font-family: 'Palatino Linotype', Georgia, serif;
         }
 
         #root {
@@ -34,701 +38,366 @@
         /*<![CDATA[*/
         const { useState, useEffect, useCallback, useRef } = React;
 
-        // --- Piece constants ---
+        // ─── Chess Logic (same as single-player) ────────────────────────
         const W = "w", B = "b";
-        const PIECES = { K: "K", Q: "Q", R: "R", B: "B", N: "N", P: "P" };
-
-        // Unicode chess pieces
         const GLYPHS = {
             wK: "♔", wQ: "♕", wR: "♖", wB: "♗", wN: "♘", wP: "♙",
             bK: "♚", bQ: "♛", bR: "♜", bB: "♝", bN: "♞", bP: "♟",
         };
 
-        // --- Initial board ---
-        function initBoard() {
-            const b = Array(8).fill(null).map(() => Array(8).fill(null));
-            const back = ["R", "N", "B", "Q", "K", "B", "N", "R"];
-            for (let c = 0; c < 8; c++) {
-                b[0][c] = { color: B, type: back[c] };
-                b[1][c] = { color: B, type: "P" };
-                b[6][c] = { color: W, type: "P" };
-                b[7][c] = { color: W, type: back[c] };
-            }
-            return b;
-        }
-
-        // --- Move generation ---
         function inBounds(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
+        function cloneBoard(b) { return b.map(row => row.map(cell => cell ? { ...cell } : null)); }
 
         function rawMoves(board, r, c, enPassant) {
-            const piece = board[r][c];
-            if (!piece) return [];
-            const { color, type } = piece;
-            const moves = [];
-            const opp = color === W ? B : W;
-
-            const slide = (dr, dc) => {
-                let nr = r + dr, nc = c + dc;
-                while (inBounds(nr, nc)) {
-                    if (board[nr][nc]) {
-                        if (board[nr][nc].color === opp) moves.push([nr, nc]);
-                        break;
-                    }
-                    moves.push([nr, nc]);
-                    nr += dr; nc += dc;
-                }
-            };
-
-            if (type === "R") { [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dr, dc]) => slide(dr, dc)); }
-            if (type === "B") { [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([dr, dc]) => slide(dr, dc)); }
-            if (type === "Q") { [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([dr, dc]) => slide(dr, dc)); }
-            if (type === "N") {
-                [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]].forEach(([dr, dc]) => {
-                    const nr = r + dr, nc = c + dc;
-                    if (inBounds(nr, nc) && board[nr][nc]?.color !== color) moves.push([nr, nc]);
-                });
-            }
-            if (type === "K") {
-                [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(([dr, dc]) => {
-                    const nr = r + dr, nc = c + dc;
-                    if (inBounds(nr, nc) && board[nr][nc]?.color !== color) moves.push([nr, nc]);
-                });
-            }
-            if (type === "P") {
-                const dir = color === W ? -1 : 1;
-                const startRow = color === W ? 6 : 1;
-                if (inBounds(r + dir, c) && !board[r + dir][c]) {
-                    moves.push([r + dir, c]);
-                    if (r === startRow && !board[r + 2 * dir][c]) moves.push([r + 2 * dir, c]);
-                }
-                [-1, 1].forEach(dc => {
-                    if (inBounds(r + dir, c + dc)) {
-                        if (board[r + dir][c + dc]?.color === opp) moves.push([r + dir, c + dc]);
-                        if (enPassant && enPassant[0] === r + dir && enPassant[1] === c + dc) moves.push([r + dir, c + dc]);
-                    }
-                });
-            }
+            const piece = board[r][c]; if (!piece) return [];
+            const { color, type } = piece; const moves = []; const opp = color === W ? B : W;
+            const slide = (dr, dc) => { let nr = r + dr, nc = c + dc; while (inBounds(nr, nc)) { if (board[nr][nc]) { if (board[nr][nc].color === opp) moves.push([nr, nc]); break; } moves.push([nr, nc]); nr += dr; nc += dc; } };
+            if (type === "R") [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dr, dc]) => slide(dr, dc));
+            if (type === "B") [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([dr, dc]) => slide(dr, dc));
+            if (type === "Q") [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([dr, dc]) => slide(dr, dc));
+            if (type === "N") [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]].forEach(([dr, dc]) => { const nr = r + dr, nc = c + dc; if (inBounds(nr, nc) && board[nr][nc]?.color !== color) moves.push([nr, nc]); });
+            if (type === "K") [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]].forEach(([dr, dc]) => { const nr = r + dr, nc = c + dc; if (inBounds(nr, nc) && board[nr][nc]?.color !== color) moves.push([nr, nc]); });
+            if (type === "P") { const dir = color === W ? -1 : 1, startRow = color === W ? 6 : 1; if (inBounds(r + dir, c) && !board[r + dir][c]) { moves.push([r + dir, c]); if (r === startRow && !board[r + 2 * dir][c]) moves.push([r + 2 * dir, c]); } [-1, 1].forEach(dc => { if (inBounds(r + dir, c + dc)) { if (board[r + dir][c + dc]?.color === opp) moves.push([r + dir, c + dc]); if (enPassant && enPassant[0] === r + dir && enPassant[1] === c + dc) moves.push([r + dir, c + dc]); } }); }
             return moves;
         }
-
-        function cloneBoard(board) { return board.map(row => row.map(cell => cell ? { ...cell } : null)); }
-
         function applyMove(board, from, to, enPassant) {
-            const nb = cloneBoard(board);
-            const piece = nb[from[0]][from[1]];
-            // en passant capture
-            if (piece.type === "P" && enPassant && to[0] === enPassant[0] && to[1] === enPassant[1]) {
-                const capturedRow = piece.color === W ? to[0] + 1 : to[0] - 1;
-                nb[capturedRow][to[1]] = null;
-            }
-            nb[to[0]][to[1]] = piece;
-            nb[from[0]][from[1]] = null;
-            // promotion auto-queen
+            const nb = cloneBoard(board); const piece = nb[from[0]][from[1]];
+            if (piece.type === "P" && enPassant && to[0] === enPassant[0] && to[1] === enPassant[1]) nb[piece.color === W ? to[0] + 1 : to[0] - 1][to[1]] = null;
+            nb[to[0]][to[1]] = piece; nb[from[0]][from[1]] = null;
             if (piece.type === "P" && (to[0] === 0 || to[0] === 7)) nb[to[0]][to[1]] = { color: piece.color, type: "Q" };
             return nb;
         }
-
-        function findKing(board, color) {
-            for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++)
-                if (board[r][c]?.color === color && board[r][c]?.type === "K") return [r, c];
-            return null;
-        }
-
-        function isAttacked(board, r, c, byColor) {
-            for (let rr = 0; rr < 8; rr++) for (let cc = 0; cc < 8; cc++) {
-                if (board[rr][cc]?.color === byColor) {
-                    if (rawMoves(board, rr, cc, null).some(([mr, mc]) => mr === r && mc === c)) return true;
-                }
-            }
-            return false;
-        }
-
-        function inCheck(board, color) {
-            const king = findKing(board, color);
-            if (!king) return false;
-            return isAttacked(board, king[0], king[1], color === W ? B : W);
-        }
-
+        function findKing(board, color) { for (let r = 0; r < 8; r++)for (let c = 0; c < 8; c++)if (board[r][c]?.color === color && board[r][c]?.type === "K") return [r, c]; return null; }
+        function isAttacked(board, r, c, byColor) { for (let rr = 0; rr < 8; rr++)for (let cc = 0; cc < 8; cc++)if (board[rr][cc]?.color === byColor && rawMoves(board, rr, cc, null).some(([mr, mc]) => mr === r && mc === c)) return true; return false; }
+        function inCheck(board, color) { const king = findKing(board, color); if (!king) return false; return isAttacked(board, king[0], king[1], color === W ? B : W); }
         function legalMoves(board, r, c, enPassant, castleRights) {
-            const piece = board[r][c];
-            if (!piece) return [];
-            let moves = rawMoves(board, r, c, enPassant).filter(([nr, nc]) => {
-                const nb = applyMove(board, [r, c], [nr, nc], enPassant);
-                return !inCheck(nb, piece.color);
-            });
-
-            // Castling
-            if (piece.type === "K" && !inCheck(board, piece.color)) {
-                const row = piece.color === W ? 7 : 0;
-                if (r === row && c === 4) {
-                    const rights = piece.color === W ? castleRights.w : castleRights.b;
-                    // Kingside
-                    if (rights.kside && !board[row][5] && !board[row][6] &&
-                        !isAttacked(board, row, 5, piece.color === W ? B : W) &&
-                        !isAttacked(board, row, 6, piece.color === W ? B : W)) {
-                        moves.push([row, 6, "castle-k"]);
-                    }
-                    // Queenside
-                    if (rights.qside && !board[row][3] && !board[row][2] && !board[row][1] &&
-                        !isAttacked(board, row, 3, piece.color === W ? B : W) &&
-                        !isAttacked(board, row, 2, piece.color === W ? B : W)) {
-                        moves.push([row, 2, "castle-q"]);
-                    }
-                }
-            }
+            const piece = board[r][c]; if (!piece) return [];
+            let moves = rawMoves(board, r, c, enPassant).filter(([nr, nc]) => !inCheck(applyMove(board, [r, c], [nr, nc], enPassant), piece.color));
+            if (piece.type === "K" && !inCheck(board, piece.color)) { const row = piece.color === W ? 7 : 0; if (r === row && c === 4) { const rights = piece.color === W ? castleRights.w : castleRights.b; if (rights.kside && !board[row][5] && !board[row][6] && !isAttacked(board, row, 5, piece.color === W ? B : W) && !isAttacked(board, row, 6, piece.color === W ? B : W)) moves.push([row, 6, "castle-k"]); if (rights.qside && !board[row][3] && !board[row][2] && !board[row][1] && !isAttacked(board, row, 3, piece.color === W ? B : W) && !isAttacked(board, row, 2, piece.color === W ? B : W)) moves.push([row, 2, "castle-q"]); } }
             return moves;
         }
+        function allLegalMoves(board, color, enPassant, castleRights) { const moves = []; for (let r = 0; r < 8; r++)for (let c = 0; c < 8; c++)if (board[r][c]?.color === color) legalMoves(board, r, c, enPassant, castleRights).forEach(m => moves.push({ from: [r, c], to: m })); return moves; }
 
-        function allLegalMoves(board, color, enPassant, castleRights) {
-            const moves = [];
-            for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++)
-                if (board[r][c]?.color === color)
-                    legalMoves(board, r, c, enPassant, castleRights).forEach(m => moves.push({ from: [r, c], to: m }));
-            return moves;
+        // Board ↔ simple array (for JSON serialization over WebSocket)
+        function serializeBoard(board) { return board.map(row => row.map(cell => cell ? cell.color + cell.type : "")); }
+        function deserializeBoard(data) { return data.map(row => row.map(cell => cell ? { color: cell[0], type: cell.slice(1) } : null)); }
+
+        function checkGameStatus(b, color, ep, cr) {
+            const moves = allLegalMoves(b, color, ep, cr);
+            if (moves.length === 0) return inCheck(b, color) ? "checkmate" : "stalemate";
+            if (inCheck(b, color)) return "check";
+            return "idle";
         }
 
-        // --- AI (Minimax + alpha-beta) ---
-        const PIECE_VALUE = { P: 100, N: 320, B: 330, R: 500, Q: 900, K: 20000 };
-
-        // Piece-square tables (white perspective, row 0=rank8)
-        const PST = {
-            P: [
-                [0, 0, 0, 0, 0, 0, 0, 0], [50, 50, 50, 50, 50, 50, 50, 50], [10, 10, 20, 30, 30, 20, 10, 10],
-                [5, 5, 10, 25, 25, 10, 5, 5], [0, 0, 0, 20, 20, 0, 0, 0], [5, -5, -10, 0, 0, -10, -5, 5],
-                [5, 10, 10, -20, -20, 10, 10, 5], [0, 0, 0, 0, 0, 0, 0, 0]
-            ],
-            N: [
-                [-50, -40, -30, -30, -30, -30, -40, -50], [-40, -20, 0, 0, 0, 0, -20, -40],
-                [-30, 0, 10, 15, 15, 10, 0, -30], [-30, 5, 15, 20, 20, 15, 5, -30],
-                [-30, 0, 15, 20, 20, 15, 0, -30], [-30, 5, 10, 15, 15, 10, 5, -30],
-                [-40, -20, 0, 5, 5, 0, -20, -40], [-50, -40, -30, -30, -30, -30, -40, -50]
-            ],
-            B: [
-                [-20, -10, -10, -10, -10, -10, -10, -20], [-10, 0, 0, 0, 0, 0, 0, -10],
-                [-10, 0, 5, 10, 10, 5, 0, -10], [-10, 5, 5, 10, 10, 5, 5, -10],
-                [-10, 0, 10, 10, 10, 10, 0, -10], [-10, 10, 10, 10, 10, 10, 10, -10],
-                [-10, 5, 0, 0, 0, 0, 5, -10], [-20, -10, -10, -10, -10, -10, -10, -20]
-            ],
-            R: [
-                [0, 0, 0, 0, 0, 0, 0, 0], [5, 10, 10, 10, 10, 10, 10, 5], [-5, 0, 0, 0, 0, 0, 0, -5],
-                [-5, 0, 0, 0, 0, 0, 0, -5], [-5, 0, 0, 0, 0, 0, 0, -5], [-5, 0, 0, 0, 0, 0, 0, -5],
-                [-5, 0, 0, 0, 0, 0, 0, -5], [0, 0, 0, 5, 5, 0, 0, 0]
-            ],
-            Q: [
-                [-20, -10, -10, -5, -5, -10, -10, -20], [-10, 0, 0, 0, 0, 0, 0, -10],
-                [-10, 0, 5, 5, 5, 5, 0, -10], [-5, 0, 5, 5, 5, 5, 0, -5],
-                [0, 0, 5, 5, 5, 5, 0, -5], [-10, 5, 5, 5, 5, 5, 0, -10],
-                [-10, 0, 5, 0, 0, 0, 0, -10], [-20, -10, -10, -5, -5, -10, -10, -20]
-            ],
-            K: [
-                [-30, -40, -40, -50, -50, -40, -40, -30], [-30, -40, -40, -50, -50, -40, -40, -30],
-                [-30, -40, -40, -50, -50, -40, -40, -30], [-30, -40, -40, -50, -50, -40, -40, -30],
-                [-20, -30, -30, -40, -40, -30, -30, -20], [-10, -20, -20, -20, -20, -20, -20, -10],
-                [20, 20, 0, 0, 0, 0, 20, 20], [20, 30, 10, 0, 0, 10, 30, 20]
-            ],
-        };
-
-        function evaluate(board) {
-            let score = 0;
-            for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
-                const p = board[r][c];
-                if (!p) continue;
-                const v = PIECE_VALUE[p.type];
-                const pst = PST[p.type];
-                const tableVal = p.color === W ? pst[r][c] : pst[7 - r][c];
-                score += p.color === W ? (v + tableVal) : -(v + tableVal);
-            }
-            return score;
-        }
-
-        function minimax(board, depth, alpha, beta, maximizing, enPassant, castleRights) {
-            const color = maximizing ? W : B;
-            const moves = allLegalMoves(board, color, enPassant, castleRights);
-            if (depth === 0 || moves.length === 0) {
-                if (moves.length === 0) {
-                    if (inCheck(board, color)) return maximizing ? -99999 : 99999;
-                    return 0;
-                }
-                return evaluate(board);
-            }
-            if (maximizing) {
-                let best = -Infinity;
-                for (const { from, to } of moves) {
-                    const nb = applyMove(board, from, to, enPassant);
-                    const val = minimax(nb, depth - 1, alpha, beta, false, null, castleRights);
-                    best = Math.max(best, val);
-                    alpha = Math.max(alpha, val);
-                    if (beta <= alpha) break;
-                }
-                return best;
-            } else {
-                let best = Infinity;
-                for (const { from, to } of moves) {
-                    const nb = applyMove(board, from, to, enPassant);
-                    const val = minimax(nb, depth - 1, alpha, beta, true, null, castleRights);
-                    best = Math.min(best, val);
-                    beta = Math.min(beta, val);
-                    if (beta <= alpha) break;
-                }
-                return best;
-            }
-        }
-
-        function getBestMove(board, enPassant, castleRights) {
-            const moves = allLegalMoves(board, B, enPassant, castleRights);
-            if (!moves.length) return null;
-            let best = Infinity, bestMove = null;
-            for (const { from, to } of moves) {
-                const nb = applyMove(board, from, to, enPassant);
-                const val = minimax(nb, 2, -Infinity, Infinity, true, null, castleRights);
-                if (val < best) { best = val; bestMove = { from, to }; }
-            }
-            return bestMove;
-        }
-
-        // --- Piece SVG rendering ---
+        // ─── Piece SVG ───────────────────────────────────────────────────
         function PieceSVG({ piece, size }) {
-            const key = piece.color + piece.type;
-            const glyph = GLYPHS[key];
             const isWhite = piece.color === W;
+            return (<svg width={size} height={size} viewBox="0 0 60 60" style={{ display: "block" }}><text x="30" y="48" textAnchor="middle" fontSize="50" style={{ userSelect: "none", fill: isWhite ? "#f5f0e8" : "#1a1008", stroke: isWhite ? "#8B6914" : "#f5f0e8", strokeWidth: isWhite ? "1.5" : "1", paintOrder: "stroke" }}>{GLYPHS[piece.color + piece.type]}</text></svg>);
+        }
+
+        // ─── WebSocket Hook ──────────────────────────────────────────────
+        function useChessSocket(roomId, onMessage, onChat) {
+            const stompRef = useRef(null);
+
+            useEffect(() => {
+                if (!roomId) return;
+                const socket = new SockJS('/ws');
+                const stomp = Stomp.over(socket);
+                stomp.debug = () => { };
+                stompRef.current = stomp;
+
+                stomp.connect({}, () => {
+                    // Subscribe to game state
+                    stomp.subscribe(`/topic/chess/${roomId}`, (msg) => {
+                        onMessage(JSON.parse(msg.body));
+                    });
+                    // Subscribe to chat
+                    stomp.subscribe(`/topic/chess/${roomId}/chat`, (msg) => {
+                        onChat(JSON.parse(msg.body));
+                    });
+                    // Request current state
+                    stomp.send(`/app/chess/${roomId}/subscribe`, {}, "{}");
+                });
+
+                return () => stomp.disconnect();
+            }, [roomId]);
+
+            const sendMove = (moveData) => {
+                stompRef.current?.send(`/app/chess/${roomId}/move`, {}, JSON.stringify(moveData));
+            };
+            const sendChat = (chatData) => {
+                stompRef.current?.send(`/app/chess/${roomId}/chat`, {}, JSON.stringify(chatData));
+            };
+
+            return { sendMove, sendChat };
+        }
+
+        // ─── Lobby ───────────────────────────────────────────────────────
+        function Lobby({ onEnterGame, playerName, setPlayerName }) {
+            const [joinCode, setJoinCode] = useState("");
+            const [err, setErr] = useState("");
+            const [loading, setLoading] = useState(false);
+
+            const handleCreate = async () => {
+                if (!playerName.trim()) { setErr("Enter your name"); return; }
+                setLoading(true);
+                try {
+                    const res = await fetch('/api/chess/create', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ playerName: playerName.trim() })
+                    });
+                    const data = await res.json();
+                    onEnterGame(data.roomId, data.color, playerName.trim(), true);
+                } catch (e) { setErr("Server error. Is Spring Boot running?"); }
+                setLoading(false);
+            };
+
+            const handleJoin = async () => {
+                if (!playerName.trim()) { setErr("Enter your name"); return; }
+                const code = joinCode.trim().toUpperCase();
+                if (!code) { setErr("Enter room code"); return; }
+                setLoading(true);
+                try {
+                    const res = await fetch('/api/chess/join', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ roomId: code, playerName: playerName.trim() })
+                    });
+                    const data = await res.json();
+                    if (data.error) { setErr(data.error); setLoading(false); return; }
+                    onEnterGame(data.roomId, data.color, playerName.trim(), false);
+                } catch (e) { setErr("Server error. Is Spring Boot running?"); }
+                setLoading(false);
+            };
+
+            const s = { wrap: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(160deg,#1a0e05,#2d1b0e,#1a0e05)", padding: 20 }, title: { fontSize: 48, fontWeight: 700, color: "#d4af37", letterSpacing: 8, fontVariant: "small-caps", textShadow: "0 2px 8px #00000088,0 0 40px #d4af3744", marginBottom: 8 }, sub: { color: "#a0825a", fontSize: 13, letterSpacing: 4, textTransform: "uppercase", marginBottom: 48 }, card: { background: "linear-gradient(145deg,#2a1a08,#3a2510)", border: "1px solid #d4af3744", borderRadius: 16, padding: 40, width: "100%", maxWidth: 440, boxShadow: "0 20px 60px #000a" }, label: { color: "#a0825a", fontSize: 12, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6, display: "block" }, input: { width: "100%", padding: "12px 16px", background: "#1a1008", border: "1px solid #d4af3744", borderRadius: 8, color: "#f5f0e8", fontFamily: "inherit", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 24 }, btn: { width: "100%", padding: "13px", borderRadius: 8, border: "1px solid #d4af3766", background: "linear-gradient(135deg,#5a3010,#3a1a05)", color: "#d4af37", fontFamily: "inherit", fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }, divider: { display: "flex", alignItems: "center", gap: 12, margin: "8px 0 24px", color: "#a0825a", fontSize: 12 }, line: { flex: 1, height: 1, background: "#d4af3722" }, joinRow: { display: "flex", gap: 8, marginBottom: 12 }, joinInput: { flex: 1, padding: "12px 16px", background: "#1a1008", border: "1px solid #d4af3744", borderRadius: 8, color: "#f5f0e8", fontFamily: "inherit", fontSize: 15, outline: "none", textTransform: "uppercase", letterSpacing: 4 }, joinBtn: { padding: "12px 20px", borderRadius: 8, border: "1px solid #d4af3766", background: "linear-gradient(135deg,#5a3010,#3a1a05)", color: "#d4af37", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" }, err: { color: "#ff6666", fontSize: 12, textAlign: "center", marginTop: 8 } };
 
             return (
-                <svg width={size} height={size} viewBox="0 0 60 60" style={{ display: "block", filter: `drop-shadow(0 2px 4px rgba(0,0,0,0.6))` }}>
-                    <defs>
-                        <filter id={`piece-shadow-${key}`}>
-                            <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#00000066" />
-                        </filter>
-                    </defs>
-                    <text
-                        x="30" y="48"
-                        textAnchor="middle"
-                        fontSize="50"
-                        style={{
-                            userSelect: "none",
-                            fill: isWhite ? "#f5f0e8" : "#1a1008",
-                            stroke: isWhite ? "#8B6914" : "#f5f0e8",
-                            strokeWidth: isWhite ? "1.5" : "1",
-                            paintOrder: "stroke",
-                            filter: `url(#piece-shadow-${key})`,
-                        }}
-                    >{glyph}</text>
-                </svg>
+                <div style={s.wrap}>
+                    <div style={s.title}>♟ Chess</div>
+                    <div style={s.sub}>Multiplayer · Player vs Player</div>
+                    <div style={s.card}>
+                        <label style={s.label}>Your Name</label>
+                        <input style={s.input} value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="Enter your name…" maxLength={20} />
+                        <button style={s.btn} onClick={handleCreate} disabled={loading}>♟ Create New Room</button>
+                        <div style={s.divider}><div style={s.line} /><span>or join existing</span><div style={s.line} /></div>
+                        <div style={s.joinRow}>
+                            <input style={s.joinInput} value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="ROOM CODE" maxLength={6} />
+                            <button style={s.joinBtn} onClick={handleJoin} disabled={loading}>Join →</button>
+                        </div>
+                        {err && <div style={s.err}>⚠ {err}</div>}
+                    </div>
+                    <a href="/games" style={{ color: "#a0825a", fontSize: 13, marginTop: 24, textDecoration: "none" }}>← Back to Games</a>
+                </div>
             );
         }
 
-        // --- Main component ---
-        const WOOD_LIGHT = "#f0d9b5";
-        const WOOD_DARK = "#b58863";
-        const SELECT_CLR = "rgba(20,85,30,0.7)";
-        const MOVE_CLR = "rgba(20,85,30,0.4)";
-        const CHECK_CLR = "rgba(200,20,20,0.65)";
-        const LAST_CLR = "rgba(205,210,106,0.5)";
+        // ─── Waiting Room ─────────────────────────────────────────────────
+        function WaitingRoom({ roomId }) {
+            const [copied, setCopied] = useState(false);
+            const copy = () => { navigator.clipboard.writeText(roomId); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+            const s = { wrap: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(160deg,#1a0e05,#2d1b0e,#1a0e05)" }, card: { background: "linear-gradient(145deg,#2a1a08,#3a2510)", border: "1px solid #d4af3744", borderRadius: 16, padding: 48, textAlign: "center", boxShadow: "0 20px 60px #000a", maxWidth: 400 }, dot: { width: 8, height: 8, borderRadius: "50%", background: "#d4af37", display: "inline-block", animation: "pulse 1.4s ease-in-out infinite" } };
+            return (
+                <div style={s.wrap}>
+                    <style>{"@keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}"}</style>
+                    <div style={s.card}>
+                        <div style={{ color: "#d4af37", fontSize: 22, fontWeight: 700, letterSpacing: 3, marginBottom: 8, fontVariant: "small-caps" }}>Room Created!</div>
+                        <div style={{ color: "#a0825a", fontSize: 13, marginBottom: 24 }}>Share this code with your friend</div>
+                        <div onClick={copy} style={{ fontSize: 52, fontWeight: 700, letterSpacing: 12, color: "#d4af37", padding: "16px 32px", background: "#1a1008", borderRadius: 12, border: "1px solid #d4af3744", marginBottom: 16, fontFamily: "monospace", cursor: "pointer" }}>{roomId}</div>
+                        <div style={{ color: "#a0825a", fontSize: 12, marginBottom: 24 }}>{copied ? "✓ Copied!" : "Click code to copy"}</div>
+                        <div style={{ color: "#a0825a", fontSize: 13, marginBottom: 20 }}>Waiting for opponent…</div>
+                        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                            {[0, 1, 2].map(i => <div key={i} style={{ ...s.dot, animationDelay: `${i * 0.2}s` }} />)}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
 
-        function ChessGame() {
-            const [board, setBoard] = useState(initBoard);
-            const [selected, setSelected] = useState(null);       // [r,c]
-            const [highlights, setHighlights] = useState([]);    // [[r,c],...]
-            const [turn, setTurn] = useState(W);
-            const [enPassant, setEnPassant] = useState(null);
-            const [castleRights, setCastleRights] = useState({
-                w: { kside: true, qside: true }, b: { kside: true, qside: true }
-            });
-            const [lastMove, setLastMove] = useState(null);
-            const [status, setStatus] = useState("idle"); // idle | check | checkmate | stalemate
-            const [aiThinking, setAiThinking] = useState(false);
-            const [capturedW, setCapturedW] = useState([]);  // pieces white captured
-            const [capturedB, setCapturedB] = useState([]);  // pieces black captured
-            const [moveHistory, setMoveHistory] = useState([]);
+        // ─── Chat ─────────────────────────────────────────────────────────
+        function Chat({ sendChat, playerName, myColor, chatMsgs }) {
+            const [input, setInput] = useState("");
+            const endRef = useRef(null);
+            useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), [chatMsgs]);
+            const send = () => { const text = input.trim(); if (!text) return; sendChat({ sender: playerName, color: myColor, text }); setInput(""); };
+            const s = { wrap: { background: "#1a1008", borderRadius: 12, border: "1px solid #d4af3722", display: "flex", flexDirection: "column", height: 200, overflow: "hidden" }, msgs: { flex: 1, overflowY: "auto", padding: "8px 12px", display: "flex", flexDirection: "column", gap: 4 }, inputRow: { display: "flex", borderTop: "1px solid #d4af3722" }, inp: { flex: 1, padding: "8px 12px", background: "transparent", border: "none", color: "#f5f0e8", fontFamily: "inherit", fontSize: 12, outline: "none" }, sendBtn: { padding: "8px 14px", background: "none", border: "none", color: "#d4af37", cursor: "pointer" } };
+            return (
+                <div style={s.wrap}>
+                    <div style={s.msgs}>
+                        {chatMsgs.map((m, i) => <div key={i} style={{ fontSize: 12, lineHeight: 1.5 }}><span style={{ color: m.color === W ? "#e8c87a" : "#a0c8ff", fontWeight: 600 }}>{m.sender}: </span><span style={{ color: "#c0a878" }}>{m.text}</span></div>)}
+                        <div ref={endRef} />
+                    </div>
+                    <div style={s.inputRow}>
+                        <input style={s.inp} value={input} onChange={e => setInput(e.target.value)} placeholder="Say something…" onKeyDown={e => e.key === "Enter" && send()} />
+                        <button style={s.sendBtn} onClick={send}>➤</button>
+                    </div>
+                </div>
+            );
+        }
+
+        // ─── Game Board ───────────────────────────────────────────────────
+        function ChessGame({ roomId, myColor, playerName, isCreator }) {
+            const [gameState, setGameState] = useState(null);
+            const [selected, setSelected] = useState(null);
+            const [highlights, setHighlights] = useState([]);
             const [promotionPending, setPromotionPending] = useState(null);
-            const aiTimerRef = useRef(null);
+            const [chatMsgs, setChatMsgs] = useState([]);
+            const [opponentName, setOpponentName] = useState("Opponent");
             const CELL = 70;
 
-            const checkGameStatus = useCallback((b, color, ep, cr) => {
-                const moves = allLegalMoves(b, color, ep, cr);
-                if (moves.length === 0) {
-                    if (inCheck(b, color)) return "checkmate";
-                    return "stalemate";
-                }
-                if (inCheck(b, color)) return "check";
-                return "idle";
+            const onMessage = useCallback((data) => {
+                const board = deserializeBoard(data.board);
+                // Normalize castleRights from backend format
+                const cr = data.castleRights || { w: { kside: true, qside: true }, b: { kside: true, qside: true } };
+                setGameState({ ...data, board, castleRights: cr });
+                const oppKey = myColor === W ? "b" : "w";
+                if (data.players?.[oppKey]) setOpponentName(data.players[oppKey]);
+            }, [myColor]);
+
+            const onChat = useCallback((msg) => {
+                setChatMsgs(prev => [...prev, msg]);
             }, []);
 
-            const doAiMove = useCallback((b, ep, cr) => {
-                setAiThinking(true);
-                aiTimerRef.current = setTimeout(() => {
-                    const move = getBestMove(b, ep, cr);
-                    if (!move) { setAiThinking(false); return; }
-                    const { from, to } = move;
-                    const piece = b[from[0]][from[1]];
-                    const captured = b[to[0]][to[1]];
-                    const nb = applyMove(b, from, to, ep);
+            const { sendMove, sendChat } = useChessSocket(roomId, onMessage, onChat);
 
-                    // castle rook
-                    const nCR = { w: { ...cr.w }, b: { ...cr.b } };
-                    if (piece.type === "K") { nCR.b = { kside: false, qside: false }; }
-                    if (piece.type === "R") {
-                        if (from[1] === 7) nCR.b.kside = false;
-                        if (from[1] === 0) nCR.b.qside = false;
-                    }
-                    if (to[2] === "castle-k") { nb[0][5] = nb[0][7]; nb[0][7] = null; }
-                    if (to[2] === "castle-q") { nb[0][3] = nb[0][0]; nb[0][0] = null; }
+            if (!gameState) return <div style={{ color: "#d4af37", textAlign: "center", marginTop: 100, fontSize: 18 }}>Connecting…</div>;
 
-                    let nEP = null;
-                    if (piece.type === "P" && Math.abs(to[0] - from[0]) === 2)
-                        nEP = [(from[0] + to[0]) / 2, to[1]];
+            const { board, turn, enPassant, castleRights, lastMove, gameStatus: status, capturedW = [], capturedB = [] } = gameState;
+            const myTurn = turn === myColor;
+            const isFlipped = myColor === B;
+            const rows = isFlipped ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+            const cols = isFlipped ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
 
-                    if (captured) setCapturedB(prev => [...prev, captured]);
-                    setMoveHistory(prev => [...prev, { from, to, piece, captured }]);
-                    setLastMove({ from, to });
-                    setBoard(nb);
-                    setEnPassant(nEP);
-                    setCastleRights(nCR);
-                    setTurn(W);
-                    setAiThinking(false);
-
-                    const s = checkGameStatus(nb, W, nEP, nCR);
-                    setStatus(s);
-                }, 300 + Math.random() * 400);
-            }, [checkGameStatus]);
-
-            const handleSquareClick = useCallback((r, c) => {
-                if (turn !== W || aiThinking || status === "checkmate" || status === "stalemate") return;
-
+            const handleSquareClick = (r, c) => {
+                if (!myTurn || status === "checkmate" || status === "stalemate") return;
                 if (selected) {
                     const move = highlights.find(([hr, hc]) => hr === r && hc === c);
                     if (move) {
                         const piece = board[selected[0]][selected[1]];
-                        const captured = board[r][c];
-                        const nb = applyMove(board, selected, move, enPassant);
-                        const nCR = { w: { ...castleRights.w }, b: { ...castleRights.b } };
-
-                        // castling rook movement
-                        if (move[2] === "castle-k") { nb[7][5] = nb[7][7]; nb[7][7] = null; }
-                        if (move[2] === "castle-q") { nb[7][3] = nb[7][0]; nb[7][0] = null; }
-
-                        if (piece.type === "K") nCR.w = { kside: false, qside: false };
-                        if (piece.type === "R") {
-                            if (selected[1] === 7) nCR.w.kside = false;
-                            if (selected[1] === 0) nCR.w.qside = false;
+                        if (piece.type === "P" && (r === 0 || r === 7)) {
+                            setPromotionPending({ from: selected, to: move });
+                            setSelected(null); setHighlights([]); return;
                         }
-
-                        let nEP = null;
-                        if (piece.type === "P" && Math.abs(r - selected[0]) === 2) nEP = [(selected[0] + r) / 2, c];
-
-                        // Pawn promotion check
-                        if (piece.type === "P" && r === 0) {
-                            setPromotionPending({ nb, nEP, nCR, from: selected, to: move, captured });
-                            setSelected(null); setHighlights([]);
-                            return;
-                        }
-
-                        if (captured) setCapturedW(prev => [...prev, captured]);
-                        setMoveHistory(prev => [...prev, { from: selected, to: move, piece, captured }]);
-                        setLastMove({ from: selected, to: move });
-                        setBoard(nb);
-                        setEnPassant(nEP);
-                        setCastleRights(nCR);
-                        setSelected(null);
-                        setHighlights([]);
-                        setTurn(B);
-
-                        const s = checkGameStatus(nb, B, nEP, nCR);
-                        setStatus(s);
-                        if (s !== "checkmate" && s !== "stalemate") {
-                            doAiMove(nb, nEP, nCR);
-                        }
+                        dispatchMove(selected, move, null);
                         return;
                     }
-                    if (board[r][c]?.color === W) {
-                        const moves = legalMoves(board, r, c, enPassant, castleRights);
-                        setSelected([r, c]);
-                        setHighlights(moves);
-                        return;
-                    }
-                    setSelected(null); setHighlights([]);
-                    return;
+                    if (board[r][c]?.color === myColor) { setSelected([r, c]); setHighlights(legalMoves(board, r, c, enPassant, castleRights)); return; }
+                    setSelected(null); setHighlights([]); return;
                 }
+                if (board[r][c]?.color === myColor) { setSelected([r, c]); setHighlights(legalMoves(board, r, c, enPassant, castleRights)); }
+            };
 
-                if (board[r][c]?.color === W) {
-                    const moves = legalMoves(board, r, c, enPassant, castleRights);
-                    setSelected([r, c]);
-                    setHighlights(moves);
-                }
-            }, [board, selected, highlights, turn, enPassant, castleRights, aiThinking, status, checkGameStatus, doAiMove]);
+            const dispatchMove = (from, to, promotion) => {
+                // Compute game status after move (client-side, server also validates)
+                const nb = applyMove(board, from, to, enPassant);
+                if (to[2] === "castle-k") { nb[myColor === W ? 7 : 0][5] = nb[myColor === W ? 7 : 0][7]; nb[myColor === W ? 7 : 0][7] = null; }
+                if (to[2] === "castle-q") { nb[myColor === W ? 7 : 0][3] = nb[myColor === W ? 7 : 0][0]; nb[myColor === W ? 7 : 0][0] = null; }
+                if (promotion) nb[to[0]][to[1]] = { color: myColor, type: promotion };
+                const oppColor = myColor === W ? B : W;
+                const gs = checkGameStatus(nb, oppColor, null, castleRights);
+                sendMove({ from, to, promotion, gameStatus: gs });
+                setSelected(null); setHighlights([]);
+            };
 
             const handlePromotion = (type) => {
                 if (!promotionPending) return;
-                const { nb, nEP, nCR, from, to, captured } = promotionPending;
-                nb[to[0]][to[1]] = { color: W, type };
-                if (captured) setCapturedW(prev => [...prev, captured]);
-                setMoveHistory(prev => [...prev, { from, to, piece: { color: W, type: "P" }, captured }]);
-                setLastMove({ from, to });
-                setBoard(nb); setEnPassant(nEP); setCastleRights(nCR);
-                setPromotionPending(null); setTurn(B);
-                const s = checkGameStatus(nb, B, nEP, nCR);
-                setStatus(s);
-                if (s !== "checkmate" && s !== "stalemate") doAiMove(nb, nEP, nCR);
-            };
-
-            const resetGame = () => {
-                if (aiTimerRef.current) clearTimeout(aiTimerRef.current);
-                setBoard(initBoard()); setSelected(null); setHighlights([]);
-                setTurn(W); setEnPassant(null);
-                setCastleRights({ w: { kside: true, qside: true }, b: { kside: true, qside: true } });
-                setLastMove(null); setStatus("idle"); setAiThinking(false);
-                setCapturedW([]); setCapturedB([]); setMoveHistory([]);
+                dispatchMove(promotionPending.from, promotionPending.to, type);
                 setPromotionPending(null);
             };
 
             const kingPos = findKing(board, turn);
             const inCheckNow = status === "check" || status === "checkmate";
-
-            const statusMsg = status === "checkmate"
-                ? (turn === W ? "☠ Checkmate — Black wins!" : "🏆 Checkmate — You win!")
-                : status === "stalemate" ? "🤝 Stalemate — Draw!"
-                    : status === "check" ? (turn === W ? "⚠ Your king is in check!" : "⚠ Black is in check!")
-                        : aiThinking ? "🤖 AI is thinking…"
-                            : turn === W ? "Your turn (White)" : "Black's turn";
+            const WOOD_LIGHT = "#f0d9b5", WOOD_DARK = "#b58863";
+            const statusMsg = status === "checkmate" ? (turn === myColor ? "☠ You're in checkmate!" : "🏆 You win by checkmate!") : status === "stalemate" ? "🤝 Stalemate — Draw!" : status === "check" ? (turn === myColor ? "⚠ Your king is in check!" : "⚠ Opponent in check!") : myTurn ? "Your turn" : "Opponent's turn…";
 
             return (
-                <div style={{
-                    minHeight: "100vh",
-                    background: "linear-gradient(160deg,#1a0e05 0%,#2d1b0e 40%,#1a0e05 100%)",
-                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                    padding: 16, fontFamily: "'Palatino Linotype','Palatino','Book Antiqua',Georgia,serif",
-                }}>
-                    <style>{`
-                @keyframes checkPulse{0%,100%{box-shadow:inset 0 0 0 3px rgba(220,30,30,0.7)}50%{box-shadow:inset 0 0 0 3px rgba(220,30,30,1),0 0 20px rgba(220,30,30,0.4)}}
-                @keyframes pieceAppear{from{transform:scale(0.7);opacity:0}to{transform:scale(1);opacity:1}}
-                @keyframes thinkDot{0%,80%,100%{opacity:0}40%{opacity:1}}
-                .sq:hover .hover-dot{opacity:0.3!important;}
-              `}</style>
+                <div style={{ minHeight: "100vh", background: "linear-gradient(160deg,#1a0e05 0%,#2d1b0e 40%,#1a0e05 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16, fontFamily: "'Palatino Linotype',Georgia,serif" }}>
+                    <style>{"@keyframes checkPulse{0%,100%{box-shadow:inset 0 0 0 3px rgba(220,30,30,0.7)}50%{box-shadow:inset 0 0 0 3px rgba(220,30,30,1),0 0 20px rgba(220,30,30,0.4)}} @keyframes pieceAppear{from{transform:scale(0.7);opacity:0}to{transform:scale(1);opacity:1}}"}</style>
 
-                    {/* Title */}
-                    <div style={{ marginBottom: 16, textAlign: "center" }}>
-                        <div style={{
-                            fontSize: 44, fontWeight: 700,
-                            color: "#d4af37", letterSpacing: 8,
-                            textShadow: "0 2px 8px #00000088,0 0 40px #d4af3744",
-                            fontVariant: "small-caps",
-                        }}>Chess</div>
-                        <div style={{ color: "#a0825a", fontSize: 12, letterSpacing: 4, textTransform: "uppercase" }}>
-                            Player vs AI
+                    <div style={{ marginBottom: 12, textAlign: "center" }}>
+                        <div style={{ fontSize: 36, fontWeight: 700, color: "#d4af37", letterSpacing: 6, fontVariant: "small-caps" }}>Chess</div>
+                        <div style={{ color: "#a0825a", fontSize: 11, letterSpacing: 3 }}>
+                            {playerName} ({myColor === W ? "White" : "Black"}) vs {opponentName} · Room: <span style={{ color: "#d4af37", fontFamily: "monospace" }}>{roomId}</span>
                         </div>
                     </div>
 
-                    <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
-                        {/* Captured by white */}
-                        <div style={{ width: 80, minHeight: 200 }}>
-                            <div style={{ color: "#a0825a", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8, textAlign: "right" }}>Captured</div>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 2, justifyContent: "flex-end" }}>
-                                {capturedW.map((p, i) => (
-                                    <span key={i} style={{ fontSize: 18, lineHeight: 1, filter: "drop-shadow(0 1px 2px #000)" }}>{GLYPHS[p.color + p.type]}</span>
-                                ))}
+                    <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
+                        {/* Left sidebar */}
+                        <div style={{ width: 110 }}>
+                            <div style={{ color: "#a0825a", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>Captured</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 2, marginBottom: 16, minHeight: 40 }}>
+                                {(myColor === W ? capturedW : capturedB).map((p, i) => <span key={i} style={{ fontSize: 16 }}>{GLYPHS[p] || ""}</span>)}
                             </div>
+                            <Chat sendChat={sendChat} playerName={playerName} myColor={myColor} chatMsgs={chatMsgs} />
                         </div>
 
                         {/* Board */}
                         <div>
-                            {/* Status bar */}
-                            <div style={{
-                                marginBottom: 8, padding: "8px 16px", borderRadius: 8, textAlign: "center",
-                                background: status === "checkmate" || status === "stalemate"
-                                    ? "linear-gradient(135deg,#3a1a00,#5a2a00)"
-                                    : status === "check" ? "linear-gradient(135deg,#3a0000,#600)"
-                                        : "linear-gradient(135deg,#1a1008,#2a1f0e)",
-                                border: `1px solid ${status === "check" || status === "checkmate" ? "#aa222244" : "#d4af3733"}`,
-                                color: status === "check" || status === "checkmate" ? "#ff6666" : status === "stalemate" ? "#aaa" : "#d4af37",
-                                fontSize: 14, letterSpacing: 1,
-                                boxShadow: "0 2px 12px #00000066",
-                            }}>
+                            <div style={{ marginBottom: 8, padding: "8px 16px", borderRadius: 8, textAlign: "center", background: inCheckNow ? "linear-gradient(135deg,#3a0000,#600)" : "linear-gradient(135deg,#1a1008,#2a1f0e)", border: `1px solid ${inCheckNow ? "#aa222244" : "#d4af3733"}`, color: inCheckNow ? "#ff6666" : myTurn ? "#d4af37" : "#a0825a", fontSize: 13, letterSpacing: 1 }}>
                                 {statusMsg}
                             </div>
-
-                            {/* Board frame */}
-                            <div style={{
-                                padding: 20,
-                                background: "linear-gradient(145deg,#5a3010,#3a1a05,#6a4020,#3a1a05)",
-                                borderRadius: 6,
-                                boxShadow: "0 0 0 3px #d4af3744,0 8px 40px #000000aa,0 0 80px #d4af3711,inset 0 2px 4px #ffffff11",
-                            }}>
-                                {/* File labels top */}
+                            <div style={{ padding: 16, background: "linear-gradient(145deg,#5a3010,#3a1a05,#6a4020,#3a1a05)", borderRadius: 6, boxShadow: "0 0 0 3px #d4af3744,0 8px 40px #000000aa" }}>
                                 <div style={{ display: "flex", marginBottom: 4, marginLeft: 20 }}>
-                                    {"abcdefgh".split("").map(f => (
-                                        <div key={f} style={{ width: CELL, textAlign: "center", color: "#c4956a", fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>{f}</div>
-                                    ))}
+                                    {cols.map(c => <div key={c} style={{ width: CELL, textAlign: "center", color: "#c4956a", fontSize: 11, fontWeight: 600 }}>{"abcdefgh"[c]}</div>)}
                                 </div>
-
                                 <div style={{ display: "flex" }}>
-                                    {/* Rank labels */}
                                     <div style={{ display: "flex", flexDirection: "column" }}>
-                                        {"87654321".split("").map(n => (
-                                            <div key={n} style={{ height: CELL, display: "flex", alignItems: "center", paddingRight: 4, color: "#c4956a", fontSize: 12, fontWeight: 600, width: 16 }}>{n}</div>
-                                        ))}
+                                        {rows.map(r => <div key={r} style={{ height: CELL, display: "flex", alignItems: "center", paddingRight: 4, color: "#c4956a", fontSize: 11, width: 16 }}>{8 - r}</div>)}
                                     </div>
-
-                                    {/* Squares */}
-                                    <div style={{
-                                        display: "grid", gridTemplateColumns: `repeat(8,${CELL}px)`,
-                                        gridTemplateRows: `repeat(8,${CELL}px)`,
-                                        boxShadow: "0 0 0 2px #d4af3766,0 0 20px #00000088",
-                                    }}>
-                                        {board.map((row, r) => row.map((piece, c) => {
+                                    <div style={{ display: "grid", gridTemplateColumns: `repeat(8,${CELL}px)`, gridTemplateRows: `repeat(8,${CELL}px)`, boxShadow: "0 0 0 2px #d4af3766" }}>
+                                        {rows.map(r => cols.map(c => {
+                                            const piece = board[r][c];
                                             const isLight = (r + c) % 2 === 0;
                                             const isSel = selected?.[0] === r && selected?.[1] === c;
                                             const isHL = highlights.some(([hr, hc]) => hr === r && hc === c);
                                             const isLast = lastMove && ((lastMove.from[0] === r && lastMove.from[1] === c) || (lastMove.to[0] === r && lastMove.to[1] === c));
                                             const isKingCheck = inCheckNow && kingPos && kingPos[0] === r && kingPos[1] === c && board[r][c]?.color === turn;
-
-                                            let bg = isLight ? WOOD_LIGHT : WOOD_DARK;
-                                            let extraStyle = {};
-
-                                            if (isLast) extraStyle = { background: isLight ? "#e8e88a" : "#aab040" };
-                                            if (isSel) extraStyle = { background: isLight ? "#7fc97f" : "#5a9a5a" };
-                                            if (isKingCheck) extraStyle = { animation: "checkPulse 1s infinite" };
-
+                                            let bg = isLight ? "#f0d9b5" : "#b58863", extra = {};
+                                            if (isLast) extra = { background: isLight ? "#e8e88a" : "#aab040" };
+                                            if (isSel) extra = { background: isLight ? "#7fc97f" : "#5a9a5a" };
+                                            if (isKingCheck) extra = { animation: "checkPulse 1s infinite" };
                                             return (
-                                                <div
-                                                    key={`${r}-${c}`}
-                                                    className="sq"
-                                                    onClick={() => handleSquareClick(r, c)}
-                                                    style={{
-                                                        width: CELL, height: CELL,
-                                                        background: bg,
-                                                        ...extraStyle,
-                                                        cursor: turn === W && !aiThinking ? "pointer" : "default",
-                                                        display: "flex", alignItems: "center", justifyContent: "center",
-                                                        position: "relative",
-                                                        transition: "background 0.15s",
-                                                    }}
-                                                >
-                                                    {/* Last move tint */}
-                                                    {isLast && !isSel && (
-                                                        <div style={{ position: "absolute", inset: 0, background: LAST_CLR, pointerEvents: "none" }} />
-                                                    )}
-                                                    {/* Selection overlay */}
-                                                    {isSel && (
-                                                        <div style={{ position: "absolute", inset: 0, background: SELECT_CLR, pointerEvents: "none" }} />
-                                                    )}
-                                                    {/* Move highlight dot */}
-                                                    {isHL && !piece && (
-                                                        <div style={{
-                                                            width: CELL * 0.32, height: CELL * 0.32, borderRadius: "50%",
-                                                            background: MOVE_CLR, pointerEvents: "none", zIndex: 2,
-                                                        }} />
-                                                    )}
-                                                    {isHL && piece && (
-                                                        <div style={{ position: "absolute", inset: 0, border: `4px solid ${MOVE_CLR}`, borderRadius: 0, pointerEvents: "none", zIndex: 2 }} />
-                                                    )}
-                                                    {/* Piece */}
-                                                    {piece && (
-                                                        <div style={{
-                                                            zIndex: 3,
-                                                            animation: "pieceAppear 0.2s ease",
-                                                            filter: isSel ? "brightness(1.1) drop-shadow(0 4px 8px rgba(0,0,0,0.6))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.4))",
-                                                            transform: isSel ? "scale(1.08) translateY(-2px)" : "scale(1)",
-                                                            transition: "transform 0.15s,filter 0.15s",
-                                                        }}>
-                                                            <PieceSVG piece={piece} size={CELL * 0.82} />
-                                                        </div>
-                                                    )}
+                                                <div key={`${r}-${c}`} onClick={() => handleSquareClick(r, c)}
+                                                    style={{ width: CELL, height: CELL, background: bg, ...extra, cursor: myTurn ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", transition: "background 0.15s" }}>
+                                                    {isLast && !isSel && <div style={{ position: "absolute", inset: 0, background: "rgba(205,210,106,0.5)", pointerEvents: "none" }} />}
+                                                    {isSel && <div style={{ position: "absolute", inset: 0, background: "rgba(20,85,30,0.7)", pointerEvents: "none" }} />}
+                                                    {isHL && !piece && <div style={{ width: CELL * 0.32, height: CELL * 0.32, borderRadius: "50%", background: "rgba(20,85,30,0.4)", zIndex: 2 }} />}
+                                                    {isHL && piece && <div style={{ position: "absolute", inset: 0, border: "4px solid rgba(20,85,30,0.4)", zIndex: 2 }} />}
+                                                    {piece && <div style={{ zIndex: 3, animation: "pieceAppear 0.2s ease", transform: isSel ? "scale(1.08) translateY(-2px)" : "scale(1)", transition: "transform 0.15s" }}><PieceSVG piece={piece} size={CELL * 0.82} /></div>}
                                                 </div>
                                             );
                                         }))}
                                     </div>
-
-                                    {/* Rank labels right */}
                                     <div style={{ display: "flex", flexDirection: "column" }}>
-                                        {"87654321".split("").map(n => (
-                                            <div key={n} style={{ height: CELL, display: "flex", alignItems: "center", paddingLeft: 4, color: "#c4956a", fontSize: 12, fontWeight: 600, width: 16 }}>{n}</div>
-                                        ))}
+                                        {rows.map(r => <div key={r} style={{ height: CELL, display: "flex", alignItems: "center", paddingLeft: 4, color: "#c4956a", fontSize: 11, width: 16 }}>{8 - r}</div>)}
                                     </div>
                                 </div>
-
-                                {/* File labels bottom */}
                                 <div style={{ display: "flex", marginTop: 4, marginLeft: 20 }}>
-                                    {"abcdefgh".split("").map(f => (
-                                        <div key={f} style={{ width: CELL, textAlign: "center", color: "#c4956a", fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>{f}</div>
-                                    ))}
+                                    {cols.map(c => <div key={c} style={{ width: CELL, textAlign: "center", color: "#c4956a", fontSize: 11, fontWeight: 600 }}>{"abcdefgh"[c]}</div>)}
                                 </div>
                             </div>
-
-                            {/* Controls */}
                             <div style={{ display: "flex", gap: 12, marginTop: 12, justifyContent: "center" }}>
-                                <button onClick={resetGame} style={{
-                                    padding: "10px 28px", borderRadius: 6, border: "1px solid #d4af3766",
-                                    background: "linear-gradient(135deg,#3a1a05,#5a3010)",
-                                    color: "#d4af37", fontFamily: "inherit", fontSize: 13, fontWeight: 600,
-                                    cursor: "pointer", letterSpacing: 2, textTransform: "uppercase",
-                                    boxShadow: "0 4px 16px #00000066", transition: "all 0.2s",
-                                }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#d4af37"; e.currentTarget.style.boxShadow = "0 4px 20px #d4af3722"; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#d4af3766"; e.currentTarget.style.boxShadow = "0 4px 16px #00000066"; }}>
-                                    New Game
-                                </button>
-                                <a href="/games" style={{
-                                    padding: "10px 28px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)",
-                                    background: "rgba(255,255,255,0.05)",
-                                    color: "white", fontFamily: "inherit", fontSize: 13, fontWeight: 600,
-                                    cursor: "pointer", letterSpacing: 2, textTransform: "uppercase",
-                                    boxShadow: "0 4px 16px rgba(0,0,0,0.5)", transition: "all 0.2s",
-                                    textDecoration: "none"
-                                }}>Exit Game</a>
+                                <a href="/games" style={{ padding: "10px 28px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.05)", color: "white", fontSize: 13, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase", textDecoration: "none" }}>Exit Game</a>
                             </div>
                         </div>
 
-                        {/* Move history */}
-                        <div style={{ width: 90 }}>
-                            <div style={{ color: "#a0825a", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 }}>Moves</div>
-                            <div style={{
-                                maxHeight: CELL * 8, overflowY: "auto",
-                                display: "flex", flexDirection: "column", gap: 2,
-                            }}>
-                                {moveHistory.map((m, i) => {
-                                    const files = "abcdefgh", ranks = "87654321";
-                                    const from = files[m.from[1]] + ranks[m.from[0]];
-                                    const to = files[m.to[1]] + ranks[m.to[0]];
-                                    return (
-                                        <div key={i} style={{
-                                            color: i % 2 === 0 ? "#e8c87a" : "#aaa", fontSize: 11,
-                                            padding: "2px 4px", borderRadius: 3,
-                                            background: "rgba(255,255,255,0.03)",
-                                            fontFamily: "'Courier New',monospace",
-                                        }}>
-                                            {i % 2 === 0 ? `${Math.floor(i / 2) + 1}.` : "  "}{from}–{to}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                            <div style={{ color: "#a0825a", fontSize: 11, letterSpacing: 2, textTransform: "uppercase", marginTop: 12, marginBottom: 8 }}>Captured</div>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                                {capturedB.map((p, i) => (
-                                    <span key={i} style={{ fontSize: 18, lineHeight: 1, filter: "drop-shadow(0 1px 2px #000)" }}>{GLYPHS[p.color + p.type]}</span>
-                                ))}
+                        {/* Right sidebar */}
+                        <div style={{ width: 110 }}>
+                            <div style={{ color: "#a0825a", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>Captured</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 2, minHeight: 40 }}>
+                                {(myColor === W ? capturedB : capturedW).map((p, i) => <span key={i} style={{ fontSize: 16 }}>{GLYPHS[p] || ""}</span>)}
                             </div>
                         </div>
                     </div>
 
-                    {/* Promotion modal */}
+                    {/* Promotion Modal */}
                     {promotionPending && (
                         <div style={{ position: "fixed", inset: 0, background: "#000b", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 500 }}>
-                            <div style={{
-                                background: "linear-gradient(145deg,#2a1a08,#3a2510)",
-                                border: "2px solid #d4af3766", borderRadius: 12, padding: 32, textAlign: "center",
-                                boxShadow: "0 20px 60px #000a",
-                            }}>
+                            <div style={{ background: "linear-gradient(145deg,#2a1a08,#3a2510)", border: "2px solid #d4af3766", borderRadius: 12, padding: 32, textAlign: "center", boxShadow: "0 20px 60px #000a" }}>
                                 <div style={{ color: "#d4af37", fontSize: 18, fontWeight: 700, marginBottom: 20, letterSpacing: 2 }}>PROMOTE PAWN</div>
                                 <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
                                     {["Q", "R", "B", "N"].map(type => (
-                                        <button key={type} onClick={() => handlePromotion(type)} style={{
-                                            width: 64, height: 64, borderRadius: 8, border: "1px solid #d4af3766",
-                                            background: "linear-gradient(135deg,#f0d9b5,#c4a068)",
-                                            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                                            transition: "transform 0.15s",
-                                        }}
-                                            onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-                                            onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
-                                            <PieceSVG piece={{ color: W, type }} size={52} />
+                                        <button key={type} onClick={() => handlePromotion(type)} style={{ width: 64, height: 64, borderRadius: 8, border: "1px solid #d4af3766", background: "linear-gradient(135deg,#f0d9b5,#c4a068)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                            <PieceSVG piece={{ color: myColor, type }} size={52} />
                                         </button>
                                     ))}
                                 </div>
@@ -736,35 +405,18 @@
                         </div>
                     )}
 
-                    {/* Checkmate / stalemate overlay */}
+                    {/* Game over overlay */}
                     {(status === "checkmate" || status === "stalemate") && (
-                        <div style={{ position: "fixed", inset: 0, background: "#000b", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 400, pointerEvents: "none" }}>
-                            <div style={{
-                                background: "linear-gradient(145deg,#1a0e05,#2d1b0e)",
-                                border: "2px solid #d4af3788", borderRadius: 16, padding: 48, textAlign: "center",
-                                boxShadow: "0 20px 80px #000a,0 0 80px #d4af3711",
-                                animation: "pieceAppear 0.4s ease", pointerEvents: "all",
-                            }}>
-                                <div style={{ fontSize: 72, marginBottom: 12 }}>
-                                    {status === "stalemate" ? "🤝" : turn === W ? "☠" : "🏆"}
-                                </div>
-                                <div style={{
-                                    color: "#d4af37", fontSize: 32, fontWeight: 700, marginBottom: 8,
-                                    letterSpacing: 4, fontVariant: "small-caps",
-                                }}>
-                                    {status === "stalemate" ? "Stalemate" : turn === W ? "You Lost" : "Victory!"}
+                        <div style={{ position: "fixed", inset: 0, background: "#000b", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 400 }}>
+                            <div style={{ background: "linear-gradient(145deg,#1a0e05,#2d1b0e)", border: "2px solid #d4af3788", borderRadius: 16, padding: 48, textAlign: "center", boxShadow: "0 20px 80px #000a", animation: "pieceAppear 0.4s ease" }}>
+                                <div style={{ fontSize: 72, marginBottom: 12 }}>{status === "stalemate" ? "🤝" : turn === myColor ? "☠" : "🏆"}</div>
+                                <div style={{ color: "#d4af37", fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: 4, fontVariant: "small-caps" }}>
+                                    {status === "stalemate" ? "Stalemate" : turn === myColor ? "You Lost" : "Victory!"}
                                 </div>
                                 <div style={{ color: "#a0825a", fontSize: 14, marginBottom: 32 }}>
-                                    {status === "stalemate" ? "The game is a draw by stalemate" :
-                                        turn === W ? "The AI delivered checkmate" : "You checkmated the AI!"}
+                                    {status === "stalemate" ? "Draw by stalemate" : turn === myColor ? "Opponent won" : "You checkmated your opponent!"}
                                 </div>
-                                <button onClick={resetGame} style={{
-                                    padding: "14px 40px", borderRadius: 8, border: "1px solid #d4af37",
-                                    background: "linear-gradient(135deg,#5a3010,#3a1a05)",
-                                    color: "#d4af37", fontFamily: "inherit", fontSize: 15, fontWeight: 700,
-                                    cursor: "pointer", letterSpacing: 3, textTransform: "uppercase",
-                                    boxShadow: "0 8px 24px #00000066",
-                                }}>Play Again</button>
+                                <a href="/games" style={{ padding: "14px 40px", borderRadius: 8, border: "1px solid #d4af37", background: "linear-gradient(135deg,#5a3010,#3a1a05)", color: "#d4af37", fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", textDecoration: "none" }}>Back to Games</a>
                             </div>
                         </div>
                     )}
@@ -772,8 +424,37 @@
             );
         }
 
+        // ─── App Root ─────────────────────────────────────────────────────
+        function App() {
+            const [screen, setScreen] = useState("lobby");
+            const [roomId, setRoomId] = useState(null);
+            const [myColor, setMyColor] = useState(null);
+            const [playerName, setPlayerName] = useState("");
+            const [isCreator, setIsCreator] = useState(false);
+            const [waitingRoomId, setWaitingRoomId] = useState(null);
+
+            const handleEnterGame = (id, color, name, creator) => {
+                setRoomId(id); setMyColor(color); setIsCreator(creator);
+                if (creator) {
+                    setWaitingRoomId(id);
+                    setScreen("waiting");
+                    // Poll via WebSocket - WS subscription handles the state update
+                    // When opponent joins, backend broadcasts updated state with status=active
+                    // We listen for that in the game component
+                    // For simplicity, auto-advance after 1s if already active
+                    setTimeout(() => setScreen("game"), 500);
+                } else {
+                    setScreen("game");
+                }
+            };
+
+            if (screen === "lobby") return <Lobby onEnterGame={handleEnterGame} playerName={playerName} setPlayerName={setPlayerName} />;
+            if (screen === "waiting") return <WaitingRoom roomId={waitingRoomId} />;
+            if (screen === "game") return <ChessGame roomId={roomId} myColor={myColor} playerName={playerName} isCreator={isCreator} />;
+        }
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ChessGame />);
+        root.render(<App />);
         /*]]>*/
     </script>
 </body>
