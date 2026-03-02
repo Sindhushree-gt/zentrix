@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zentrix Snake & Ladder | Classic Realism</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700;900&display=swap');
+
+        :root {
+            --board-wood: #5d4037;
+            --tile-light: #f3e5f5;
+            --tile-dark: #e1bee7;
+            --tile-accent: #d32f2f;
+            --p1-color: #2196f3;
+            --p2-color: #ff9800;
+            --ladder-wood: #8d6e63;
+            --snake-skin: #2e7d32;
+        }
+
+        body {
+            background: #121212;
+            color: #fff;
+            font-family: 'Crimson Pro', serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+        }
+
+        .game-wrapper {
+            margin-top: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 50px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Board Styling */
+        .board-outer {
+            padding: 20px;
+            background: var(--board-wood);
+            border-radius: 15px;
+            box-shadow:
+                inset 0 0 50px rgba(0, 0, 0, 0.5),
+                0 20px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1500px;
+        }
+
+        .board-container {
+            width: 600px;
+            height: 600px;
+            background: #fff;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            border: 10px solid #3e2723;
+            position: relative;
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.5),
+                inset 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .cell {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 900;
+            color: rgba(0, 0, 0, 0.6);
+            position: relative;
+            background: var(--tile-light);
+            transition: transform 0.2s;
+        }
+
+        .cell:nth-child(even) {
+            background: var(--tile-dark);
+        }
+
+        .cell[data-num="1"],
+        .cell[data-num="100"] {
+            background: #ffd700 !important;
+            color: #5d4037;
+        }
+
+        /* Physical Game Elements Overlay */
+        #game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Players (Pawns) */
+        .player {
+            width: 34px;
+            height: 45px;
+            position: absolute;
+            z-index: 20;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 10px 5px rgba(0, 0, 0, 0.4));
+        }
+
+        .pawn-top {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .pawn-body {
+            width: 26px;
+            height: 32px;
+            margin: -8px auto 0;
+            clip-path: polygon(20% 100%, 80% 100%, 100% 80%, 100% 20%, 50% 0%, 0% 20%, 0% 80%);
+            position: relative;
+            z-index: 1;
+        }
+
+        .player-1 .pawn-top,
+        .player-1 .pawn-body {
+            background: var(--p1-color);
+            background-image: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent);
+        }
+
+        .player-2 .pawn-top,
+        .player-2 .pawn-body {
+            background: var(--p2-color);
+            background-image: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent);
+        }
+
+        /* Enhanced Ladder */
+        .ladder-svg {
+            filter: drop-shadow(0 5px 3px rgba(0, 0, 0, 0.3));
+        }
+
+        .ladder-rail {
+            stroke: var(--ladder-wood);
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+
+        .ladder-rung {
+            stroke: var(--ladder-wood);
+            stroke-width: 4;
+            stroke-linecap: round;
+        }
+
+        /* Enhanced Snake */
+        .snake-svg {
+            filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.4));
+        }
+
+        .snake-body {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .snake-head {
+            fill: var(--snake-skin);
+        }
+
+        /* UI Panel */
+        .control-panel {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .turn-indicator {
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+
+        /* 3D Dice */
+        .dice-box {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .dice {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            transform-style: preserve-3d;
+            transition: transform 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+        }
+
+        .dice-side {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            background: #333;
+            border-radius: 50%;
+            place-self: center;
+        }
+
+        .side-1 {
+            transform: translateZ(40px);
+        }
+
+        .side-2 {
+            transform: rotateY(90deg) translateZ(40px);
+        }
+
+        .side-3 {
+            transform: rotateY(180deg) translateZ(40px);
+        }
+
+        .side-4 {
+            transform: rotateY(-90deg) translateZ(40px);
+        }
+
+        .side-5 {
+            transform: rotateX(90deg) translateZ(40px);
+        }
+
+        .side-6 {
+            transform: rotateX(-90deg) translateZ(40px);
+        }
+
+        .dice.rolling {
+            animation: diceRoll 0.5s infinite linear;
+        }
+
+        @keyframes diceRoll {
+            0% {
+                transform: rotateX(0) rotateY(0) rotateZ(0);
+            }
+
+            100% {
+                transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg);
+            }
+        }
+
+        .btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .event-log {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 15px;
+            height: 180px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .log-line {
+            margin-bottom: 5px;
+            color: #888;
+        }
+
+        .log-line.impact {
+            color: #fff;
+            border-left: 2px solid #fff;
+            padding-left: 10px;
+        }
+
+        /* Modal */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .victory-text {
+            font-size: 5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1 style="font-size: 3rem; font-weight: 900; letter-spacing: 12px; text-transform: uppercase; margin-bottom: 0;">
+        Zentrix</h1>
+    <p style="color: #666; letter-spacing: 5px; margin-bottom: 30px; font-weight: 700;">PREMIUM BOARD COLLECTION</p>
+
+    <div class="game-wrapper">
+        <div class="board-outer">
+            <div class="board-container" id="board">
+                <svg id="game-overlay"></svg>
+
+                <!-- Player 1 Pawn -->
+                <div id="p1-piece" class="player player-1">
+                    <div class="pawn-top"></div>
+                    <div class="pawn-body"></div>
+                </div>
+
+                <!-- Player 2 Pawn -->
+                <div id="p2-piece" class="player player-2">
+                    <div class="pawn-top"></div>
+                    <div class="pawn-body"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="card">
+                <div id="turn-display" class="turn-indicator" style="color: var(--p1-color);">Player 1</div>
+                <div class="dice-box" onclick="roll()">
+                    <div class="dice" id="dice">
+                        <div class="dice-side side-1">
+                            <div class="dot" style="grid-area: 2/2"></div>
+                        </div>
+                        <div class="dice-side side-2">
+                            <div class="dot" style="grid-area: 1/1"></div>
+                            <div class="dot" style="grid-area: 3/3"></div>
+                        </div>
+                        <div class="dice-side side-3">
+                            <div class="dot" style="grid-area: 1/1"></div>
+                            <div class="dot" style="grid-area: 2/2"></div>
+                            <div class="dot" style="grid-area: 3/3"></div>
+                        </div>
+                        <div class="dice-side side-4">
+                            <div class="dot" style="grid-area: 1/1"></div>
+                            <div class="dot" style="grid-area: 1/3"></div>
+                            <div class="dot" style="grid-area: 3/1"></div>
+                            <div class="dot" style="grid-area: 3/3"></div>
+                        </div>
+                        <div class="dice-side side-5">
+                            <div class="dot" style="grid-area: 1/1"></div>
+                            <div class="dot" style="grid-area: 1/3"></div>
+                            <div class="dot" style="grid-area: 2/2"></div>
+                            <div class="dot" style="grid-area: 3/1"></div>
+                            <div class="dot" style="grid-area: 3/3"></div>
+                        </div>
+                        <div class="dice-side side-6">
+                            <div class="dot" style="grid-area: 1/1"></div>
+                            <div class="dot" style="grid-area: 1/3"></div>
+                            <div class="dot" style="grid-area: 2/1"></div>
+                            <div class="dot" style="grid-area: 2/3"></div>
+                            <div class="dot" style="grid-area: 3/1"></div>
+                            <div class="dot" style="grid-area: 3/3"></div>
+                        </div>
+                    </div>
+                </div>
+                <button id="roll-btn" class="btn" onclick="roll()">Roll Physical Dice</button>
+            </div>
+
+            <div class="card event-log" id="log">
+                <div class="log-line">Zentrix Engine Initialized.</div>
+                <div class="log-line">Board: Standard 10x10.</div>
+                <div class="log-line">Physical Assets: Loaded.</div>
+            </div>
+
+            <button class="btn" style="background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2);"
+                onclick="reset()">Restart Game</button>
+        </div>
+    </div>
+
+    <div id="victory-modal" class="overlay">
+        <h1 id="winner-name" class="victory-text">PLAYER 1 WINS</h1>
+        <p style="letter-spacing: 10px; color: #aaa; margin-bottom: 40px;">SUPREME CHAMPION</p>
+        <button class="btn" style="max-width: 250px" onclick="location.reload()">New Match</button>
+        <a href="/games" style="margin-top: 20px; color: #666; text-decoration: none;">Exit to Library</a>
+    </div>
+
+    <a href="/games"
+        style="position: fixed; bottom: 30px; left: 30px; color: #444; text-decoration: none; font-weight: 700;">
+        <i class="fas fa-arrow-left"></i> BACK TO LIBRARY
+    </a>
+
+    <script>
+        const board = document.getElementById('board');
+        const overlay = document.getElementById('game-overlay');
+        const dice = document.getElementById('dice');
+        const log = document.getElementById('log');
+        const turnDisplay = document.getElementById('turn-display');
+        const rollBtn = document.getElementById('roll-btn');
+
+        // Logic Maps
+        const maps = {
+            2: 38, 7: 14, 8: 31, 15: 26, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 78: 98,
+            16: 6, 46: 25, 49: 11, 62: 19, 64: 60, 74: 53, 89: 68, 92: 88, 95: 75, 99: 80
+        };
+
+        let player1 = 0;
+        let player2 = 0;
+        let turn = 1;
+        let busy = false;
+
+        function createBoard() {
+            board.innerHTML = '<svg id="game-overlay"></svg>' +
+                '<div id="p1-piece" class="player player-1"><div class="pawn-top"></div><div class="pawn-body"></div></div>' +
+                '<div id="p2-piece" class="player player-2"><div class="pawn-top"></div><div class="pawn-body"></div></div>';
+
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                let row = Math.floor(i / 10);
+                let col = i % 10;
+                let actualRow = 9 - row;
+                let num = (actualRow % 2 === 0) ? (actualRow * 10) + col + 1 : (actualRow * 10) + (9 - col) + 1;
+                cell.dataset.num = num;
+                cell.innerHTML = `<span>${num}</span>`;
+                board.appendChild(cell);
+            }
+            updatePieces();
+            setTimeout(drawBoardAssets, 100);
+        }
+
+        function getCoord(num) {
+            if (num === 0) {
+                return { x: -30, y: 560 };
+            }
+            const cell = document.querySelector(`.cell[data-num="${num}"]`);
+            return { x: cell.offsetLeft + 13, y: cell.offsetTop + 10 };
+        }
+
+        function drawBoardAssets() {
+            const overlay = document.getElementById('game-overlay');
+            overlay.innerHTML = '';
+            for (let from in maps) {
+                const to = maps[from];
+                const start = getCoord(parseInt(from));
+                const end = getCoord(to);
+                // Centers
+                const sx = start.x + 15; const sy = start.y + 15;
+                const ex = end.x + 15; const ey = end.y + 15;
+
+                if (to > from) {
+                    // Draw Ladder
+                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    g.setAttribute("class", "ladder-svg");
+
+                    const angle = Math.atan2(ey - sy, ex - sx);
+                    const offset = 8;
+                    const dx = offset * Math.sin(angle);
+                    const dy = offset * Math.cos(angle);
+
+                    const rail1 = createLine(sx - dx, sy + dy, ex - dx, ey + dy, "ladder-rail");
+                    const rail2 = createLine(sx + dx, sy - dy, ex + dx, ey - dy, "ladder-rail");
+                    g.appendChild(rail1);
+                    g.appendChild(rail2);
+
+                    // Rungs
+                    const dist = Math.hypot(ex - sx, ey - sy);
+                    const steps = Math.floor(dist / 20);
+                    for (let i = 1; i < steps; i++) {
+                        const px = sx + (ex - sx) * (i / steps);
+                        const py = sy + (ey - sy) * (i / steps);
+                        g.appendChild(createLine(px - dx, py + dy, px + dx, py - dy, "ladder-rung"));
+                    }
+                    overlay.appendChild(g);
+                } else {
+                    // Draw Snake
+                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                    g.setAttribute("class", "snake-svg");
+
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    const midX = (sx + ex) / 2 + (Math.random() > 0.5 ? 40 : -40);
+                    const midY = (sy + ey) / 2;
+                    const d = `M ${sx} ${sy} Q ${midX} ${midY}, ${ex} ${ey}`;
+
+                    path.setAttribute("d", d);
+                    path.setAttribute("class", "snake-body");
+                    path.setAttribute("stroke", "#2e7d32");
+
+                    const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    head.setAttribute("cx", sx); head.setAttribute("cy", sy); head.setAttribute("r", 8);
+                    head.setAttribute("class", "snake-head");
+
+                    g.appendChild(path);
+                    g.appendChild(head);
+                    overlay.appendChild(g);
+                }
+            }
+        }
+
+        function createLine(x1, y1, x2, y2, cls) {
+            const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            l.setAttribute("x1", x1); l.setAttribute("y1", y1); l.setAttribute("x2", x2); l.setAttribute("y2", y2);
+            l.setAttribute("class", cls);
+            return l;
+        }
+
+        async function roll() {
+            if (busy) return;
+            busy = true;
+            rollBtn.disabled = true;
+            const dice = document.getElementById('dice');
+            dice.classList.add('rolling');
+
+            const val = Math.floor(Math.random() * 6) + 1;
+            await new Promise(r => setTimeout(r, 1000));
+            dice.classList.remove('rolling');
+
+            const rotations = {
+                1: 'rotateX(0deg) rotateY(0deg)',
+                2: 'rotateX(0deg) rotateY(-90deg)',
+                3: 'rotateX(0deg) rotateY(-180deg)',
+                4: 'rotateX(0deg) rotateY(90deg)',
+                5: 'rotateX(-90deg) rotateY(0deg)',
+                6: 'rotateX(90deg) rotateY(0deg)'
+            };
+            dice.style.transform = rotations[val];
+
+            pushLog(`Player ${turn} rolled a ${val}.`, true);
+            await move(turn, val);
+
+            if (checkWin()) return;
+
+            turn = turn === 1 ? 2 : 1;
+            const turnDisplay = document.getElementById('turn-display');
+            turnDisplay.innerText = `Player ${turn}`;
+            turnDisplay.style.color = turn === 1 ? 'var(--p1-color)' : 'var(--p2-color)';
+            busy = false;
+            rollBtn.disabled = false;
+        }
+
+        async function move(pNum, steps) {
+            let cur = pNum === 1 ? player1 : player2;
+            let target = cur + steps;
+
+            if (target > 100) {
+                pushLog(`Need exact roll to finish!`);
+                return;
+            }
+
+            for (let i = 1; i <= steps; i++) {
+                cur++;
+                setPiece(pNum, cur);
+                await new Promise(r => setTimeout(r, 300));
+            }
+
+            pNum === 1 ? player1 = cur : player2 = cur;
+
+            if (maps[cur]) {
+                const destination = maps[cur];
+                const isLadder = destination > cur;
+                pushLog(isLadder ? "Climbing ladder!" : "Bitten by snake!", true);
+                await new Promise(r => setTimeout(r, 600));
+                setPiece(pNum, destination);
+                pNum === 1 ? player1 = destination : player2 = destination;
+            }
+        }
+
+        function setPiece(pNum, val) {
+            const piece = document.getElementById(`p${pNum}-piece`);
+            const pos = getCoord(val);
+            const offset = pNum === 1 ? 0 : 15;
+            piece.style.left = `${pos.x + offset}px`;
+            piece.style.top = `${pos.y}px`;
+            // Add a little jump effect
+            piece.style.transform = 'translateY(-20px)';
+            setTimeout(() => piece.style.transform = 'translateY(0)', 300);
+        }
+
+        function updatePieces() {
+            setPiece(1, player1);
+            setPiece(2, player2);
+        }
+
+        function pushLog(msg, impact = false) {
+            const log = document.getElementById('log');
+            const div = document.createElement('div');
+            div.className = `log-line ${impact ? 'impact' : ''}`;
+            div.innerText = `> ${msg}`;
+            log.prepend(div);
+        }
+
+        function checkWin() {
+            if (player1 === 100 || player2 === 100) {
+                const winner = player1 === 100 ? 1 : 2;
+                document.getElementById('winner-name').innerText = `PLAYER ${winner} WINS`;
+                document.getElementById('victory-modal').style.display = 'flex';
+                return true;
+            }
+            return false;
+        }
+
+        function reset() {
+            location.reload();
+        }
+
+        createBoard();
+        window.addEventListener('resize', drawBoardAssets);
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .event-detail-container {
+            max-width: 900px;
+            margin: 120px auto 60px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .event-hero {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .event-hero img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .event-hero-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 40px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent);
+        }
+
+        .event-content {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+        }
+
+        .info-pill {
+            background: var(--glass-bg);
+            padding: 8px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .info-pill i {
+            color: var(--accent);
+        }
+
+        .register-card {
+            background: var(--glass-bg);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .success-banner {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Zentrix</div>
+        <div class="nav-links">
+            <a href="/dashboard"><i class="fas fa-home"></i></a>
+            <a href="/events" class="active">Events</a>
+            <a href="/profile"><i class="fas fa-user"></i></a>
+        </div>
+        <a href="/dashboard" class="nav-btn">Dashboard</a>
+    </nav>
+
+    <div class="container">
+
+        <div th:if="${param.success}" class="success-banner" style="max-width: 900px; margin: 100px auto -80px;">
+            <i class="fas fa-check-circle"></i>
+            Registration Successful! You're on the list.
+        </div>
+
+        <div class="event-detail-container">
+            <div class="event-hero">
+                <img th:src="${event.imageUrl}" alt="Event Banner">
+                <div class="event-hero-overlay">
+                    <span
+                        style="background: var(--accent); color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 700; margin-bottom: 15px; display: inline-block;"
+                        th:text="${event.category}">Category</span>
+                    <h1 style="font-size: 3rem; font-weight: 900; color: #fff; margin-bottom: 10px;"
+                        th:text="${event.title}">Event Title</h1>
+                    <p style="color: var(--text-secondary); font-size: 1.1rem;"><i class="fas fa-map-marker-alt"
+                            style="color: var(--accent);"></i> <span th:text="${event.venue}">Venue</span></p>
+                </div>
+            </div>
+
+            <div class="event-content">
+                <!-- Left Side: Description -->
+                <div class="description-sect">
+                    <div style="display: flex; gap: 15px; margin-bottom: 30px;">
+                        <div class="info-pill"><i class="far fa-calendar-alt"></i> <span
+                                th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'MMMM dd, yyyy') : 'TBA'}">Date</span>
+                        </div>
+                        <div class="info-pill"><i class="far fa-clock"></i> <span
+                                th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'hh:mm a') : 'TBA'}">Time</span>
+                        </div>
+                        <div class="info-pill"><i class="fas fa-ticket-alt"></i> <span
+                                th:text="${event.price}">Price</span></div>
+                    </div>
+
+                    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; color: #fff;">About this Event
+                    </h2>
+                    <p style="line-height: 1.8; color: var(--text-secondary); font-size: 1.05rem;"
+                        th:text="${event.description}">
+                        Description placeholder...
+                    </p>
+
+                    <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--glass-border);">
+                        <h3 style="font-weight: 700; color: #fff; margin-bottom: 15px;">Organizer</h3>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff;"
+                                th:text="${event.organizer != null ? #strings.substring(event.organizer, 0, 1) : 'Z'}">Z
+                            </div>
+                            <div>
+                                <h4 style="color: #fff; font-weight: 600;"
+                                    th:text="${event.organizer != null ? event.organizer : 'Zentrix Events'}">Organizer
+                                    Name</h4>
+                                <p style="color: var(--text-secondary); font-size: 13px;">Official Partner</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Action Card -->
+                <div class="sidebar-sect">
+                    <div class="register-card">
+                        <div style="margin-bottom: 25px;">
+                            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 5px;">Starting from
+                            </p>
+                            <h2 style="font-size: 2.5rem; font-weight: 900; color: #fff;" th:text="${event.price}">$10
+                            </h2>
+                        </div>
+
+                        <div
+                            style="margin-bottom: 30px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; text-align: center;">
+                            <h4 style="font-size: 1.5rem; font-weight: 800; color: var(--accent);"
+                                th:text="${registrationCount}">42</h4>
+                            <p
+                                style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                                Attending</p>
+                        </div>
+
+                        <form th:if="${!isRegistered}" th:action="@{'/events/' + ${event.id} + '/register'}"
+                            method="POST">
+                            <button type="submit" class="cta-btn"
+                                style="width: 100%; padding: 15px; font-weight: 800; font-size: 16px;">REGISTER
+                                NOW</button>
+                        </form>
+
+                        <div th:if="${isRegistered}"
+                            style="text-align: center; padding: 15px; background: rgba(46, 204, 113, 0.1); border: 1px solid #2ecc71; border-radius: 12px; color: #2ecc71;">
+                            <i class="fas fa-check-circle"></i> Registered
+                        </div>
+
+                        <p
+                            style="color: var(--text-secondary); font-size: 12px; margin-top: 15px; text-align: center; line-height: 1.4;">
+                            By registering, you agree to Zentrix terms and conditions for event participation.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 60px;">
+            <a href="/events" class="back-link"
+                style="color: var(--text-secondary); text-decoration: none; font-weight: 600;">
+                <i class="fas fa-arrow-left"></i> BACK TO EVENTS
+            </a>
+        </div>
+    </div>
+
+</body>
+
+</html>
