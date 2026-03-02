@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.model.*;
+import com.example.demo.model.MessageStatus;
+import com.example.demo.model.MessageType;
 import com.example.demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,18 +1,22 @@
 package com.example.demo.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-public class User {
+@Table(name = "users")
+public class User implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String username;
     private String email;
     private String password;
@@ -20,6 +24,21 @@ public class User {
     private String gender;
     private String profilePicture;
     private java.time.LocalDateTime lastActiveAt;
+
+    @Column(length = 300)
+    private String bio;
+
+    private String profilePhotoUrl;
+    @Column(length = 1000)
+    private String aboutMe;
+    private String skills;
+
+    @ManyToMany
+    @JoinTable(name = "user_followers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "follower_id"))
+    private transient Set<User> followers = new HashSet<>();
+
+    @ManyToMany(mappedBy = "followers")
+    private transient Set<User> following = new HashSet<>();
 
     public User() {
     }
@@ -97,11 +116,59 @@ public class User {
         this.lastActiveAt = lastActiveAt;
     }
 
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getProfilePhotoUrl() {
+        return profilePhotoUrl;
+    }
+
+    public void setProfilePhotoUrl(String profilePhotoUrl) {
+        this.profilePhotoUrl = profilePhotoUrl;
+    }
+
+    public String getAboutMe() {
+        return aboutMe;
+    }
+
+    public void setAboutMe(String aboutMe) {
+        this.aboutMe = aboutMe;
+    }
+
+    public String getSkills() {
+        return skills;
+    }
+
+    public void setSkills(String skills) {
+        this.skills = skills;
+    }
+
+    public Set<User> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(Set<User> followers) {
+        this.followers = followers;
+    }
+
+    public Set<User> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(Set<User> following) {
+        this.following = following;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (o == null || getClass() != o.getClass())
+        if (!(o instanceof User))
             return false;
         User user = (User) o;
         return id != null && id.equals(user.id);
@@ -109,6 +176,6 @@ public class User {
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return 31;
     }
 }

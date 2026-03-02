@@ -22,14 +22,33 @@
         <div class="nav-links">
             <a href="/dashboard" class="active"><i class="fas fa-home"></i></a>
             <a href="/messages"><i class="fas fa-comment-dots"></i></a>
-            <a href="/notifications"><i class="fas fa-bell"></i></a>
-            <a href="/profile" style="position: relative;">
-                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
-                    class="user-avatar" style="width: 32px; height: 32px; border: none;">
-                <span th:if="${pendingCount != null && pendingCount > 0}"
+            <a href="#" onclick="openNotifications()" style="position: relative;">
+                <i class="fas fa-bell"></i>
+                <span th:if="${unreadNotifCount != null && unreadNotifCount > 0}"
                     style="position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 5px; font-size: 10px; font-weight: bold;"
-                    th:text="${pendingCount}"></span>
+                    th:text="${unreadNotifCount}"></span>
             </a>
+            <div class="profile-dropdown">
+                <a href="/profile" style="position: relative;">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
+                        class="user-avatar" style="width: 32px; height: 32px; border: none;">
+                    <span th:if="${pendingCount != null && pendingCount > 0}"
+                        style="position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 5px; font-size: 10px; font-weight: bold;"
+                        th:text="${pendingCount}"></span>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="/profile" class="dropdown-item">
+                        <i class="fas fa-user-circle"></i> View Profile
+                    </a>
+                    <a href="/settings" class="dropdown-item">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="/logout" class="dropdown-item" style="color: #ff4444;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -41,7 +60,9 @@
             <a href="/explore" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
             <a href="/events" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Events</a>
             <a href="/achievements" class="sidebar-link"><i class="fas fa-trophy"></i> Achievements</a>
+            <a href="/messages" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
             <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
+            <a href="/games" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
             <a href="#" class="sidebar-link" onclick="openCreateModal()"><i class="fas fa-plus-circle"
                     style="color: var(--accent);"></i> Create Post</a>
             <a href="/logout" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
@@ -138,27 +159,68 @@
                     <h3>Suggested for you</h3>
                     <a href="#" class="see-all">See All</a>
                 </div>
-                <div class="suggestion-item">
+                <div class="suggestion-item" th:each="suggestedUser : ${suggestions}">
                     <div class="suggestion-user">
-                        <img src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=1780&auto=format&fit=crop"
+                        <img th:src="'https://ui-avatars.com/api/?name=' + ${suggestedUser.username} + '&background=F84464&color=fff&size=80'"
                             class="user-avatar" style="width: 32px; height: 32px;">
-                        <span style="font-size: 13px; font-weight: 500;">alex_designs</span>
+                        <a th:href="@{'/profile/' + ${suggestedUser.username}}">
+                            <span style="font-size: 13px; font-weight: 500;"
+                                th:text="${suggestedUser.username}">username</span>
+                        </a>
                     </div>
-                    <button class="follow-btn">Follow</button>
+                    <form th:action="@{'/profile/' + ${suggestedUser.id} + '/follow'}" method="post"
+                        style="display:inline;">
+                        <button type="submit" class="follow-btn">Follow</button>
+                    </form>
                 </div>
-                <div class="suggestion-item">
-                    <div class="suggestion-user">
-                        <img src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=1780&auto=format&fit=crop"
-                            class="user-avatar" style="width: 32px; height: 32px;">
-                        <span style="font-size: 13px; font-weight: 500;">mike_comedy</span>
-                    </div>
-                    <button class="follow-btn">Follow</button>
+                <div th:if="${suggestions == null or suggestions.isEmpty()}"
+                    style="font-size: 12px; color: var(--text-secondary); text-align: center; padding: 10px;">
+                    No new suggestions.
                 </div>
             </div>
-        </aside>
+    </div>
+    </aside>
 
     </div>
 
+    <!-- Notifications Modal -->
+    <div class="modal" id="notifModal" style="display:none; max-width: 400px;">
+        <div class="modal-header">
+            <h3>Notifications</h3>
+            <i class="fas fa-times close-modal" onclick="closeNotifications()"></i>
+        </div>
+        <div style="max-height: 400px; overflow-y: auto; padding: 15px;">
+            <div th:each="n : ${notifications}" th:class="'notification-item' + (${n.read} ? '' : ' unread')"
+                style="padding: 10px; border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 12px; margin-bottom: 8px; border-radius: 8px;">
+                <img th:src="'https://ui-avatars.com/api/?name=' + ${n.actor != null ? n.actor.username : 'System'} + '&background=F84464&color=fff&size=80'"
+                    style="width: 35px; height: 35px; border-radius: 50%;">
+                <div style="flex-grow: 1;">
+                    <p style="font-size: 13px; color: var(--text-primary); margin-bottom: 3px;" th:text="${n.message}">
+                        Message</p>
+                    <span style="font-size: 11px; color: var(--text-secondary);"
+                        th:text="${#temporals.format(n.createdAt, 'dd MMM, HH:mm')}">Date</span>
+
+                    <!-- Follow Request Actions -->
+                    <div th:if="${n.type == 'FOLLOW_REQUEST'}" style="margin-top: 8px; display: flex; gap: 8px;">
+                        <form th:action="@{'/profile/follow-request/' + ${n.id} + '/accept'}" method="POST"
+                            style="display:inline;">
+                            <button class="btn-edit"
+                                style="font-size: 11px; padding: 4px 10px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer;">Confirm</button>
+                        </form>
+                        <form th:action="@{'/profile/follow-request/' + ${n.id} + '/reject'}" method="POST"
+                            style="display:inline;">
+                            <button
+                                style="font-size: 11px; padding: 4px 10px; background: transparent; color: var(--text-secondary); border: 1px solid var(--glass-border); border-radius: 4px; cursor: pointer;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${notifications == null or notifications.isEmpty()}"
+                style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                No notifications yet.
+            </div>
+        </div>
+    </div>
     <!-- Create Post Modal -->
     <div class="overlay" id="overlay"></div>
     <!-- Share Modal -->
@@ -204,7 +266,6 @@
             document.getElementById('shareModal').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
         }
-
         async function shareToConv(convId) {
             const res = await fetch('/api/chat/share-post', {
                 method: 'POST',
@@ -217,6 +278,25 @@
             } else {
                 alert('Failed to share post.');
             }
+        }
+
+        function openNotifications() {
+            document.getElementById('notifModal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closeNotifications() {
+            document.getElementById('notifModal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        function markAllRead() {
+            fetch('/profile/notifications/mark-all-read', { method: 'POST' })
+                .then(r => {
+                    if (r.ok) {
+                        location.reload();
+                    }
+                });
         }
     </script>
 </body>

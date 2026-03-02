@@ -4,9 +4,392 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile | Zentrix</title>
+    <title th:text="${user.username + ' • Zentrix'}">Profile</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Additional profile-specific styles that aren't in style.css */
+        .profile-header {
+            display: flex;
+            gap: 52px;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
+        .avatar-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .avatar-ring {
+            width: 148px;
+            height: 148px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+        }
+
+        .avatar-ring img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--bg-color);
+            display: block;
+        }
+
+        .new-post-fab {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 3px solid var(--bg-color);
+            color: #fff;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform .2s;
+            box-shadow: 0 2px 12px rgba(232, 66, 124, .5);
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-top {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .profile-username {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .btn-edit {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 7px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-follow {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            border-radius: 8px;
+            padding: 7px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 16px;
+        }
+
+        .stat-num {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .bio-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .skills-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .skill-pill {
+            background: rgba(167, 139, 250, .12);
+            border: 1px solid rgba(167, 139, 250, .3);
+            color: var(--accent2);
+            border-radius: 20px;
+            padding: 3px 11px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tabs {
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            border-top: 2px solid transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 13px 26px;
+            cursor: pointer;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: all .2s;
+        }
+
+        .tab-btn.active {
+            color: var(--text-primary);
+            border-top-color: var(--accent);
+        }
+
+        .tab-panel {
+            display: none;
+            padding-top: 20px;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+        }
+
+        .grid-item {
+            aspect-ratio: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            background: var(--card-bg);
+        }
+
+        .grid-item img,
+        .grid-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .3s;
+        }
+
+        .grid-item:hover img,
+        .grid-item:hover video {
+            transform: scale(1.06);
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.52);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            opacity: 0;
+            transition: opacity .2s;
+        }
+
+        .grid-item:hover .grid-overlay {
+            opacity: 1;
+        }
+
+        .grid-overlay span {
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Modal Overlay */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .72);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s;
+        }
+
+        .overlay.open {
+            opacity: 1;
+            pointer-events: all;
+            display: flex;
+            /* Ensure it overrides display: none */
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 92vh;
+            overflow-y: auto;
+            transform: translateY(24px);
+            transition: transform .25s;
+            display: block;
+            /* Ensure it overrides display: none */
+            position: relative;
+            /* Override position: fixed from style.css */
+            top: auto;
+            /* Override top: 50% */
+            left: auto;
+            /* Override left: 50% */
+        }
+
+        .overlay.open .modal {
+            transform: translateY(0);
+        }
+
+        /* Post Modal Specific */
+        .post-modal {
+            max-width: 860px;
+        }
+
+        .post-modal-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .pd-media {
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-height: 560px;
+        }
+
+        .pd-info {
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--glass-border);
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 9px;
+            margin-bottom: 12px;
+        }
+
+        .comment-bubble {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 13px;
+            flex: 1;
+        }
+
+        .badge {
+            background: var(--accent);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 10px;
+            padding: 2px 5px;
+            font-weight: 700;
+        }
+
+        .mdrop {
+            position: absolute;
+            background: var(--card-bg);
+            border: 1px solid var(--accent2);
+            border-radius: 8px;
+            z-index: 600;
+            max-height: 180px;
+            overflow-y: auto;
+            min-width: 200px;
+            display: none;
+            top: 100%;
+            left: 0;
+            width: 100%;
+        }
+
+        .mdrop.open {
+            display: block;
+        }
+
+        .mi {
+            padding: 9px 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .mi:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .mi img {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+        }
+
+        .collab-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .ctag {
+            background: rgba(167, 139, 250, .15);
+            border: 1px solid rgba(167, 139, 250, .4);
+            color: var(--accent2);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Select styling */
+        select.form-input option {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+    </style>
 </head>
 
 <body>
@@ -14,146 +397,575 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">Zentrix</div>
+        <!-- Search Bar -->
+        <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
+            <input type="text" placeholder="Search for talents, events..." class="form-input"
+                style="background: var(--card-bg); border-radius: 20px; padding: 8px 15px;">
+        </div>
         <div class="nav-links">
-            <a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <a href="/dashboard"><i class="fas fa-home"></i></a>
+            <a href="/messages"><i class="fas fa-comment-dots"></i></a>
+            <a href="#" onclick="openM('notifModal')" style="position: relative;">
+                <i class="fas fa-bell"></i>
+                <span th:if="${unreadNotifCount != null && unreadNotifCount > 0}" class="badge"
+                    th:text="${unreadNotifCount}"></span>
+            </a>
+            <a href="/profile" class="active">
+                <img th:src="${session.user.profilePhotoUrl != null and !session.user.profilePhotoUrl.isEmpty()} ? ${session.user.profilePhotoUrl} : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop'"
+                    class="user-avatar" style="width: 32px; height: 32px; border: none;">
+            </a>
         </div>
     </nav>
 
-    <div class="container" style="max-width: 800px; margin-top: 40px;">
+    <div class="dashboard-container">
 
-        <div th:if="${param.success}"
-            style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            Profile updated successfully!
-        </div>
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <a href="/dashboard" class="sidebar-link"><i class="fas fa-home"></i> Home</a>
+            <a href="/explore" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
+            <a href="/events" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Events</a>
+            <a href="/achievements" class="sidebar-link"><i class="fas fa-trophy"></i> Achievements</a>
+            <a href="/messages" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
+            <a href="/profile" class="sidebar-link active"><i class="fas fa-user"></i> Profile</a>
+            <a href="/games" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
+            <a href="#" class="sidebar-link" onclick="openM('createPostModal')"><i class="fas fa-plus-circle"
+                    style="color: var(--accent);"></i> Create Post</a>
+            <a href="/logout" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
+                Logout</a>
+        </aside>
 
-        <div th:if="${param.passwordReset}"
-            style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            Password reset successfully!
-        </div>
+        <!-- Center Feed -->
+        <main class="social-feed">
 
-        <!-- Basic Info Section -->
-        <div class="feature-card" style="text-align: left; margin-bottom: 30px;">
-            <h2 style="margin-bottom: 20px;">Edit Profile</h2>
-            <form th:action="@{/profile/update}" method="post">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" name="username" th:value="${user.username}" class="form-input" required>
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="avatar-wrap">
+                    <div class="avatar-ring">
+                        <img id="mainAvatar"
+                            th:src="${user.profilePhotoUrl != null and !user.profilePhotoUrl.isEmpty()}
+                                 ? ${user.profilePhotoUrl}
+                                 : ${'https://ui-avatars.com/api/?name=' + user.username + '&background=e8427c&color=fff&size=200'}"
+                            alt="avatar">
+                    </div>
+                    <div class="new-post-fab" th:if="${isOwnProfile}" onclick="openM('createPostModal')"
+                        title="New Post">
+                        <i class="fas fa-plus"></i>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" th:value="${user.email}" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label>Date of Birth</label>
-                    <input type="date" name="dob" th:value="${user.dob}" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label>Gender</label>
-                    <select name="gender" class="form-input" required>
-                        <option value="Male" th:selected="${user.gender == 'Male'}">Male</option>
-                        <option value="Female" th:selected="${user.gender == 'Female'}">Female</option>
-                        <option value="Other" th:selected="${user.gender == 'Other'}">Other</option>
-                    </select>
-                </div>
-                <button type="submit" class="cta-btn">Update Info</button>
-            </form>
-        </div>
 
-        <!-- Reset Password Section -->
-        <div class="feature-card" style="text-align: left; margin-bottom: 30px;">
-            <h2 style="margin-bottom: 20px;">Reset Password</h2>
-            <form th:action="@{/profile/reset-password}" method="post">
-                <div class="form-group">
-                    <label>New Password</label>
-                    <input type="password" name="newPassword" class="form-input" required>
-                </div>
-                <button type="submit" class="cta-btn" style="background: var(--text-secondary);">Reset Password</button>
-            </form>
-        </div>
+                <div class="profile-info">
+                    <div class="profile-top">
+                        <span class="profile-username" th:text="${user.username}">username</span>
+                        <button class="btn-edit" th:if="${isOwnProfile}" onclick="openM('editModal')">
+                            <i class="fas fa-pen" style="font-size:11px;"></i> Edit Profile
+                        </button>
+                        <form th:if="${!isOwnProfile and !isFollowing}"
+                            th:action="@{'/profile/' + ${user.id} + '/follow'}" method="post" style="display:inline;">
+                            <button type="submit" class="btn-follow"><i class="fas fa-user-plus"></i> Follow</button>
+                        </form>
+                        <form th:if="${!isOwnProfile and isFollowing}"
+                            th:action="@{'/profile/' + ${user.id} + '/unfollow'}" method="post" style="display:inline;">
+                            <button type="submit" class="btn-edit"><i class="fas fa-user-check"></i> Following</button>
+                        </form>
+                    </div>
 
-        <!-- Create Post Section -->
-        <div class="feature-card" style="text-align: left; margin-bottom: 30px;">
-            <h2 style="margin-bottom: 20px;">Create Post</h2>
-            <form th:action="@{/profile/post}" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <textarea name="content" class="form-input" rows="3"
-                        placeholder="What's on your mind? Mention users with @" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Add Media (Photo/Video)</label>
-                    <input type="file" name="file" class="form-input" accept="image/*,video/*">
-                </div>
-                <div class="form-group">
-                    <label>Hashtags</label>
-                    <input type="text" name="hashtags" class="form-input" placeholder="#tech #life">
-                </div>
-                <button type="submit" class="cta-btn">Post</button>
-            </form>
-        </div>
+                    <div class="stats-row">
+                        <div class="stat" style="cursor:pointer;"
+                            onclick="switchTab('grid', document.querySelector('.tab-btn'))">
+                            <span class="stat-num" th:text="${#lists.size(posts)}">0</span>
+                            <span class="stat-label">posts</span>
+                        </div>
+                        <div class="stat" style="cursor:pointer;" onclick="openFollowList('followers')">
+                            <span class="stat-num" th:text="${followersCount}">0</span>
+                            <span class="stat-label">followers</span>
+                        </div>
+                        <div class="stat" style="cursor:pointer;" onclick="openFollowList('following')">
+                            <span class="stat-num" th:text="${followingCount}">0</span>
+                            <span class="stat-label">following</span>
+                        </div>
+                    </div>
 
-        <!-- Collaboration Requests Section -->
-        <div th:if="${pendingRequests != null and !pendingRequests.isEmpty()}" class="feature-card"
-            style="text-align: left; margin-bottom: 30px; border-color: var(--accent);">
-            <h2 style="margin-bottom: 20px; color: var(--accent);">Collaboration Requests</h2>
-            <div th:each="req : ${pendingRequests}"
-                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--glass-border);">
-                <div>
-                    <strong><span th:text="${req.post.user.username}">User</span></strong> wants to collaborate on a
-                    post.
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;"
-                        th:text="${#temporals.format(req.post.createdAt, 'dd-MM-yyyy HH:mm')}">Date</div>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <form th:action="@{'/profile/collaboration/' + ${req.id} + '/accept'}" method="post">
-                        <button type="submit" class="cta-btn"
-                            style="padding: 5px 15px; font-size: 12px;">Accept</button>
-                    </form>
-                    <form th:action="@{'/profile/collaboration/' + ${req.id} + '/reject'}" method="post">
-                        <button type="submit" class="cta-btn"
-                            style="padding: 5px 15px; font-size: 12px; background: var(--glass-bg); border: 1px solid var(--glass-border);">Reject</button>
-                    </form>
+                    <p class="bio-text" style="color:var(--text-primary); font-weight:500;" th:text="${user.email}">
+                        email</p>
+                    <p class="bio-text"
+                        th:text="${user.aboutMe != null and !user.aboutMe.isEmpty()} ? ${user.aboutMe} : 'No bio yet. Click Edit Profile to add one!'">
+                        bio</p>
+                    <div class="skills-row" th:if="${user.skills != null and !user.skills.isEmpty()}">
+                        <span class="skill-pill" th:each="s : ${#strings.arraySplit(user.skills,',')}"
+                            th:text="${#strings.trim(s)}">skill</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- My Posts Section -->
-        <h2 style="margin-bottom: 20px;">My Posts</h2>
-        <div th:each="post : ${posts}" class="post-card">
-            <div class="post-header">
-                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
-                    class="user-avatar" alt="User">
-                <div class="post-user-info">
-                    <h4>
-                        <span th:text="${post.user.username}">Username</span>
-                        <span th:each="collab : ${post.collaborations}" th:if="${collab.status.name() == 'ACCEPTED'}">
-                            & <span th:text="${collab.user.username}">CollabUser</span>
-                        </span>
-                    </h4>
-                    <span th:text="${#temporals.format(post.createdAt, 'dd-MM-yyyy HH:mm')}">Date</span>
-                </div>
-                <!-- Collaboration Badge -->
-                <div th:if="${post.user.id != user.id}" style="margin-left: auto;">
-                    <span class="status-badge"
-                        style="background: rgba(46, 204, 113, 0.2); color: #2ecc71; font-size: 10px;">Collab</span>
-                </div>
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('grid',this)"><i class="fas fa-th"></i> Posts</button>
+                <button class="tab-btn" onclick="switchTab('text',this)"><i class="fas fa-align-left"></i> Text</button>
+                <button class="tab-btn" th:if="${isOwnProfile}" onclick="switchTab('settings',this)"><i
+                        class="fas fa-cog"></i> Settings</button>
             </div>
-            <!-- Media Display -->
-            <div th:if="${post.mediaUrl != null}">
-                <img th:if="${post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}"
-                    style="width: 100%; max-height: 400px; object-fit: cover; margin-bottom: 15px; border-radius: 8px;">
-                <video th:if="${post.mediaType == 'VIDEO'}" th:src="@{${post.mediaUrl}}" controls
-                    style="width: 100%; max-height: 400px; margin-bottom: 15px; border-radius: 8px;"></video>
-            </div>
-            <div class="post-content">
-                <p th:text="${post.content}" style="white-space: pre-wrap;">Post content...</p>
-                <div th:if="${post.hashtags != null}" style="color: var(--accent); margin-top: 5px;"
-                    th:text="${post.hashtags}">#hashtags</div>
-            </div>
-        </div>
 
+            <!-- Grid -->
+            <div class="tab-panel active" id="tab-grid">
+                <div class="posts-grid" th:if="${not #lists.isEmpty(posts)}">
+                    <div th:each="post : ${posts}" class="grid-item"
+                        th:attr="data-id=${post.id},
+                               data-content=${post.content},
+                               data-hashtags=${post.hashtags != null ? post.hashtags : ''},
+                               data-mediaurl=${post.mediaUrl != null ? post.mediaUrl : ''},
+                               data-mediatype=${post.mediaType != null ? post.mediaType : ''},
+                               data-username=${post.user.username},
+                               data-avatar=${post.user.profilePhotoUrl != null ? post.user.profilePhotoUrl : ''},
+                               data-date=${#temporals.format(post.createdAt,'dd MMM yyyy')},
+                               data-collabs=${#strings.listJoin(post.collaborations.?[status.name() == 'ACCEPTED'].![user.username], ', ')}"
+                        onclick="openPostDetail(this)">
+
+                        <img th:if="${post.mediaUrl != null and post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}"
+                            alt="post">
+                        <video th:if="${post.mediaUrl != null and post.mediaType == 'VIDEO'}"
+                            th:src="@{${post.mediaUrl}}" muted></video>
+                        <div th:if="${post.mediaUrl == null}"
+                            style="display:flex; align-items:center; justify-content:center; height:100%; padding:20px; background:var(--card-bg);">
+                            <p style="font-size:12px; text-align:center; color:var(--text-secondary);"
+                                th:text="${#strings.abbreviate(post.content,90)}">text</p>
+                        </div>
+
+                        <div th:if="${not #lists.isEmpty(post.collaborations.?[status.name() == 'ACCEPTED'])}"
+                            style="position:absolute; top:8px; right:8px; background:var(--accent); color:white; border-radius:4px; padding:2px 6px; font-size:10px;">
+                            <i class="fas fa-users"></i>
+                        </div>
+
+                        <div class="grid-overlay">
+                            <span><i class="fas fa-heart"></i> <span class="lc">—</span></span>
+                            <span><i class="fas fa-comment"></i> <span class="cc">—</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(posts)}"
+                    style="text-align:center; padding:60px 20px; color:var(--text-secondary);">
+                    <i class="fas fa-camera"
+                        style="font-size:48px; opacity:0.3; margin-bottom:15px; display:block;"></i>
+                    <p style="font-weight:600;">No Posts Yet</p>
+                </div>
+            </div>
+
+            <!-- Text Posts -->
+            <div class="tab-panel" id="tab-text">
+                <div style="max-width:580px; margin:0 auto; display:flex; flex-direction:column; gap:14px;">
+                    <div th:each="post : ${posts}" th:if="${post.mediaUrl == null}"
+                        style="background:var(--card-bg); border:1px solid var(--glass-border); border-radius:12px; padding:20px; cursor:pointer;"
+                        th:attr="data-id=${post.id},data-content=${post.content},data-hashtags=${post.hashtags != null ? post.hashtags : ''},data-mediaurl='',data-mediatype='',data-username=${post.user.username},data-avatar=${post.user.profilePhotoUrl != null ? post.user.profilePhotoUrl : ''},data-date=${#temporals.format(post.createdAt,'dd MMM yyyy')},data-collabs=${#strings.listJoin(post.collaborations.?[status.name() == 'ACCEPTED'].![user.username], ', ')}"
+                        onclick="openPostDetail(this)">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                            <img th:src="${post.user.profilePhotoUrl != null and !post.user.profilePhotoUrl.isEmpty()} ? ${post.user.profilePhotoUrl} : ${'https://ui-avatars.com/api/?name='+post.user.username+'&background=e8427c&color=fff&size=60'}"
+                                style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                            <div>
+                                <div style="font-weight:600; font-size:14px;" th:text="${post.user.username}">u</div>
+                                <div style="font-size:11px; color:var(--text-secondary);"
+                                    th:text="${#temporals.format(post.createdAt,'dd MMM yyyy')}">d</div>
+                            </div>
+                        </div>
+                        <p style="font-size:14px; line-height:1.6;" th:text="${post.content}">c</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="tab-panel" id="tab-settings" th:if="${isOwnProfile}">
+                <div style="max-width:500px; margin:0 auto;">
+                    <div class="feature-card" style="margin-bottom:20px;">
+                        <h3 style="margin-bottom:15px;"><i class="fas fa-lock" style="color:var(--accent);"></i> Reset
+                            Password</h3>
+                        <form th:action="@{/profile/reset-password}" method="post" style="display:flex; gap:10px;">
+                            <input type="password" name="newPassword" class="form-input" placeholder="New password"
+                                required>
+                            <button type="submit" class="cta-btn" style="padding:10px 20px;">Reset</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </main>
     </div>
 
+    <!-- Modals -->
+
+    <!-- Edit Profile -->
+    <div class="overlay" id="editModal">
+        <div class="modal">
+            <div
+                style="padding:20px; border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:16px;">Edit Profile</h3>
+                <button class="nav-btn" onclick="closeM('editModal')"
+                    style="background:none; border:none; color:var(--text-secondary); font-size:20px;">&times;</button>
+            </div>
+            <div style="padding:20px;">
+                <form th:action="@{/profile/update}" method="post">
+                    <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                        <img id="editAvatarPrev"
+                            th:src="${user.profilePhotoUrl != null and !user.profilePhotoUrl.isEmpty()} ? ${user.profilePhotoUrl} : ${'https://ui-avatars.com/api/?name='+user.username+'&background=e8427c&color=fff&size=200'}"
+                            style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px solid var(--accent);">
+                        <div style="flex:1;">
+                            <label style="font-size:12px; color:var(--text-secondary);">Photo URL</label>
+                            <input type="text" name="profilePhotoUrl" th:value="${user.profilePhotoUrl}"
+                                class="form-input" style="padding:8px;" oninput="livePhoto(this.value)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" name="username" th:value="${user.username}" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" th:value="${user.email}" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" name="dob" th:value="${user.dob}" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select name="gender" class="form-input">
+                            <option value="Male" th:selected="${user.gender == 'Male'}">Male</option>
+                            <option value="Female" th:selected="${user.gender == 'Female'}">Female</option>
+                            <option value="Other" th:selected="${user.gender == 'Other'}">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Skills (comma separated)</label>
+                        <input type="text" name="skills" th:value="${user.skills}" class="form-input"
+                            placeholder="e.g. Design, Coding">
+                    </div>
+                    <div class="form-group">
+                        <label>About Me</label>
+                        <textarea name="aboutMe" class="form-input" rows="3" th:text="${user.aboutMe}"></textarea>
+                    </div>
+                    <button type="submit" class="cta-btn" style="width:100%;">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Post Modal -->
+    <div class="overlay" id="createPostModal">
+        <div class="modal">
+            <div
+                style="padding:20px; border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="font-size:16px;">Create Post</h3>
+                <button class="nav-btn" onclick="closeM('createPostModal')"
+                    style="background:none; border:none; color:var(--text-secondary); font-size:20px;">&times;</button>
+            </div>
+            <div style="padding:20px;">
+                <form th:action="@{/profile/post}" method="post" enctype="multipart/form-data">
+                    <div class="form-group" style="position:relative;">
+                        <textarea id="postContent" name="content" class="form-input" rows="4"
+                            placeholder="What's on your mind? Type @ to mention..." required></textarea>
+                        <div class="mdrop" id="mentionDrop"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Media</label>
+                        <input type="file" name="file" class="form-input" accept="image/*,video/*"
+                            onchange="previewMedia(this)">
+                        <div id="mediaPreview" style="display:none; margin-top:10px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Tag Collaborators</label>
+                        <div class="collab-tags" id="collabTags"></div>
+                        <input type="text" id="collabSearch" class="form-input" placeholder="Search users...">
+                        <div class="mdrop" id="collabDrop"></div>
+                        <input type="hidden" name="collaborators" id="collabHidden">
+                    </div>
+                    <div class="form-group">
+                        <label>Hashtags</label>
+                        <input type="text" name="hashtags" class="form-input" placeholder="#zentrix #creative">
+                    </div>
+                    <button type="submit" class="cta-btn" style="width:100%;">Post</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Detail Modal -->
+    <div class="overlay" id="postDetailModal">
+        <div class="modal post-modal">
+            <div
+                style="padding:15px; border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img id="pd-avatar" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                    <div>
+                        <div id="pd-username" style="font-weight:600; font-size:14px;"></div>
+                        <div id="pd-date" style="font-size:11px; color:var(--text-secondary);"></div>
+                    </div>
+                </div>
+                <button class="nav-btn" onclick="closeM('postDetailModal')"
+                    style="background:none; border:none; color:var(--text-secondary); font-size:20px;">&times;</button>
+            </div>
+            <div class="post-modal-body" id="pd-body">
+                <div class="pd-media" id="pd-media">
+                    <img id="pd-img" style="display:none; width:100%;">
+                    <video id="pd-vid" controls style="display:none; width:100%;"></video>
+                </div>
+                <div class="pd-info">
+                    <div style="padding:15px; flex:1; overflow-y:auto;">
+                        <p id="pd-text" style="font-size:14px; line-height:1.6;"></p>
+                        <p id="pd-collab" style="font-size:12px; color:var(--accent); margin-top:10px;"></p>
+                    </div>
+                    <div
+                        style="padding:10px 15px; border-top:1px solid var(--glass-border); display:flex; gap:15px; align-items:center;">
+                        <button class="nav-btn" id="likeBtn" onclick="toggleLike()"
+                            style="background:none; border:none; color:var(--text-secondary); display:flex; align-items:center; gap:5px;">
+                            <i class="fas fa-heart"></i> <span id="likeCount">0</span>
+                        </button>
+                        <button class="nav-btn" onclick="document.getElementById('cmtInput').focus()"
+                            style="background:none; border:none; color:var(--text-secondary); display:flex; align-items:center; gap:5px;">
+                            <i class="fas fa-comment"></i> <span id="cmtCount">0</span>
+                        </button>
+                        <button class="nav-btn" id="deleteBtn" onclick="deletePost()"
+                            style="display:none; background:none; border:none; color:var(--accent); margin-left:auto;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    <div class="comments-section"
+                        style="max-height:200px; overflow-y:auto; padding:15px; border-top:1px solid var(--glass-border);">
+                        <div id="cmtList"></div>
+                    </div>
+                    <div style="padding:15px; border-top:1px solid var(--glass-border); display:flex; gap:10px;">
+                        <input type="text" id="cmtInput" class="form-input" placeholder="Add a comment..."
+                            style="padding:8px;" onkeydown="if(event.key==='Enter')submitCmt()">
+                        <button class="cta-btn" onclick="submitCmt()"
+                            style="padding:5px 15px; font-size:12px;">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div class="overlay" id="notifModal">
+        <div class="modal" style="max-width:400px;">
+            <div
+                style="padding:15px; border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
+                <h3>Notifications</h3>
+                <button class="nav-btn" onclick="closeM('notifModal')"
+                    style="background:none; border:none; color:var(--text-secondary); font-size:20px;">&times;</button>
+            </div>
+            <div style="padding:15px; max-height:400px; overflow-y:auto;">
+                <div th:each="n : ${notifications}"
+                    style="padding:10px 0; border-bottom:1px solid var(--glass-border); display:flex; gap:10px; align-items:center;">
+                    <img th:src="'https://ui-avatars.com/api/?name=' + ${n.actor != null ? n.actor.username : 'S'} + '&background=e8427c&color=fff'"
+                        style="width:32px; height:32px; border-radius:50%;">
+                    <div>
+                        <p style="font-size:13px;" th:text="${n.message}"></p>
+                        <span style="font-size:10px; color:var(--text-secondary);"
+                            th:text="${#temporals.format(n.createdAt, 'dd MMM HH:mm')}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Followers / Following List Modal -->
+    <div class="overlay" id="followModal">
+        <div class="modal" style="max-width:380px;">
+            <div
+                style="padding:15px; border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="followTitle">Users</h3>
+                <button class="nav-btn" onclick="closeM('followModal')"
+                    style="background:none; border:none; color:var(--text-secondary); font-size:20px;">&times;</button>
+            </div>
+            <div id="followBody" style="padding:15px;"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"
+        style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(100px); background:#2ecc71; color:white; padding:12px 24px; border-radius:8px; transition:all 0.3s; z-index:2000;">
+    </div>
+    <span th:if="${param.success}" id="ts1" style="display:none"></span>
+
+    <!-- Data needed for JS -->
+    <div id="flData" style="display:none;">
+        <span th:each="f : ${followers}" class="fl-item"
+            th:attr="data-u=${f.username},data-p=${f.profilePhotoUrl},data-s=${f.skills}"></span>
+        <span th:each="f : ${following}" class="fw-item"
+            th:attr="data-u=${f.username},data-p=${f.profilePhotoUrl},data-s=${f.skills}"></span>
+    </div>
+
+    <script th:inline="javascript">
+        const curUser = /*[[${session.user.username}]]*/ 'anonymous';
+        const FB = 'https://ui-avatars.com/api/?name=User&background=666&color=fff';
+
+        function openM(id) { document.getElementById(id).classList.add('open'); }
+        function closeM(id) { document.getElementById(id).classList.remove('open'); }
+
+        function switchTab(n, b) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+            document.getElementById('tab-' + n).classList.add('active');
+            b.classList.add('active');
+        }
+
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.transform = 'translateX(-50%) translateY(0)';
+            setTimeout(() => t.style.transform = 'translateX(-50%) translateY(100px)', 3000);
+        }
+        if (document.getElementById('ts1')) toast('Profile Updated!');
+
+        function livePhoto(v) {
+            document.getElementById('editAvatarPrev').src = v || FB;
+        }
+
+        function openFollowList(type) {
+            const title = type === 'followers' ? 'Followers' : 'Following';
+            document.getElementById('followTitle').textContent = title;
+            const body = document.getElementById('followBody');
+            body.innerHTML = '';
+            const items = document.querySelectorAll(type === 'followers' ? '.fl-item' : '.fw-item');
+            if (items.length === 0) body.innerHTML = '<p style="text-align:center; opacity:0.5;">No users found</p>';
+            items.forEach(i => {
+                const div = document.createElement('div');
+                div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '10px'; div.style.marginBottom = '10px';
+                div.innerHTML = `<img src="${i.dataset.p || FB}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                                 <div style="flex:1;"><a href="/profile/${i.dataset.u}" style="font-weight:600; font-size:14px; color:inherit;">@${i.dataset.u}</a></div>`;
+                body.appendChild(div);
+            });
+            openM('followModal');
+        }
+
+        let currentId = null;
+        function openPostDetail(el) {
+            currentId = el.dataset.id;
+            document.getElementById('pd-username').textContent = '@' + el.dataset.username;
+            document.getElementById('pd-avatar').src = el.dataset.avatar || FB;
+            document.getElementById('pd-date').textContent = el.dataset.date;
+            document.getElementById('pd-text').textContent = el.dataset.content;
+            document.getElementById('pd-collab').textContent = el.dataset.collabs ? 'Collaborators: ' + el.dataset.collabs : '';
+
+            const ms = document.getElementById('pd-media');
+            const img = document.getElementById('pd-img');
+            const vid = document.getElementById('pd-vid');
+            img.style.display = 'none'; vid.style.display = 'none'; ms.style.display = 'none';
+
+            if (el.dataset.mediaurl) {
+                ms.style.display = 'block';
+                document.getElementById('pd-body').style.gridTemplateColumns = '1fr 1fr';
+                if (el.dataset.mediatype === 'VIDEO') { vid.src = el.dataset.mediaurl; vid.style.display = 'block'; }
+                else { img.src = el.dataset.mediaurl; img.style.display = 'block'; }
+            } else {
+                document.getElementById('pd-body').style.gridTemplateColumns = '1fr';
+            }
+
+            document.getElementById('deleteBtn').style.display = el.dataset.username === curUser ? 'block' : 'none';
+
+            loadStats(currentId);
+            loadComments(currentId);
+            openM('postDetailModal');
+        }
+
+        function loadStats(id) {
+            fetch(`/api/posts/${id}/stats`).then(r => r.json()).then(d => {
+                document.getElementById('likeCount').textContent = d.likes;
+                document.getElementById('cmtCount').textContent = d.comments;
+                document.getElementById('likeBtn').style.color = d.liked ? 'var(--accent)' : 'inherit';
+            });
+        }
+
+        function toggleLike() {
+            fetch(`/api/posts/${currentId}/like`, { method: 'POST' }).then(() => loadStats(currentId));
+        }
+
+        function loadComments(id) {
+            fetch(`/api/posts/${id}/comments`).then(r => r.json()).then(cs => {
+                const list = document.getElementById('cmtList');
+                list.innerHTML = '';
+                cs.forEach(c => {
+                    const div = document.createElement('div');
+                    div.className = 'comment-item';
+                    div.innerHTML = `<img src="${c.photo || FB}" style="width:28px; height:28px; border-radius:50%; margin-top:3px;">
+                                     <div class="comment-bubble"><strong>@${c.username}</strong> ${c.content}</div>`;
+                    list.appendChild(div);
+                });
+            });
+        }
+
+        function submitCmt() {
+            const inp = document.getElementById('cmtInput');
+            if (!inp.value.trim()) return;
+            fetch(`/api/posts/${currentId}/comment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: inp.value })
+            }).then(() => { inp.value = ''; loadStats(currentId); loadComments(currentId); });
+        }
+
+        function deletePost() {
+            if (!confirm('Detele this post?')) return;
+            fetch(`/profile/post/delete/${currentId}`, { method: 'POST' }).then(() => location.reload());
+        }
+
+        /* Mention/Collab Autocomplete logic */
+        function fetchU(q, drop, onSel) {
+            fetch('/profile/api/users/search?q=' + encodeURIComponent(q))
+                .then(r => r.json()).then(us => {
+                    drop.innerHTML = '';
+                    if (!us.length) { drop.classList.remove('open'); return; }
+                    us.forEach(u => {
+                        const d = document.createElement('div'); d.className = 'mi';
+                        d.innerHTML = `<img src="${u.profilePhotoUrl || FB}"><span class="mu">@${u.username}</span>`;
+                        d.onmousedown = (e) => { e.preventDefault(); onSel(u.username); };
+                        drop.appendChild(d);
+                    });
+                    drop.classList.add('open');
+                });
+        }
+
+        const postContent = document.getElementById('postContent');
+        const mentionDrop = document.getElementById('mentionDrop');
+        postContent.oninput = () => {
+            const val = postContent.value, pos = postContent.selectionStart;
+            let at = -1;
+            for (let i = pos - 1; i >= 0; i--) { if (val[i] === '@') { at = i; break; } if (/\s/.test(val[i])) break; }
+            if (at === -1) { mentionDrop.classList.remove('open'); return; }
+            const q = val.substring(at + 1, pos);
+            if (!q) { mentionDrop.classList.remove('open'); return; }
+            fetchU(q, mentionDrop, u => {
+                postContent.value = val.substring(0, at) + '@' + u + ' ' + val.substring(pos);
+                mentionDrop.classList.remove('open');
+            });
+        };
+
+        const collabSearch = document.getElementById('collabSearch');
+        const collabDrop = document.getElementById('collabDrop');
+        const collabTags = document.getElementById('collabTags');
+        const collabHidden = document.getElementById('collabHidden');
+        let selCollabs = [];
+        collabSearch.oninput = () => {
+            const q = collabSearch.value.trim();
+            if (!q) { collabDrop.classList.remove('open'); return; }
+            fetchU(q, collabDrop, u => {
+                if (!selCollabs.includes(u)) {
+                    selCollabs.push(u); collabHidden.value = selCollabs.join(',');
+                    const t = document.createElement('div'); t.className = 'ctag';
+                    t.innerHTML = `@${u} <span style="cursor:pointer; font-weight:bold;">&times;</span>`;
+                    t.onclick = () => { selCollabs = selCollabs.filter(x => x !== u); collabHidden.value = selCollabs.join(','); t.remove(); };
+                    collabTags.appendChild(t);
+                }
+                collabSearch.value = ''; collabDrop.classList.remove('open');
+            });
+        };
+
+        function previewMedia(inp) {
+            const wrap = document.getElementById('mediaPreview'); wrap.innerHTML = '';
+            if (!inp.files || !inp.files[0]) { wrap.style.display = 'none'; return; }
+            const f = inp.files[0], url = URL.createObjectURL(f);
+            wrap.style.display = 'block';
+            wrap.innerHTML = f.type.startsWith('video')
+                ? `<video src="${url}" controls style="width:100%; max-height:180px; border-radius:8px;"></video>`
+                : `<img src="${url}" style="width:100%; max-height:180px; border-radius:8px;">`;
+        }
+    </script>
 </body>
 
 </html>

@@ -1,8 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.ChatMessage;
-import com.example.demo.model.Conversation;
-import com.example.demo.model.User;
+import com.example.demo.model.*;
 import com.example.demo.service.ChatService;
 import com.example.demo.repository.ConversationRepository;
 import com.example.demo.repository.UserRepository;
@@ -24,6 +22,31 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/chat")
 public class ChatRestController {
 
+    private User getUserFromSession(HttpSession session) {
+        Object sessionUser = session.getAttribute("user");
+        if (sessionUser instanceof User) {
+            return (User) sessionUser;
+        }
+        Object userIdObj = session.getAttribute("userId");
+        if (userIdObj != null) {
+            try {
+                Long userId = null;
+                if (userIdObj instanceof Number) {
+                    userId = ((Number) userIdObj).longValue();
+                } else if (userIdObj instanceof String) {
+                    userId = Long.parseLong((String) userIdObj);
+                }
+
+                if (userId != null) {
+                    return userRepository.findById(userId).orElse(null);
+                }
+            } catch (Exception e) {
+                System.err.println("[DEBUG] Failed to recover user from session userId: " + userIdObj);
+            }
+        }
+        return null;
+    }
+
     @Autowired
     private ChatService chatService;
 
@@ -38,12 +61,12 @@ public class ChatRestController {
 
     @GetMapping("/conversations")
     public ResponseEntity<List<Conversation>> getConversations(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        System.out.println("[DEBUG] getConversations called for user: " + (user != null ? user.getUsername() : "NULL"));
+        User user = getUserFromSession(session);
         if (user == null) {
-            System.err.println("[ERROR] No user found in session for getConversations");
+            System.err.println("[ERROR] No valid user found in session for getConversations.");
             return ResponseEntity.status(401).build();
         }
+        System.out.println("[DEBUG] getConversations called for user: " + user.getUsername());
         try {
             List<Conversation> convs = chatService.getUserConversations(user);
             System.out.println("[DEBUG] Found " + convs.size() + " conversations");
@@ -57,9 +80,10 @@ public class ChatRestController {
 
     @GetMapping("/history/{conversationId}")
     public ResponseEntity<List<ChatMessage>> getHistory(@PathVariable Long conversationId, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
+        User user = getUserFromSession(session);
+        if (user == null) {
             return ResponseEntity.status(401).build();
+        }
 
         List<com.example.demo.model.MessageReadReceipt> seen = chatService.markMessagesAsSeen(conversationId, user);
         notifySenderOfSeen(seen);
@@ -68,9 +92,10 @@ public class ChatRestController {
 
     @PostMapping("/mark-seen/{conversationId}")
     public ResponseEntity<Void> markSeen(@PathVariable Long conversationId, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
+        User user = getUserFromSession(session);
+        if (user == null) {
             return ResponseEntity.status(401).build();
+        }
         List<com.example.demo.model.MessageReadReceipt> seen = chatService.markMessagesAsSeen(conversationId, user);
         notifySenderOfSeen(seen);
         return ResponseEntity.ok().build();
@@ -78,17 +103,19 @@ public class ChatRestController {
 
     @GetMapping("/media/{conversationId}")
     public ResponseEntity<List<ChatMessage>> getMedia(@PathVariable Long conversationId, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
+        User user = getUserFromSession(session);
+        if (user == null) {
             return ResponseEntity.status(401).build();
+        }
         return ResponseEntity.ok(chatService.getConversationMedia(conversationId));
     }
 
     @PostMapping("/cleanup-vanish/{conversationId}")
     public ResponseEntity<Void> cleanupVanish(@PathVariable Long conversationId, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
+        User user = getUserFromSession(session);
+        if (user == null) {
             return ResponseEntity.status(401).build();
+        }
         chatService.cleanupVanishMessages(conversationId);
         return ResponseEntity.ok().build();
     }
@@ -96,17 +123,19 @@ public class ChatRestController {
     @PostMapping("/update-theme/{conversationId}")
     public ResponseEntity<Conversation> updateTheme(@PathVariable Long conversationId, @RequestParam String theme,
             HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
+        User user = getUserFromSession(session);
+        if (user == null) {
             return ResponseEntity.status(401).build();
+        }
         return ResponseEntity.ok(chatService.updateTheme(conversationId, theme));
     }
 
     @PostMapping("/create-group")
     public ResponseEntity<Conversation> createGroup(@RequestBody Map<String, Object> payload, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
+        User user = getUserFromSession(session);
+        if (user == null) {
             return ResponseEntity.status(401).build();
+        }
 
         String name = (String) payload.get("name");
         List<?> participantIdsRaw = (List<?>) payload.get("participantIds");
@@ -119,19 +148,21 @@ public class ChatRestController {
 
     @PostMapping("/toggle-pin/{messageId}")
     public ResponseEntity<ChatMessage> togglePin(@PathVariable Long messageId, HttpSession session) {
-        Object sessionUser = session.getAttribute("user");
-        if (!(sessionUser instanceof User))
+        User user = getUserFromSession(session);
+        if (user == null)
             return ResponseEntity.status(401).build();
-        User user = (User) sessionUser;
         return ResponseEntity.ok(chatService.togglePin(messageId, user));
     }
 
     @PostMapping("/share-post")
     public ResponseEntity<ChatMessage> sharePost(@RequestBody Map<String, Object> payload, HttpSession session) {
-        Object sessionUser = session.getAttribute("user");
-        if (!(sessionUser instanceof User))
+        User user = getUserFromSession(session);
+        if (user == null)
             return ResponseEntity.status(401).build();
-        User user = (User) sessionUser;
+        // Always refresh and ensure it's in session
+        user = userRepository.findById(user.getId()).orElse(user);
+        session.setAttribute("user", user);
+        session.setAttribute("userId", user.getId());
 
         Long postId = Long.valueOf(payload.get("postId").toString());
         Long conversationId = Long.valueOf(payload.get("conversationId").toString());
@@ -164,7 +195,7 @@ public class ChatRestController {
 
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers(HttpSession session) {
-        User currentUser = (User) session.getAttribute("user");
+        User currentUser = getUserFromSession(session);
         List<User> users = userRepository.findAll();
         if (currentUser != null) {
             users.removeIf(u -> u.getId().equals(currentUser.getId()));
@@ -174,7 +205,7 @@ public class ChatRestController {
 
     @GetMapping("/search-users")
     public ResponseEntity<List<User>> searchUsers(@RequestParam String query, HttpSession session) {
-        User currentUser = (User) session.getAttribute("user");
+        User currentUser = getUserFromSession(session);
         List<User> users = userRepository.findByUsernameContainingIgnoreCase(query);
         if (currentUser != null) {
             users.removeIf(u -> u.getId().equals(currentUser.getId()));
@@ -184,9 +215,10 @@ public class ChatRestController {
 
     @GetMapping("/unread-count")
     public ResponseEntity<Map<String, Long>> getUnreadCount(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null)
+        User user = getUserFromSession(session);
+        if (user == null) {
             return ResponseEntity.ok(Map.of("count", 0L));
+        }
         return ResponseEntity.ok(Map.of("count", chatService.getUnreadCount(user)));
     }
 
@@ -221,11 +253,10 @@ public class ChatRestController {
 
     @PostMapping("/accept/{id}")
     public ResponseEntity<Conversation> acceptConversation(@PathVariable Long id, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        System.out.println("[DEBUG] acceptConversation called for convId: " + id + ", user: "
-                + (user != null ? user.getUsername() : "NULL"));
-        if (user == null)
+        User user = getUserFromSession(session);
+        if (user == null) {
             return ResponseEntity.status(401).build();
+        }
 
         Conversation accepted = chatService.acceptConversation(id, user);
         System.out.println("[DEBUG] acceptConversation succeeded. Status is now: " + accepted.getStatus());
@@ -244,11 +275,14 @@ public class ChatRestController {
 
     @PostMapping("/reject/{id}")
     public ResponseEntity<Void> rejectConversation(@PathVariable Long id, HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        System.out.println("[DEBUG] rejectConversation called for convId: " + id + ", user: "
-                + (user != null ? user.getUsername() : "NULL"));
-        if (user == null)
+        User user = getUserFromSession(session);
+        if (user == null) {
             return ResponseEntity.status(401).build();
+        }
+        // Always refresh and ensure it's in session
+        user = userRepository.findById(user.getId()).orElse(user);
+        session.setAttribute("user", user);
+        session.setAttribute("userId", user.getId());
 
         // Find conversation to notify participants before deletion
         // We'll use a simple findById since we have conversational context

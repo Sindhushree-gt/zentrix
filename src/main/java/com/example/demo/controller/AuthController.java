@@ -22,7 +22,10 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute("user") User user) {
+    public String registerUser(@ModelAttribute("user") User user, Model model) {
+        if (userRepository.findByUsername(user.getUsername()) != null) {
+            return "redirect:/register?error=duplicate";
+        }
         userRepository.save(user);
         return "redirect:/home";
     }
@@ -37,12 +40,13 @@ public class AuthController {
             @org.springframework.web.bind.annotation.RequestParam String password,
             jakarta.servlet.http.HttpSession session) {
         if ("admin".equals(username) && "admin123".equals(password)) {
-            session.setAttribute("user", "admin");
+            session.setAttribute("adminMode", true);
             return "redirect:/admin";
         }
         User user = userRepository.findByUsername(username);
         if (user != null && user.getPassword().equals(password)) {
             session.setAttribute("user", user);
+            session.setAttribute("userId", user.getId());
             return "redirect:/dashboard";
         } else {
             return "redirect:/login?error";

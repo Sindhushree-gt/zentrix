@@ -1,5 +1,8 @@
 package com.example.demo.model;
 
+import com.example.demo.model.CollaborationStatus;
+import com.example.demo.model.Post;
+import com.example.demo.model.User;
 import jakarta.persistence.*;
 
 @Entity

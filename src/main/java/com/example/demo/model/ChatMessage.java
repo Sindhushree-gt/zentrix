@@ -1,5 +1,7 @@
 package com.example.demo.model;
 
+import com.example.demo.model.MessageStatus;
+import com.example.demo.model.MessageType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashMap;
