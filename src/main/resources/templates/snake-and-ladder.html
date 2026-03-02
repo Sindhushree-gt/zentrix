@@ -4,9 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zentrix Snake & Ladder | Classic Realism</title>
+    <title>Zentrix Snake & Ladder | Multiplayer</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- React -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- SockJS + STOMP (WebSocket) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;700;900&display=swap');
 
@@ -26,16 +36,20 @@
             color: #fff;
             font-family: 'Crimson Pro', serif;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            margin: 0;
             overflow-x: hidden;
             background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
         }
 
+        #root {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
         .game-wrapper {
-            margin-top: 40px;
             display: flex;
             flex-wrap: wrap;
             gap: 50px;
@@ -88,7 +102,7 @@
             transition: transform 0.2s;
         }
 
-        .cell:nth-child(even) {
+        .cell.dark {
             background: var(--tile-dark);
         }
 
@@ -171,11 +185,12 @@
             filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.4));
         }
 
-        .snake-body {
+        .snake-body-path {
             fill: none;
             stroke-width: 10;
             stroke-linecap: round;
             stroke-linejoin: round;
+            stroke: var(--snake-skin);
         }
 
         .snake-head {
@@ -336,6 +351,41 @@
             padding-left: 10px;
         }
 
+        /* Chat styles */
+        .chat-container {
+            margin-top: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 15px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: #fff;
+            font-family: inherit;
+        }
+
         /* Modal */
         .overlay {
             position: fixed;
@@ -345,7 +395,7 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.9);
             z-index: 1000;
-            display: none;
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -360,220 +410,269 @@
 </head>
 
 <body>
+    <div id="root"></div>
 
-    <h1 style="font-size: 3rem; font-weight: 900; letter-spacing: 12px; text-transform: uppercase; margin-bottom: 0;">
-        Zentrix</h1>
-    <p style="color: #666; letter-spacing: 5px; margin-bottom: 30px; font-weight: 700;">PREMIUM BOARD COLLECTION</p>
-
-    <div class="game-wrapper">
-        <div class="board-outer">
-            <div class="board-container" id="board">
-                <svg id="game-overlay"></svg>
-
-                <!-- Player 1 Pawn -->
-                <div id="p1-piece" class="player player-1">
-                    <div class="pawn-top"></div>
-                    <div class="pawn-body"></div>
-                </div>
-
-                <!-- Player 2 Pawn -->
-                <div id="p2-piece" class="player player-2">
-                    <div class="pawn-top"></div>
-                    <div class="pawn-body"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="control-panel">
-            <div class="card">
-                <div id="turn-display" class="turn-indicator" style="color: var(--p1-color);">Player 1</div>
-                <div class="dice-box" onclick="roll()">
-                    <div class="dice" id="dice">
-                        <div class="dice-side side-1">
-                            <div class="dot" style="grid-area: 2/2"></div>
-                        </div>
-                        <div class="dice-side side-2">
-                            <div class="dot" style="grid-area: 1/1"></div>
-                            <div class="dot" style="grid-area: 3/3"></div>
-                        </div>
-                        <div class="dice-side side-3">
-                            <div class="dot" style="grid-area: 1/1"></div>
-                            <div class="dot" style="grid-area: 2/2"></div>
-                            <div class="dot" style="grid-area: 3/3"></div>
-                        </div>
-                        <div class="dice-side side-4">
-                            <div class="dot" style="grid-area: 1/1"></div>
-                            <div class="dot" style="grid-area: 1/3"></div>
-                            <div class="dot" style="grid-area: 3/1"></div>
-                            <div class="dot" style="grid-area: 3/3"></div>
-                        </div>
-                        <div class="dice-side side-5">
-                            <div class="dot" style="grid-area: 1/1"></div>
-                            <div class="dot" style="grid-area: 1/3"></div>
-                            <div class="dot" style="grid-area: 2/2"></div>
-                            <div class="dot" style="grid-area: 3/1"></div>
-                            <div class="dot" style="grid-area: 3/3"></div>
-                        </div>
-                        <div class="dice-side side-6">
-                            <div class="dot" style="grid-area: 1/1"></div>
-                            <div class="dot" style="grid-area: 1/3"></div>
-                            <div class="dot" style="grid-area: 2/1"></div>
-                            <div class="dot" style="grid-area: 2/3"></div>
-                            <div class="dot" style="grid-area: 3/1"></div>
-                            <div class="dot" style="grid-area: 3/3"></div>
-                        </div>
-                    </div>
-                </div>
-                <button id="roll-btn" class="btn" onclick="roll()">Roll Physical Dice</button>
-            </div>
-
-            <div class="card event-log" id="log">
-                <div class="log-line">Zentrix Engine Initialized.</div>
-                <div class="log-line">Board: Standard 10x10.</div>
-                <div class="log-line">Physical Assets: Loaded.</div>
-            </div>
-
-            <button class="btn" style="background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2);"
-                onclick="reset()">Restart Game</button>
-        </div>
-    </div>
-
-    <div id="victory-modal" class="overlay">
-        <h1 id="winner-name" class="victory-text">PLAYER 1 WINS</h1>
-        <p style="letter-spacing: 10px; color: #aaa; margin-bottom: 40px;">SUPREME CHAMPION</p>
-        <button class="btn" style="max-width: 250px" onclick="location.reload()">New Match</button>
-        <a href="/games" style="margin-top: 20px; color: #666; text-decoration: none;">Exit to Library</a>
-    </div>
-
-    <a href="/games"
-        style="position: fixed; bottom: 30px; left: 30px; color: #444; text-decoration: none; font-weight: 700;">
-        <i class="fas fa-arrow-left"></i> BACK TO LIBRARY
-    </a>
-
-    <script>
-        const board = document.getElementById('board');
-        const overlay = document.getElementById('game-overlay');
-        const dice = document.getElementById('dice');
-        const log = document.getElementById('log');
-        const turnDisplay = document.getElementById('turn-display');
-        const rollBtn = document.getElementById('roll-btn');
+    <script type="text/babel" th:inline="none">
+        /*<![CDATA[*/
+        const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
         // Logic Maps
-        const maps = {
+        const MAPS = {
             2: 38, 7: 14, 8: 31, 15: 26, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 78: 98,
             16: 6, 46: 25, 49: 11, 62: 19, 64: 60, 74: 53, 89: 68, 92: 88, 95: 75, 99: 80
         };
 
-        let player1 = 0;
-        let player2 = 0;
-        let turn = 1;
-        let busy = false;
+        // ─── WebSocket Hook ──────────────────────────────────────────────
+        function useSnakeSocket(roomId, onStateUpdate, onRollAnim, onChat) {
+            const stompRef = useRef(null);
 
-        function createBoard() {
-            board.innerHTML = '<svg id="game-overlay"></svg>' +
-                '<div id="p1-piece" class="player player-1"><div class="pawn-top"></div><div class="pawn-body"></div></div>' +
-                '<div id="p2-piece" class="player player-2"><div class="pawn-top"></div><div class="pawn-body"></div></div>';
+            useEffect(() => {
+                if (!roomId) return;
+                const socket = new SockJS('/ws');
+                const stomp = Stomp.over(socket);
+                stomp.debug = () => { };
+                stompRef.current = stomp;
 
-            for (let i = 0; i < 100; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                let row = Math.floor(i / 10);
-                let col = i % 10;
-                let actualRow = 9 - row;
-                let num = (actualRow % 2 === 0) ? (actualRow * 10) + col + 1 : (actualRow * 10) + (9 - col) + 1;
-                cell.dataset.num = num;
-                cell.innerHTML = `<span>${num}</span>`;
-                board.appendChild(cell);
+                stomp.connect({}, () => {
+                    // Subscribe to game state
+                    stomp.subscribe(`/topic/snake/${roomId}`, (msg) => {
+                        onStateUpdate(JSON.parse(msg.body));
+                    });
+                    // Subscribe to dice roll animation trigger (so both players see dice roll)
+                    stomp.subscribe(`/topic/snake/${roomId}/rollEvent`, (msg) => {
+                        onRollAnim(JSON.parse(msg.body));
+                    });
+                    // Subscribe to chat
+                    stomp.subscribe(`/topic/snake/${roomId}/chat`, (msg) => {
+                        if (onChat) onChat(JSON.parse(msg.body));
+                    });
+                    // Request current state
+                    stomp.send(`/app/snake/${roomId}/subscribe`, {}, "{}");
+                });
+
+                return () => stomp.disconnect();
+            }, [roomId]);
+
+            const sendRoll = (steps, playerNum) => {
+                stompRef.current?.send(`/app/snake/${roomId}/roll`, {}, JSON.stringify({ steps, playerNum }));
+            };
+            const sendChat = (chatData) => {
+                stompRef.current?.send(`/app/snake/${roomId}/chat`, {}, JSON.stringify(chatData));
+            };
+
+            return { sendRoll, sendChat };
+        }
+
+        // ─── Lobby & Waiting ─────────────────────────────────────────────
+        function Lobby({ onEnterGame, playerName, setPlayerName }) {
+            const [joinCode, setJoinCode] = useState("");
+            const [err, setErr] = useState("");
+            const [loading, setLoading] = useState(false);
+
+            const handleCreate = async () => {
+                if (!playerName.trim()) { setErr("Enter your name"); return; }
+                setLoading(true);
+                try {
+                    const res = await fetch('/api/snake/create', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ playerName: playerName.trim() })
+                    });
+                    const data = await res.json();
+                    onEnterGame(data.roomId, parseInt(data.playerNum), playerName.trim(), true);
+                } catch (e) { setErr("Server error. Is Spring Boot running?"); }
+                setLoading(false);
+            };
+
+            const handleJoin = async () => {
+                if (!playerName.trim()) { setErr("Enter your name"); return; }
+                const code = joinCode.trim().toUpperCase();
+                if (!code) { setErr("Enter room code"); return; }
+                setLoading(true);
+                try {
+                    const res = await fetch('/api/snake/join', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ roomId: code, playerName: playerName.trim() })
+                    });
+                    const data = await res.json();
+                    if (data.error) { setErr(data.error); setLoading(false); return; }
+                    onEnterGame(data.roomId, parseInt(data.playerNum), playerName.trim(), false);
+                } catch (e) { setErr("Server error. Is Spring Boot running?"); }
+                setLoading(false);
+            };
+
+            const wrap = {
+                minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                padding: 20
+            };
+            const card = {
+                background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 40, width: "100%", maxWidth: 440,
+                boxShadow: "0 25px 50px rgba(0,0,0,0.5)", backdropFilter: "blur(20px)"
+            };
+            const input = { width: "100%", padding: "12px 16px", background: "#1a1a1a", border: "1px solid #444", borderRadius: 8, color: "#fff", fontFamily: "inherit", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 24 };
+
+            return (
+                <div style={wrap}>
+                    <h1 style={{ fontSize: "3rem", fontWeight: 900, letterSpacing: "12px", textTransform: "uppercase", marginBottom: 0 }}>Zentrix</h1>
+                    <p style={{ color: "#666", letterSpacing: "5px", marginBottom: "30px", fontWeight: 700 }}>SNAKE & LADDER MULTIPLAYER</p>
+                    <div style={card}>
+                        <label style={{ display: "block", marginBottom: 6, color: "#888" }}>Your Name</label>
+                        <input style={input} value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="Enter your name…" maxLength={20} />
+                        <button className="btn" style={{ marginBottom: 12 }} onClick={handleCreate} disabled={loading}>Create New Match</button>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0 24px", color: "#888", fontSize: 12 }}>
+                            <div style={{ flex: 1, height: 1, background: "#444" }} /><span>or join existing</span><div style={{ flex: 1, height: 1, background: "#444" }} />
+                        </div>
+                        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                            <input style={{ ...input, marginBottom: 0, textTransform: "uppercase", letterSpacing: 4 }} value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="ROOM CODE" maxLength={6} />
+                            <button className="btn" style={{ width: "auto", padding: "12px 20px" }} onClick={handleJoin} disabled={loading}>Join →</button>
+                        </div>
+                        {err && <div style={{ color: "#ff6666", fontSize: 12, textAlign: "center", marginTop: 8 }}>⚠ {err}</div>}
+                    </div>
+                    <a href="/games" style={{ color: "#888", fontSize: 13, marginTop: 24, textDecoration: "none", fontWeight: 700 }}><i className="fas fa-arrow-left"></i> BACK TO LIBRARY</a>
+                </div>
+            );
+        }
+
+        function WaitingRoom({ roomId }) {
+            return (
+                <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 48, textAlign: "center" }}>
+                        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: 3, marginBottom: 8 }}>Room Created!</div>
+                        <div style={{ color: "#a0825a", fontSize: 13, marginBottom: 24 }}>Share this code with your friend</div>
+                        <div style={{ fontSize: 52, fontWeight: 700, letterSpacing: 12, padding: "16px 32px", background: "#111", borderRadius: 12, marginBottom: 24, fontFamily: "monospace" }}>{roomId}</div>
+                        <div style={{ color: "#a0825a", fontSize: 13, marginBottom: 20 }}>Waiting for opponent…</div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ─── Game Board & Rendering ──────────────────────────────────────
+        function getCoord(num, isMobile = false) {
+            if (num <= 0) return { x: -30, y: 560 }; // Off board initial spawn
+
+            // Abstract grid calculation to avoid querying DOM purely based on React logic
+            let row = Math.floor((num - 1) / 10);
+            let col = (num - 1) % 10;
+
+            let actualRow = 9 - row; // 0 is bottom row, 9 is top row
+
+            // Zig-zag logic
+            if (row % 2 !== 0) {
+                col = 9 - col; // Reverse column on odd rows (from bottom)
             }
-            updatePieces();
-            setTimeout(drawBoardAssets, 100);
+
+            // Grid is 600x600, each cell is roughly 58x58 with borders
+            const CELL_SIZE = 58;
+            const MARGIN = 10; // offset
+
+            return {
+                x: (col * CELL_SIZE) + MARGIN + 6, // center pawn
+                y: (actualRow * CELL_SIZE) + MARGIN + 6
+            };
         }
 
-        function getCoord(num) {
-            if (num === 0) {
-                return { x: -30, y: 560 };
-            }
-            const cell = document.querySelector(`.cell[data-num="${num}"]`);
-            return { x: cell.offsetLeft + 13, y: cell.offsetTop + 10 };
+        function SnakeSVG() {
+            const lines = [];
+            const snakesAndLadders = Object.entries(MAPS);
+
+            return (
+                <svg id="game-overlay" viewBox="0 0 600 600">
+                    {snakesAndLadders.map(([fromStr, to]) => {
+                        let from = parseInt(fromStr);
+                        const start = getCoord(from);
+                        const end = getCoord(to);
+                        const sx = start.x + 15, sy = start.y + 15;
+                        const ex = end.x + 15, ey = end.y + 15;
+
+                        if (to > from) {
+                            // Ladder
+                            const angle = Math.atan2(ey - sy, ex - sx);
+                            const offset = 8;
+                            const dx = offset * Math.sin(angle);
+                            const dy = offset * Math.cos(angle);
+
+                            const dist = Math.hypot(ex - sx, ey - sy);
+                            const steps = Math.floor(dist / 20);
+                            const rungs = [];
+                            for (let i = 1; i < steps; i++) {
+                                const px = sx + (ex - sx) * (i / steps);
+                                const py = sy + (ey - sy) * (i / steps);
+                                rungs.push(<line key={i} x1={px - dx} y1={py + dy} x2={px + dx} y2={py - dy} className="ladder-rung" />);
+                            }
+
+                            return (
+                                <g key={`${from}-${to}`} className="ladder-svg">
+                                    <line x1={sx - dx} y1={sy + dy} x2={ex - dx} y2={ey + dy} className="ladder-rail" />
+                                    <line x1={sx + dx} y1={sy - dy} x2={ex + dx} y2={ey - dy} className="ladder-rail" />
+                                    {rungs}
+                                </g>
+                            );
+                        } else {
+                            // Snake
+                            const midX = (sx + ex) / 2 + (from % 2 === 0 ? 40 : -40);
+                            const midY = (sy + ey) / 2;
+                            const d = `M ${sx} ${sy} Q ${midX} ${midY}, ${ex} ${ey}`;
+                            return (
+                                <g key={`${from}-${to}`} className="snake-svg">
+                                    <path d={d} className="snake-body-path" />
+                                    <circle cx={sx} cy={sy} r="8" className="snake-head" />
+                                </g>
+                            );
+                        }
+                    })}
+                </svg>
+            );
         }
 
-        function drawBoardAssets() {
-            const overlay = document.getElementById('game-overlay');
-            overlay.innerHTML = '';
-            for (let from in maps) {
-                const to = maps[from];
-                const start = getCoord(parseInt(from));
-                const end = getCoord(to);
-                // Centers
-                const sx = start.x + 15; const sy = start.y + 15;
-                const ex = end.x + 15; const ey = end.y + 15;
+        function Game({ roomId, playerNum, playerName }) {
+            const [state, setState] = useState(null);
+            const [rolling, setRolling] = useState(false);
+            const [diceVal, setDiceVal] = useState(1);
+            const [logs, setLogs] = useState(["> Zentrix Engine Initialized.", "> Board: Standard 10x10.", "> Waiting for Players..."]);
+            const [chatMsgs, setChatMsgs] = useState([]);
+            const [chatInput, setChatInput] = useState("");
+            const logRef = useRef(null);
+            const chatRef = useRef(null);
 
-                if (to > from) {
-                    // Draw Ladder
-                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                    g.setAttribute("class", "ladder-svg");
+            // Auto-scroll logs
+            useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [logs]);
+            useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [chatMsgs]);
 
-                    const angle = Math.atan2(ey - sy, ex - sx);
-                    const offset = 8;
-                    const dx = offset * Math.sin(angle);
-                    const dy = offset * Math.cos(angle);
+            const pushLog = useCallback((msg, impact = false) => {
+                setLogs(prev => [...prev, `> ${msg}`]);
+            }, []);
 
-                    const rail1 = createLine(sx - dx, sy + dy, ex - dx, ey + dy, "ladder-rail");
-                    const rail2 = createLine(sx + dx, sy - dy, ex + dx, ey - dy, "ladder-rail");
-                    g.appendChild(rail1);
-                    g.appendChild(rail2);
+            const onStateUpdate = useCallback((data) => {
+                setState(data);
+            }, []);
 
-                    // Rungs
-                    const dist = Math.hypot(ex - sx, ey - sy);
-                    const steps = Math.floor(dist / 20);
-                    for (let i = 1; i < steps; i++) {
-                        const px = sx + (ex - sx) * (i / steps);
-                        const py = sy + (ey - sy) * (i / steps);
-                        g.appendChild(createLine(px - dx, py + dy, px + dx, py - dy, "ladder-rung"));
-                    }
-                    overlay.appendChild(g);
-                } else {
-                    // Draw Snake
-                    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                    g.setAttribute("class", "snake-svg");
+            const onRollAnim = useCallback((data) => {
+                setRolling(true);
+                // Spin for 1 sec
+                setTimeout(() => {
+                    setRolling(false);
+                    setDiceVal(data.steps);
+                    pushLog(`Player ${data.playerNum} rolled a ${data.steps}.`, true);
+                    // State update from backend will naturally arrive shortly to move pieces
+                }, 1000);
+            }, [pushLog]);
 
-                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    const midX = (sx + ex) / 2 + (Math.random() > 0.5 ? 40 : -40);
-                    const midY = (sy + ey) / 2;
-                    const d = `M ${sx} ${sy} Q ${midX} ${midY}, ${ex} ${ey}`;
+            const onChat = useCallback((msg) => {
+                setChatMsgs(prev => [...prev, msg]);
+            }, []);
 
-                    path.setAttribute("d", d);
-                    path.setAttribute("class", "snake-body");
-                    path.setAttribute("stroke", "#2e7d32");
+            const { sendRoll, sendChat } = useSnakeSocket(roomId, onStateUpdate, onRollAnim, onChat);
 
-                    const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    head.setAttribute("cx", sx); head.setAttribute("cy", sy); head.setAttribute("r", 8);
-                    head.setAttribute("class", "snake-head");
+            if (!state) return <div style={{ marginTop: 100 }}>Connecting to match...</div>;
 
-                    g.appendChild(path);
-                    g.appendChild(head);
-                    overlay.appendChild(g);
-                }
-            }
-        }
+            const myTurn = state.turn === playerNum;
+            const isGameOver = state.status === "finished";
 
-        function createLine(x1, y1, x2, y2, cls) {
-            const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            l.setAttribute("x1", x1); l.setAttribute("y1", y1); l.setAttribute("x2", x2); l.setAttribute("y2", y2);
-            l.setAttribute("class", cls);
-            return l;
-        }
-
-        async function roll() {
-            if (busy) return;
-            busy = true;
-            rollBtn.disabled = true;
-            const dice = document.getElementById('dice');
-            dice.classList.add('rolling');
-
-            const val = Math.floor(Math.random() * 6) + 1;
-            await new Promise(r => setTimeout(r, 1000));
-            dice.classList.remove('rolling');
+            const handleRoll = () => {
+                if (!myTurn || isGameOver || rolling) return;
+                const steps = Math.floor(Math.random() * 6) + 1;
+                // Inform backend instantly, which broadcasts the raw dice roll to trigger animation
+                sendRoll(steps, playerNum);
+            };
 
             const rotations = {
                 1: 'rotateX(0deg) rotateY(0deg)',
@@ -583,89 +682,147 @@
                 5: 'rotateX(-90deg) rotateY(0deg)',
                 6: 'rotateX(90deg) rotateY(0deg)'
             };
-            dice.style.transform = rotations[val];
+            const diceTransform = rolling ? undefined : rotations[diceVal]; // class handles animation if rolling
 
-            pushLog(`Player ${turn} rolled a ${val}.`, true);
-            await move(turn, val);
+            // Board Generation
+            const cells = [];
+            for (let i = 0; i < 100; i++) {
+                let row = Math.floor(i / 10);
+                let col = i % 10;
+                let actualRow = 9 - row; // 0-based from bottom
+                let num = (actualRow % 2 === 0) ? (actualRow * 10) + col + 1 : (actualRow * 10) + (9 - col) + 1;
 
-            if (checkWin()) return;
-
-            turn = turn === 1 ? 2 : 1;
-            const turnDisplay = document.getElementById('turn-display');
-            turnDisplay.innerText = `Player ${turn}`;
-            turnDisplay.style.color = turn === 1 ? 'var(--p1-color)' : 'var(--p2-color)';
-            busy = false;
-            rollBtn.disabled = false;
-        }
-
-        async function move(pNum, steps) {
-            let cur = pNum === 1 ? player1 : player2;
-            let target = cur + steps;
-
-            if (target > 100) {
-                pushLog(`Need exact roll to finish!`);
-                return;
+                let extraClass = (i % 2 === 0) ? "" : "dark";
+                cells.push(
+                    <div key={i} className={`cell ${extraClass}`} data-num={num}>
+                        <span>{num}</span>
+                    </div>
+                );
             }
 
-            for (let i = 1; i <= steps; i++) {
-                cur++;
-                setPiece(pNum, cur);
-                await new Promise(r => setTimeout(r, 300));
-            }
+            // Pawn Positions
+            const p1Coord = getCoord(state.p1Position);
+            const p2Coord = getCoord(state.p2Position);
 
-            pNum === 1 ? player1 = cur : player2 = cur;
+            // Visual names for turn indicator
+            const p1Name = state.players?.["1"] || "Player 1";
+            const p2Name = state.players?.["2"] || "Player 2";
+            const activePlayerName = state.turn === 1 ? p1Name : p2Name;
 
-            if (maps[cur]) {
-                const destination = maps[cur];
-                const isLadder = destination > cur;
-                pushLog(isLadder ? "Climbing ladder!" : "Bitten by snake!", true);
-                await new Promise(r => setTimeout(r, 600));
-                setPiece(pNum, destination);
-                pNum === 1 ? player1 = destination : player2 = destination;
-            }
+            const sendChatMessage = () => {
+                if (!chatInput.trim()) return;
+                sendChat({ sender: playerName, text: chatInput.trim(), color: playerNum == 1 ? "w" : "b" });
+                setChatInput("");
+            };
+
+            return (
+                <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <h1 style={{ fontSize: "3rem", fontWeight: 900, letterSpacing: "12px", textTransform: "uppercase", marginBottom: 0 }}>
+                        Zentrix
+                    </h1>
+                    <p style={{ color: "#666", letterSpacing: "5px", marginBottom: "30px", fontWeight: 700 }}>MULTIPLAYER MATCH</p>
+
+                    <div className="game-wrapper">
+                        <div className="board-outer">
+                            <div className="board-container" id="board">
+                                {cells}
+                                <SnakeSVG />
+
+                                {/* Player 1 Pawn */}
+                                <div id="p1-piece" className="player player-1" style={{ left: p1Coord.x, top: p1Coord.y }}>
+                                    <div className="pawn-top"></div><div className="pawn-body"></div>
+                                </div>
+
+                                {/* Player 2 Pawn */}
+                                <div id="p2-piece" className="player player-2" style={{ left: p2Coord.x + 15, top: p2Coord.y }}>
+                                    <div className="pawn-top"></div><div className="pawn-body"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="control-panel">
+                            <div className="card" style={{ padding: "20px 25px" }}>
+                                <div className="turn-indicator" style={{ color: state.turn === 1 ? 'var(--p1-color)' : 'var(--p2-color)' }}>
+                                    {activePlayerName}'s Turn
+                                </div>
+                                <div className="dice-box" onClick={handleRoll}>
+                                    <div className={`dice ${rolling ? 'rolling' : ''}`} id="dice" style={{ transform: diceTransform }}>
+                                        <div className="dice-side side-1"><div className="dot" style={{ gridArea: "2/2" }}></div></div>
+                                        <div className="dice-side side-2"><div className="dot" style={{ gridArea: "1/1" }}></div><div className="dot" style={{ gridArea: "3/3" }}></div></div>
+                                        <div className="dice-side side-3"><div className="dot" style={{ gridArea: "1/1" }}></div><div className="dot" style={{ gridArea: "2/2" }}></div><div className="dot" style={{ gridArea: "3/3" }}></div></div>
+                                        <div className="dice-side side-4"><div className="dot" style={{ gridArea: "1/1" }}></div><div className="dot" style={{ gridArea: "1/3" }}></div><div className="dot" style={{ gridArea: "3/1" }}></div><div className="dot" style={{ gridArea: "3/3" }}></div></div>
+                                        <div className="dice-side side-5"><div className="dot" style={{ gridArea: "1/1" }}></div><div className="dot" style={{ gridArea: "1/3" }}></div><div className="dot" style={{ gridArea: "2/2" }}></div><div className="dot" style={{ gridArea: "3/1" }}></div><div className="dot" style={{ gridArea: "3/3" }}></div></div>
+                                        <div className="dice-side side-6"><div className="dot" style={{ gridArea: "1/1" }}></div><div className="dot" style={{ gridArea: "1/3" }}></div><div className="dot" style={{ gridArea: "2/1" }}></div><div className="dot" style={{ gridArea: "2/3" }}></div><div className="dot" style={{ gridArea: "3/1" }}></div><div className="dot" style={{ gridArea: "3/3" }}></div></div>
+                                    </div>
+                                </div>
+                                <button className="btn" onClick={handleRoll} disabled={!myTurn || rolling || isGameOver}>
+                                    {myTurn ? "Roll Dice" : "Waiting..."}
+                                </button>
+                            </div>
+
+                            <div className="card event-log" ref={logRef}>
+                                {logs.map((l, i) => <div key={i} className="log-line impact">{l}</div>)}
+                            </div>
+
+                            <div className="chat-container">
+                                <div className="chat-messages" ref={chatRef}>
+                                    {chatMsgs.map((m, i) => (
+                                        <div key={i}><strong style={{ color: m.color === "w" ? "var(--p1-color)" : "var(--p2-color)" }}>{m.sender}:</strong> {m.text}</div>
+                                    ))}
+                                </div>
+                                <div className="chat-input-row">
+                                    <input className="chat-input" value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendChatMessage()} placeholder="Trash talk..." />
+                                    <button className="btn" style={{ padding: "8px 12px", width: "auto" }} onClick={sendChatMessage}>➤</button>
+                                </div>
+                            </div>
+
+                            <button className="btn" style={{ background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
+                                onClick={() => window.location.reload()}>Leave Match</button>
+                        </div>
+                    </div>
+
+                    {isGameOver && (
+                        <div className="overlay">
+                            <h1 className="victory-text" style={{ color: state.p1Position >= 100 ? 'var(--p1-color)' : 'var(--p2-color)' }}>
+                                {state.p1Position >= 100 ? p1Name : p2Name} WINS!
+                            </h1>
+                            <p style={{ letterSpacing: "10px", color: "#aaa", marginBottom: "40px" }}>SUPREME CHAMPION</p>
+                            <button className="btn" style={{ maxWidth: "250px" }} onClick={() => window.location.reload()}>New Match</button>
+                            <a href="/games" style={{ marginTop: "20px", color: "#666", textDecoration: "none" }}>Exit to Library</a>
+                        </div>
+                    )}
+                </div>
+            );
         }
 
-        function setPiece(pNum, val) {
-            const piece = document.getElementById(`p${pNum}-piece`);
-            const pos = getCoord(val);
-            const offset = pNum === 1 ? 0 : 15;
-            piece.style.left = `${pos.x + offset}px`;
-            piece.style.top = `${pos.y}px`;
-            // Add a little jump effect
-            piece.style.transform = 'translateY(-20px)';
-            setTimeout(() => piece.style.transform = 'translateY(0)', 300);
+        // ─── App Root ─────────────────────────────────────────────────────
+        function App() {
+            const [screen, setScreen] = useState("lobby");
+            const [roomId, setRoomId] = useState(null);
+            const [playerNum, setPlayerNum] = useState(null); // 1 or 2
+            const [playerName, setPlayerName] = useState("");
+            const [isCreator, setIsCreator] = useState(false);
+            const [waitingRoomId, setWaitingRoomId] = useState(null);
+
+            const handleEnterGame = (id, num, name, creator) => {
+                setRoomId(id); setPlayerNum(num); setIsCreator(creator);
+                if (creator) {
+                    setWaitingRoomId(id);
+                    setScreen("waiting");
+                    setTimeout(() => setScreen("game"), 500); // Advance to game view that handles connection and rendering
+                } else {
+                    setScreen("game");
+                }
+            };
+
+            if (screen === "lobby") return <Lobby onEnterGame={handleEnterGame} playerName={playerName} setPlayerName={setPlayerName} />;
+            if (screen === "waiting") return <WaitingRoom roomId={waitingRoomId} />;
+            if (screen === "game") return <Game roomId={roomId} playerNum={playerNum} playerName={playerName} />;
         }
 
-        function updatePieces() {
-            setPiece(1, player1);
-            setPiece(2, player2);
-        }
-
-        function pushLog(msg, impact = false) {
-            const log = document.getElementById('log');
-            const div = document.createElement('div');
-            div.className = `log-line ${impact ? 'impact' : ''}`;
-            div.innerText = `> ${msg}`;
-            log.prepend(div);
-        }
-
-        function checkWin() {
-            if (player1 === 100 || player2 === 100) {
-                const winner = player1 === 100 ? 1 : 2;
-                document.getElementById('winner-name').innerText = `PLAYER ${winner} WINS`;
-                document.getElementById('victory-modal').style.display = 'flex';
-                return true;
-            }
-            return false;
-        }
-
-        function reset() {
-            location.reload();
-        }
-
-        createBoard();
-        window.addEventListener('resize', drawBoardAssets);
-
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        /*]]>*/
     </script>
 </body>
 
