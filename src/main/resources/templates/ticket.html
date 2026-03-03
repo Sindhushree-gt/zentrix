@@ -539,9 +539,9 @@
                         <span th:text="${registration.registrationStatus}">REGISTERED</span>
                     </div>
                 </div>
-                <!-- Real QR Code -->
+                <!-- QR Code linking to verification URL -->
                 <div class="mini-qr">
-                    <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + ${registration.ticketId}"
+                    <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + ${ticketUrl}"
                         alt="QR Code" style="width:100%; height:100%; object-fit:contain;">
                 </div>
             </div>

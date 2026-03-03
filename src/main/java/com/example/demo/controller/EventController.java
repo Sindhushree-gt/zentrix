@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -283,7 +284,7 @@ public class EventController {
     //  TICKET: Show confirmation + ticket
     // ─────────────────────────────────────────────────────────
     @GetMapping("/ticket/{ticketId}")
-    public String showTicket(@PathVariable String ticketId, Model model, HttpSession session) {
+    public String showTicket(@PathVariable String ticketId, Model model, HttpSession session, HttpServletRequest request) {
         User user = getUserFromSession(session);
         boolean adminViewing = isAdmin(session);
         
@@ -292,6 +293,10 @@ public class EventController {
 
         EventRegistration reg = eventRegistrationRepository.findByTicketId(ticketId).orElse(null);
         if (reg == null) return "redirect:/events";
+
+        // Construct full URL for QR code (works on LAN/Local if scanned by same network)
+        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        model.addAttribute("ticketUrl", baseUrl + "/events/ticket/" + ticketId);
 
         model.addAttribute("registration", reg);
         model.addAttribute("event", reg.getEvent());
