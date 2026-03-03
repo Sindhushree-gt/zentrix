@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Confirmed | Zentrix</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0a0a0f;
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 80px 20px 60px;
+        }
+
+        /* ── Top nav ── */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 100;
+        }
+
+        .brand {
+            font-weight: 900;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #f84464, #ff6b9d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 20px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        /* ── Success Header ── */
+        .success-header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeSlideIn 0.6s ease both;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-icon-wrap {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.12);
+            border: 2px solid rgba(16, 185, 129, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 22px;
+            font-size: 36px;
+            color: #10b981;
+            animation: popIn 0.5s ease 0.2s both;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            80% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-header h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+
+        .success-header p {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 15px;
+        }
+
+        /* ── Ticket ── */
+        .ticket-wrapper {
+            width: 100%;
+            max-width: 680px;
+            animation: fadeSlideIn 0.6s ease 0.15s both;
+        }
+
+        .ticket {
+            background: linear-gradient(135deg, #12122a 0%, #1a0e2e 100%);
+            border: 1px solid rgba(248, 68, 100, 0.25);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(248, 68, 100, 0.1);
+            position: relative;
+        }
+
+        /* Decorative circles */
+        .ticket::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(248, 68, 100, 0.15) 0%, transparent 70%);
+        }
+
+        .ticket::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: -40px;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
+        }
+
+        /* ── Ticket Top ── */
+        .ticket-top {
+            position: relative;
+            display: flex;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .ticket-banner {
+            width: 220px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .ticket-banner img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .ticket-banner-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, transparent 60%, rgba(18, 18, 42, 1));
+        }
+
+        .ticket-header-info {
+            flex: 1;
+            padding: 28px 28px 20px;
+        }
+
+        .ticket-cat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(248, 68, 100, 0.15);
+            border: 1px solid rgba(248, 68, 100, 0.3);
+            color: #f84464;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .ticket-event-name {
+            font-size: 1.5rem;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .ticket-date-venue {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .tdv-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .tdv-row i {
+            color: #f84464;
+            width: 14px;
+            text-align: center;
+        }
+
+        /* ── Perforation ── */
+        .perforated {
+            position: relative;
+            margin: 0 20px;
+            border-top: 2px dashed rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .perf-circle {
+            width: 32px;
+            height: 32px;
+            background: #0a0a0f;
+            border-radius: 50%;
+            position: absolute;
+            top: -16px;
+        }
+
+        .perf-circle.left {
+            left: -36px;
+        }
+
+        .perf-circle.right {
+            right: -36px;
+        }
+
+        /* ── Ticket Body ── */
+        .ticket-body {
+            padding: 24px 28px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .ticket-field label {
+            display: block;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 5px;
+        }
+
+        .ticket-field .val {
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ── Ticket Footer (Ticket ID + QR) ── */
+        .ticket-footer {
+            padding: 0 28px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .ticket-id-block {
+            flex: 1;
+        }
+
+        .ticket-id-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 8px;
+        }
+
+        .ticket-id-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #f84464, #ff6b9d, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ticket-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            margin-top: 10px;
+        }
+
+        .mini-qr {
+            width: 90px;
+            height: 90px;
+            flex-shrink: 0;
+            background: #fff;
+            border-radius: 10px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Zentrix watermark */
+        .ticket-watermark {
+            position: absolute;
+            top: 50%;
+            right: 28px;
+            transform: translateY(-50%) rotate(-45deg);
+            font-size: 4rem;
+            font-weight: 900;
+            opacity: 0.03;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* ── Action Buttons ── */
+        .ticket-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+            animation: fadeSlideIn 0.6s ease 0.3s both;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 13px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f84464, #ff6b9d);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(248, 68, 100, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(248, 68, 100, 0.55);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* ── Confetti ── */
+        .confetti-piece {
+            position: fixed;
+            top: -10px;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            animation: confettiFall linear forwards;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-10px) rotate(0deg);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="brand">⚡ Zentrix</div>
+        <div class="nav-links">
+            <a href="/events">Browse Events</a>
+            <a href="/dashboard">Dashboard</a>
+        </div>
+    </div>
+
+    <!-- ═════ Success Header ═════ -->
+    <div class="success-header">
+        <div class="success-icon-wrap"><i class="fas fa-check"></i></div>
+        <h1>You're Registered! 🎉</h1>
+        <p th:if="${registration.paymentStatus == 'PAID'}">Payment confirmed · Your ticket is ready below</p>
+        <p th:if="${registration.paymentStatus != 'PAID'}">Registration successful · Your free ticket is ready below</p>
+    </div>
+
+    <!-- ═════ TICKET ═════ -->
+    <div class="ticket-wrapper">
+        <div class="ticket" id="ticketCard">
+            <div class="ticket-watermark">ZENTRIX</div>
+
+            <!-- Top Section -->
+            <div class="ticket-top">
+                <div class="ticket-banner">
+                    <img th:src="${event.imageUrl}" alt="event"
+                        onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400'">
+                    <div class="ticket-banner-overlay"></div>
+                </div>
+                <div class="ticket-header-info">
+                    <div class="ticket-cat">
+                        <i class="fas fa-tag"></i>
+                        <span th:text="${event.category}">Category</span>
+                    </div>
+                    <div class="ticket-event-name" th:text="${event.title}">Event Name</div>
+                    <div class="ticket-date-venue">
+                        <div class="tdv-row">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span
+                                th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'EEEE, MMMM dd yyyy') : 'TBA'}">Date</span>
+                        </div>
+                        <div class="tdv-row">
+                            <i class="fas fa-clock"></i>
+                            <span
+                                th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'hh:mm a') : 'TBA'}">Time</span>
+                        </div>
+                        <div class="tdv-row">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span th:text="${event.venue}">Venue</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Perforation -->
+            <div class="perforated" style="margin: 0;">
+                <div class="perf-circle left"></div>
+                <div class="perf-circle right"></div>
+            </div>
+
+            <!-- Body: Ticket Fields -->
+            <div class="ticket-body">
+                <div class="ticket-field">
+                    <label>Attendee Name</label>
+                    <div class="val" th:text="${registration.fullName != null ? registration.fullName : user.username}">
+                        Name</div>
+                </div>
+                <div class="ticket-field">
+                    <label>Email</label>
+                    <div class="val" style="font-size:12px;"
+                        th:text="${registration.email != null ? registration.email : '—'}">email@email.com</div>
+                </div>
+                <div class="ticket-field">
+                    <label>Phone</label>
+                    <div class="val" th:text="${registration.phone != null ? registration.phone : '—'}">Phone</div>
+                </div>
+                <div class="ticket-field">
+                    <label>College / Org</label>
+                    <div class="val" style="font-size:12px;"
+                        th:text="${registration.college != null ? registration.college : '—'}">—</div>
+                </div>
+                <div class="ticket-field">
+                    <label>Year of Study</label>
+                    <div class="val" th:text="${registration.yearOfStudy != null ? registration.yearOfStudy : '—'}">—
+                    </div>
+                </div>
+                <div class="ticket-field">
+                    <label>Amount Paid</label>
+                    <div class="val" th:text="${event.price != null ? event.price : 'Free'}">Free</div>
+                </div>
+            </div>
+
+            <!-- Footer: Ticket ID + Mini QR -->
+            <div class="ticket-footer">
+                <div class="ticket-id-block">
+                    <div class="ticket-id-label">Ticket ID</div>
+                    <div class="ticket-id-value" th:text="${registration.ticketId}">ZTX-GA-XXXXXX</div>
+                    <div class="ticket-status-badge">
+                        <i class="fas fa-check-circle"></i>
+                        <span th:text="${registration.registrationStatus}">REGISTERED</span>
+                    </div>
+                </div>
+                <!-- Mini QR (decorative) -->
+                <div class="mini-qr">
+                    <svg width="74" height="74" viewBox="0 0 74 74">
+                        <rect width="74" height="74" fill="white" />
+                        <rect x="5" y="5" width="28" height="28" fill="black" />
+                        <rect x="8" y="8" width="22" height="22" fill="white" />
+                        <rect x="11" y="11" width="16" height="16" fill="black" />
+                        <rect x="41" y="5" width="28" height="28" fill="black" />
+                        <rect x="44" y="8" width="22" height="22" fill="white" />
+                        <rect x="47" y="11" width="16" height="16" fill="black" />
+                        <rect x="5" y="41" width="28" height="28" fill="black" />
+                        <rect x="8" y="44" width="22" height="22" fill="white" />
+                        <rect x="11" y="47" width="16" height="16" fill="black" />
+                        <rect x="41" y="41" width="5" height="5" fill="black" />
+                        <rect x="48" y="41" width="5" height="5" fill="black" />
+                        <rect x="55" y="41" width="5" height="5" fill="black" />
+                        <rect x="62" y="41" width="5" height="5" fill="black" />
+                        <rect x="41" y="48" width="5" height="5" fill="black" />
+                        <rect x="55" y="48" width="5" height="5" fill="black" />
+                        <rect x="41" y="55" width="5" height="5" fill="black" />
+                        <rect x="48" y="55" width="5" height="5" fill="black" />
+                        <rect x="62" y="55" width="5" height="5" fill="black" />
+                        <rect x="41" y="62" width="5" height="5" fill="black" />
+                        <rect x="55" y="62" width="5" height="5" fill="black" />
+                    </svg>
+                </div>
+            </div>
+        </div><!-- /ticket -->
+
+        <!-- Action Buttons -->
+        <div class="ticket-actions">
+            <button class="btn-action btn-secondary" onclick="printTicket()">
+                <i class="fas fa-print"></i> Print Ticket
+            </button>
+            <a href="/events" class="btn-action btn-primary">
+                <i class="fas fa-calendar-alt"></i> Browse More Events
+            </a>
+            <a href="/dashboard" class="btn-action btn-secondary">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+        </div>
+
+    </div><!-- /ticket-wrapper -->
+
+    <script>
+        // ── Confetti on load ──
+        (function spawnConfetti() {
+            const colors = ['#f84464', '#ff6b9d', '#10b981', '#8b5cf6', '#f59e0b', '#3b82f6'];
+            for (let i = 0; i < 70; i++) {
+                setTimeout(() => {
+                    const el = document.createElement('div');
+                    el.className = 'confetti-piece';
+                    el.style.left = Math.random() * 100 + 'vw';
+                    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    el.style.width = (Math.random() * 10 + 5) + 'px';
+                    el.style.height = (Math.random() * 10 + 5) + 'px';
+                    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                    el.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    el.style.animationDelay = (Math.random() * 0.5) + 's';
+                    document.body.appendChild(el);
+                    el.addEventListener('animationend', () => el.remove());
+                }, i * 30);
+            }
+        })();
+
+        // ── Print Ticket ──
+        function printTicket() {
+            window.print();
+        }
+    </script>
+</body>
+
+</html>

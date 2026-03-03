@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${event.title} + ' · Attendance | Zentrix Admin'">Attendance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            height: 62px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar .logo {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #f84464;
+        }
+
+        .navbar .logo span {
+            color: #fff;
+            font-weight: 400;
+            font-size: 0.9rem;
+            margin-left: 4px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-size: 14px;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #f84464, #ff6b9d);
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        /* ── Page ── */
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* ── Event Header ── */
+        .event-header {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 24px 28px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .event-thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: 14px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .event-info h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .event-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .badge-upcoming {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .badge-ongoing {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .badge-completed {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+        }
+
+        .badge-offline {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+        }
+
+        .badge-online {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .event-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f84464, #ff6b9d);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(248, 68, 100, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* ── Stats Row ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px 22px;
+            text-align: center;
+        }
+
+        .stat-box .num {
+            font-size: 2rem;
+            font-weight: 900;
+        }
+
+        .stat-box .lbl {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+        }
+
+        .num-green {
+            color: #4ade80;
+        }
+
+        .num-yellow {
+            color: #f59e0b;
+        }
+
+        .num-pink {
+            color: #f84464;
+        }
+
+        /* ── Progress Bar ── */
+        .progress-wrap {
+            margin-bottom: 28px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #f84464, #ff6b9d);
+            transition: width 0.6s ease;
+        }
+
+        /* ── Alert Banner ── */
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #34d399;
+        }
+
+        .alert-error {
+            background: rgba(248, 68, 100, 0.10);
+            border: 1px solid rgba(248, 68, 100, 0.25);
+            color: #f87171;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.10);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            color: #93c5fd;
+        }
+
+        /* ── Ticket Search (Offline) ── */
+        .scan-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 24px 26px;
+            margin-bottom: 28px;
+        }
+
+        .scan-card h2 {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .scan-card p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 18px;
+        }
+
+        .scan-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .scan-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: border-color 0.2s;
+        }
+
+        .scan-input:focus {
+            outline: none;
+            border-color: rgba(248, 68, 100, 0.5);
+        }
+
+        .scan-input::placeholder {
+            text-transform: none;
+            letter-spacing: 0;
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Online join link display */
+        .online-card {
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            border-radius: 18px;
+            padding: 24px 26px;
+            margin-bottom: 28px;
+        }
+
+        .online-card h2 {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+            color: #34d399;
+        }
+
+        .online-card p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 14px;
+        }
+
+        .join-link-box {
+            font-size: 13px;
+            color: #34d399;
+            background: rgba(16, 185, 129, 0.08);
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            word-break: break-all;
+            margin-bottom: 14px;
+        }
+
+        /* ── Table ── */
+        .table-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        .table-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .table-head h2 {
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px 18px;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        th {
+            color: rgba(255, 255, 255, 0.35);
+            font-weight: 600;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        tr:not(:last-child) td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .att-yes {
+            color: #4ade80;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .att-no {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .ticket-chip {
+            font-family: monospace;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .empty-row {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            padding: 40px;
+        }
+
+        /* ── Results Modal ── */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background: #12121c;
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-box h2 {
+            font-weight: 800;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 6px;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group select[multiple] {
+            height: 100px;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: #f84464;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .rank-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .points-input {
+            width: 80px !important;
+            text-align: center;
+        }
+
+        /* Scrollbar for select */
+        select::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        select::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        select::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Zentrix <span>Admin · Attendance</span></div>
+        <div class="nav-links">
+            <a href="/events/admin/manage"><i class="fas fa-arrow-left"></i> Manage Events</a>
+            <a href="/admin">Dashboard</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="page">
+
+        <!-- ── Alert Banners ── -->
+        <div th:if="${param.started}" class="alert alert-success">
+            <i class="fas fa-play-circle"></i>
+            Event marked as <strong>ONGOING</strong>! Attendance tracking is now live.
+        </div>
+        <div th:if="${param.markedAll}" class="alert alert-success">
+            <i class="fas fa-check-double"></i>
+            All registered participants have been marked as <strong>Attended</strong>.
+        </div>
+        <div th:if="${param.marked != null and !param.marked.isEmpty()}" class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            Ticket <strong th:text="${param.marked}"></strong> verified — attendance marked!
+        </div>
+        <div th:if="${param.error == 'invalid'}" class="alert alert-error">
+            <i class="fas fa-times-circle"></i>
+            Invalid Ticket ID or does not belong to this event.
+        </div>
+        <div th:if="${param.error == 'already'}" class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            This ticket has already been marked as attended.
+        </div>
+
+        <!-- ── Event Header ── -->
+        <div class="event-header">
+            <img class="event-thumb" th:src="${event.imageUrl}"
+                onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=200'" alt="event">
+            <div class="event-info">
+                <h1 th:text="${event.title}">Event Title</h1>
+                <div class="event-badges">
+                    <span class="badge"
+                        th:classappend="${event.status == 'ONGOING'} ? 'badge-ongoing' : (${event.status == 'COMPLETED'} ? 'badge-completed' : 'badge-upcoming')"
+                        th:text="${event.status}">UPCOMING</span>
+                    <span class="badge"
+                        th:classappend="${event.eventMode == 'Online'} ? 'badge-online' : 'badge-offline'">
+                        <i th:class="${event.eventMode == 'Online'} ? 'fas fa-video' : 'fas fa-map-marker-alt'"></i>
+                        <span th:text="${event.eventMode}">Offline</span>
+                    </span>
+                    <span class="badge" style="background:rgba(99,102,241,0.15); color:#a5b4fc;">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span
+                            th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'MMM dd, yyyy hh:mm a') : 'TBA'}">Date</span>
+                    </span>
+                </div>
+            </div>
+            <div class="event-actions">
+                <!-- Start Event (UPCOMING → ONGOING) -->
+                <form th:if="${event.status == 'UPCOMING'}" th:action="@{'/events/admin/' + ${event.id} + '/start'}"
+                    method="post">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Start Event &amp; Track Attendance
+                    </button>
+                </form>
+                <!-- Complete Event (ONGOING → COMPLETED) -->
+                <button th:if="${event.status == 'ONGOING'}" type="button" class="btn btn-success"
+                    onclick="openResultsModal()">
+                    <i class="fas fa-flag-checkered"></i> Mark Results &amp; Complete
+                </button>
+                <!-- Mark All Present -->
+                <form th:if="${event.status == 'ONGOING'}"
+                    th:action="@{'/events/admin/' + ${event.id} + '/attendance/mark-all'}" method="post"
+                    onsubmit="return confirm('Mark all participants as attended?')">
+                    <button type="submit" class="btn btn-ghost">
+                        <i class="fas fa-users"></i> Mark All Present
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ── Stats ── -->
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="num num-pink" th:text="${totalCount}">0</div>
+                <div class="lbl">Total Registered</div>
+            </div>
+            <div class="stat-box">
+                <div class="num num-green" th:text="${attendedCount}">0</div>
+                <div class="lbl">Attended</div>
+            </div>
+            <div class="stat-box">
+                <div class="num num-yellow" th:text="${totalCount - attendedCount}">0</div>
+                <div class="lbl">Absent / Not Yet</div>
+            </div>
+        </div>
+
+        <!-- ── Progress ── -->
+        <div class="progress-wrap" th:if="${totalCount > 0}">
+            <div class="progress-label">
+                <span>Attendance Progress</span>
+                <span th:text="${#numbers.formatDecimal(attendedCount * 100.0 / totalCount, 1, 0)} + '%'">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill"
+                    th:style="'width:' + ${totalCount > 0 ? attendedCount * 100 / totalCount : 0} + '%'">
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Offline: Ticket/QR Scan Input ── -->
+        <div class="scan-card" th:if="${event.eventMode == 'Offline' or event.eventMode == null}">
+            <h2><i class="fas fa-qrcode" style="color:#f84464;"></i> &nbsp;Verify Ticket / QR Code</h2>
+            <p>Enter the participant's Ticket ID (printed on their ticket or QR code) to mark attendance.</p>
+            <form th:action="@{'/events/admin/' + ${event.id} + '/attendance/mark'}" method="post">
+                <div class="scan-row">
+                    <input class="scan-input" type="text" name="ticketId" placeholder="e.g. ZTX-SP-7F3A2B"
+                        id="ticketInput" autocomplete="off" required>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Verify &amp; Mark
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ── Online: Meeting Link Display ── -->
+        <div class="online-card" th:if="${event.eventMode == 'Online'}">
+            <h2><i class="fas fa-video"></i> &nbsp;Online Event — Meeting Link</h2>
+            <p>Share this link with participants. Attendance is auto-marked when a registered student clicks "Join Now"
+                on the event page.</p>
+            <div class="join-link-box"
+                th:text="${event.meetingLink != null ? event.meetingLink : 'No link set. Edit the event to add a meeting link.'}">
+                https://meet.google.com/...
+            </div>
+            <a th:if="${event.meetingLink != null}" th:href="${event.meetingLink}" target="_blank"
+                class="btn btn-success">
+                <i class="fas fa-external-link-alt"></i> Open Meeting Link
+            </a>
+        </div>
+
+        <!-- ── Participant Table ── -->
+        <div class="table-card">
+            <div class="table-head">
+                <h2><i class="fas fa-list" style="color:#f84464; margin-right:8px;"></i>Registered Participants</h2>
+                <span style="font-size:12px; color:rgba(255,255,255,0.3);" th:text="${totalCount} + ' participants'">0
+                    participants</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Contact</th>
+                        <th>Ticket ID</th>
+                        <th>Registered</th>
+                        <th>Attendance</th>
+                        <th>Result</th>
+                        <th>Points / XP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(registrations)}">
+                        <td colspan="8" class="empty-row">No registrations yet for this event.</td>
+                    </tr>
+                    <tr th:each="reg, iter : ${registrations}">
+                        <td style="color:rgba(255,255,255,0.3);" th:text="${iter.index + 1}">1</td>
+                        <td>
+                            <div style="font-weight:700;"
+                                th:text="${reg.fullName != null ? reg.fullName : reg.user.username}">Name</div>
+                            <div style="font-size:11px; color:rgba(255,255,255,0.35);"
+                                th:text="${reg.email != null ? reg.email : reg.user.email}">email</div>
+                        </td>
+                        <td style="color:rgba(255,255,255,0.5); font-size:12px;"
+                            th:text="${reg.phone != null ? reg.phone : '—'}">Phone</td>
+                        <td><span class="ticket-chip" th:text="${reg.ticketId}">ZTX-XX-XXXX</span></td>
+                        <td style="color:rgba(255,255,255,0.4); font-size:12px;"
+                            th:text="${reg.registrationDate != null ? #temporals.format(reg.registrationDate, 'MMM dd, yyyy') : '—'}">
+                            Date</td>
+                        <td>
+                            <span th:if="${reg.attendanceMarked}" class="att-yes">
+                                <i class="fas fa-check-circle"></i> Present
+                            </span>
+                            <span th:unless="${reg.attendanceMarked}" class="att-no">
+                                <i class="fas fa-clock"></i> Pending
+                            </span>
+                        </td>
+                        <td style="font-weight:700; font-size:12px;"
+                            th:classappend="${reg.position == 'Winner'} ? 'num-pink' : (${reg.position == 'Runner'} ? 'num-yellow' : '')"
+                            th:text="${reg.position != null ? reg.position : '—'}">—</td>
+                        <td style="color:#4ade80; font-weight:800;"
+                            th:text="${reg.pointsEarned != null and reg.pointsEarned > 0 ? '+' + reg.pointsEarned + ' XP' : '—'}">
+                            —</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    </div>
+
+    <!-- ── Results Modal ── -->
+    <div class="modal-overlay" id="resultsModal">
+        <div class="modal-box">
+            <h2><i class="fas fa-trophy" style="color:#f59e0b; margin-right:10px;"></i> Event Results</h2>
+            <p style="font-size:13px; color:rgba(255,255,255,0.5); margin-bottom: 20px;">
+                Select winners and runners from the attended participants. All attended participants will receive
+                default XP. Marking event as completed will lock attendance.
+            </p>
+            <form th:action="@{'/events/admin/' + ${event.id} + '/complete'}" method="post">
+
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <div class="rank-label">
+                        <label>⚖️ Judge Scores (out of 100)</label>
+                        <span style="font-size:11px; color:#10b981;">60% Weighting</span>
+                    </div>
+                    <div
+                        style="max-height: 160px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px inset rgba(255,255,255,0.05);">
+                        <div th:each="reg : ${registrations}" th:if="${reg.attendanceMarked}"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 4px;">
+                            <div style="font-size: 13px;">
+                                <div style="font-weight:700;"
+                                    th:text="${reg.fullName != null ? reg.fullName : reg.user.username}">Name</div>
+                                <div style="font-size:10px; color:rgba(255,255,255,0.4);"><span
+                                        th:text="${reg.publicVotes != null ? reg.publicVotes : 0}"></span> Public Votes
+                                    (40% Weighting)</div>
+                            </div>
+                            <input type="number" th:name="'judgeScore_' + ${reg.id}" value="0" min="0" max="100"
+                                style="width: 70px; padding: 6px; border-radius: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; text-align:center;">
+                        </div>
+                        <div th:if="${#lists.isEmpty(registrations.?[attendanceMarked])}"
+                            style="font-size:12px; color:rgba(255,255,255,0.4); text-align:center;">No attendees marked
+                            yet.</div>
+                    </div>
+                    <p style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:8px;">* The final score determines
+                        the true ranking. You may choose to follow the calculated scores to pick the winners below.</p>
+                </div>
+
+                <div class="form-group">
+                    <div class="rank-label">
+                        <label>🏆 Winners</label>
+                        <div>
+                            <span style="font-size:11px; color:rgba(255,255,255,0.4); margin-right:6px;">XP
+                                Reward:</span>
+                            <input type="number" name="winnerPoints" value="100" class="points-input" required>
+                        </div>
+                    </div>
+                    <select name="winnerIds" multiple>
+                        <option th:each="reg : ${registrations}" th:if="${reg.attendanceMarked}" th:value="${reg.id}"
+                            th:text="${reg.fullName != null ? reg.fullName : reg.user.username} + ' (' + ${reg.ticketId} + ')'">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="rank-label">
+                        <label>🥈 Runners Up</label>
+                        <div>
+                            <span style="font-size:11px; color:rgba(255,255,255,0.4); margin-right:6px;">XP
+                                Reward:</span>
+                            <input type="number" name="runnerPoints" value="50" class="points-input" required>
+                        </div>
+                    </div>
+                    <select name="runnerIds" multiple>
+                        <option th:each="reg : ${registrations}" th:if="${reg.attendanceMarked}" th:value="${reg.id}"
+                            th:text="${reg.fullName != null ? reg.fullName : reg.user.username} + ' (' + ${reg.ticketId} + ')'">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="rank-label">
+                        <label>🏅 Participation Default</label>
+                        <div>
+                            <span style="font-size:11px; color:rgba(255,255,255,0.4); margin-right:6px;">XP
+                                Reward:</span>
+                            <input type="number" name="defaultPoints" value="10" class="points-input" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeResultsModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Submit &amp;
+                        Complete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus the ticket input and auto-uppercase
+        const ti = document.getElementById('ticketInput');
+        if (ti) {
+            ti.addEventListener('input', () => ti.value = ti.value.toUpperCase());
+            ti.focus();
+        }
+
+        function openResultsModal() {
+            document.getElementById('resultsModal').classList.add('open');
+        }
+        function closeResultsModal() {
+            document.getElementById('resultsModal').classList.remove('open');
+        }
+    </script>
+
+</body>
+
+</html>

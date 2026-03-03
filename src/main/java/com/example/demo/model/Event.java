@@ -22,6 +22,13 @@ public class Event {
     private String category;
     private String organizer;
 
+    // New fields for admin create event flow
+    private String status = "UPCOMING";  // UPCOMING, ONGOING, COMPLETED
+    private Integer maxParticipants;
+    private String entryFeeType = "Free"; // Free or Paid
+    private String eventMode = "Offline"; // Offline or Online
+    private String meetingLink;           // For online events
+
     public Event() {
     }
 
@@ -96,4 +103,29 @@ public class Event {
     public void setOrganizer(String organizer) {
         this.organizer = organizer;
     }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Integer getMaxParticipants() {
+        return maxParticipants;
+    }
+
+    public void setMaxParticipants(Integer maxParticipants) {
+        this.maxParticipants = maxParticipants;
+    }
+
+    public String getEntryFeeType() { return entryFeeType; }
+    public void setEntryFeeType(String entryFeeType) { this.entryFeeType = entryFeeType; }
+
+    public String getEventMode() { return eventMode; }
+    public void setEventMode(String eventMode) { this.eventMode = eventMode; }
+
+    public String getMeetingLink() { return meetingLink; }
+    public void setMeetingLink(String meetingLink) { this.meetingLink = meetingLink; }
 }

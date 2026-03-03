@@ -59,6 +59,9 @@ public class ProfileController {
     @Autowired
     private FollowRequestRepository followRequestRepository;
 
+    @Autowired
+    private com.example.demo.repository.EventRegistrationRepository eventRegistrationRepository;
+
     @GetMapping("/{username}")
     public String showPublicProfile(@PathVariable String username, HttpSession session, Model model) {
         User currentUser = (User) session.getAttribute("user");
@@ -75,9 +78,27 @@ public class ProfileController {
         currentUser = userRepository.findById(currentUser.getId()).orElse(currentUser);
         session.setAttribute("user", currentUser);
 
+        // Calculate Talent Score Stats
+        long eventsJoined = eventRegistrationRepository.countByUser(targetUser);
+        long eventsWon = eventRegistrationRepository.countByUserAndPosition(targetUser, "Winner");
+        
+        // Calculate Rank (simplistic query-based approach: all users with XP > targetUser's XP + 1)
+        long higherXpCount = userRepository.findAll().stream()
+                .filter(u -> (u.getXp() != null ? u.getXp() : 0) > (targetUser.getXp() != null ? targetUser.getXp() : 0))
+                .count();
+        long rank = higherXpCount + 1;
+        
+        String badge = targetUser.getLevel() != null ? targetUser.getLevel() : "Novice";
+
         boolean isOwnProfile = currentUser.getId().equals(targetUser.getId());
         model.addAttribute("user", targetUser);
         model.addAttribute("isOwnProfile", isOwnProfile);
+        
+        // Add Talent Score to model
+        model.addAttribute("eventsJoined", eventsJoined);
+        model.addAttribute("eventsWon", eventsWon);
+        model.addAttribute("userRank", rank);
+        model.addAttribute("userBadge", badge);
         model.addAttribute("isFollowing", currentUser.getFollowing().contains(targetUser));
 
         model.addAttribute("followersCount", targetUser.getFollowers().size());

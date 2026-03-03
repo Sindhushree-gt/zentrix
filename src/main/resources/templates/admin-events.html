@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Events | Zentrix Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .admin-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(248, 68, 100, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 1000;
+        }
+
+        .brand {
+            font-size: 1.4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #f84464, #ff6b9d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-nav.secondary {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .btn-nav.secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .btn-nav.primary {
+            background: linear-gradient(135deg, #f84464, #ff6b9d);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(248, 68, 100, 0.4);
+        }
+
+        .btn-nav.primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(248, 68, 100, 0.5);
+        }
+
+        .page-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 90px 24px 60px;
+        }
+
+        /* Stats Strip */
+        .stats-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-tile {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            padding: 20px 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .stat-tile:hover {
+            border-color: rgba(248, 68, 100, 0.25);
+        }
+
+        .stat-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .stat-icon.total {
+            background: rgba(248, 68, 100, 0.12);
+            color: #f84464;
+        }
+
+        .stat-icon.upcoming {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+        }
+
+        .stat-icon.ongoing {
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
+        }
+
+        .stat-icon.completed {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+
+        .stat-num {
+            font-size: 1.6rem;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .stat-lbl {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 12px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 16px;
+            min-width: 280px;
+        }
+
+        .search-box i {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 14px;
+        }
+
+        .search-box input {
+            background: none;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .filter-select {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Toast */
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            animation: slideIn 0.4s ease;
+        }
+
+        .toast.success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #10b981;
+        }
+
+        .toast.danger {
+            background: rgba(248, 68, 100, 0.12);
+            border: 1px solid rgba(248, 68, 100, 0.35);
+            color: #f84464;
+        }
+
+        .toast.info {
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            color: #3b82f6;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Event Cards Grid */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+        }
+
+        .event-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            overflow: hidden;
+            transition: all 0.25s;
+        }
+
+        .event-card:hover {
+            border-color: rgba(248, 68, 100, 0.25);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .event-thumb {
+            position: relative;
+            height: 180px;
+            overflow: hidden;
+        }
+
+        .event-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .event-thumb-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10, 10, 20, 0.9) 0%, transparent 60%);
+        }
+
+        .cat-tag {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(248, 68, 100, 0.9);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-dot {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot.upcoming {
+            background: rgba(59, 130, 246, 0.85);
+            color: #fff;
+        }
+
+        .status-dot.ongoing {
+            background: rgba(245, 158, 11, 0.9);
+            color: #000;
+        }
+
+        .status-dot.completed {
+            background: rgba(16, 185, 129, 0.85);
+            color: #fff;
+        }
+
+        .event-body {
+            padding: 18px;
+        }
+
+        .event-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .event-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 16px;
+        }
+
+        .meta-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .meta-row i {
+            color: #f84464;
+            width: 14px;
+            text-align: center;
+        }
+
+        .event-footer {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .badge-pill {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-free {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .badge-paid {
+            background: rgba(248, 68, 100, 0.12);
+            color: #f84464;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 7px 15px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: none;
+        }
+
+        .btn-edit {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.25);
+        }
+
+        .btn-edit:hover {
+            background: rgba(59, 130, 246, 0.22);
+        }
+
+        .btn-view {
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-view:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .btn-delete {
+            background: rgba(248, 68, 100, 0.1);
+            color: #f84464;
+            border: 1px solid rgba(248, 68, 100, 0.25);
+            margin-left: auto;
+        }
+
+        .btn-delete:hover {
+            background: rgba(248, 68, 100, 0.2);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            grid-column: 1 / -1;
+        }
+
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(248, 68, 100, 0.08);
+            border: 1px solid rgba(248, 68, 100, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+            color: rgba(248, 68, 100, 0.5);
+        }
+
+        .empty-state h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        /* Delete Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #14141f;
+            border: 1px solid rgba(248, 68, 100, 0.25);
+            border-radius: 20px;
+            padding: 36px;
+            max-width: 420px;
+            width: 90%;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-box .modal-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(248, 68, 100, 0.12);
+            border: 1px solid rgba(248, 68, 100, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #f84464;
+            margin: 0 auto 20px;
+        }
+
+        .modal-box h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .modal-box p {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-actions .btn-modal {
+            flex: 1;
+            padding: 13px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .modal-actions .btn-modal.cancel {
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .modal-actions .btn-modal.confirm {
+            background: linear-gradient(135deg, #f84464, #c0392b);
+            color: #fff;
+        }
+
+        .modal-actions .btn-modal.confirm:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .stats-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .events-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="admin-navbar">
+        <div class="brand">⚡ Zentrix Admin</div>
+        <div class="nav-actions">
+            <a href="/admin" class="btn-nav secondary"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="/events/admin/create" class="btn-nav primary"><i class="fas fa-plus"></i> Create Event</a>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <!-- Toasts -->
+        <div th:if="${param.created}" class="toast success">
+            <i class="fas fa-check-circle"></i> Event published successfully! It's now live on the platform.
+        </div>
+        <div th:if="${param.updated}" class="toast info">
+            <i class="fas fa-edit"></i> Event updated successfully.
+        </div>
+        <div th:if="${param.deleted}" class="toast danger">
+            <i class="fas fa-trash"></i> Event deleted from the platform.
+        </div>
+
+        <!-- Stats Strip -->
+        <div class="stats-strip">
+            <div class="stat-tile">
+                <div class="stat-icon total"><i class="fas fa-calendar-alt"></i></div>
+                <div>
+                    <div class="stat-num" th:text="${totalEvents}">0</div>
+                    <div class="stat-lbl">Total Events</div>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-icon upcoming"><i class="fas fa-hourglass-start"></i></div>
+                <div>
+                    <div class="stat-num" th:text="${upcomingCount}">0</div>
+                    <div class="stat-lbl">Upcoming</div>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-icon ongoing"><i class="fas fa-circle-notch"></i></div>
+                <div>
+                    <div class="stat-num" th:text="${ongoingCount}">0</div>
+                    <div class="stat-lbl">Ongoing</div>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-icon completed"><i class="fas fa-check-circle"></i></div>
+                <div>
+                    <div class="stat-num" th:text="${completedCount}">0</div>
+                    <div class="stat-lbl">Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search events..." onkeyup="filterCards()">
+                </div>
+                <select class="filter-select" id="statusFilter" onchange="filterCards()">
+                    <option value="">All Statuses</option>
+                    <option value="UPCOMING">Upcoming</option>
+                    <option value="ONGOING">Ongoing</option>
+                    <option value="COMPLETED">Completed</option>
+                </select>
+                <select class="filter-select" id="catFilter" onchange="filterCards()">
+                    <option value="">All Categories</option>
+                    <option value="Gaming">Gaming</option>
+                    <option value="Talent">Talent</option>
+                    <option value="Tech">Tech</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Cultural">Cultural</option>
+                </select>
+            </div>
+            <a href="/events/admin/create" class="btn-nav primary">
+                <i class="fas fa-plus"></i> New Event
+            </a>
+        </div>
+
+        <!-- Events Grid -->
+        <div class="events-grid" id="eventsGrid">
+
+            <div th:each="event : ${events}" class="event-card" th:data-title="${event.title}"
+                th:data-status="${event.status}" th:data-category="${event.category}">
+
+                <div class="event-thumb">
+                    <img th:src="${event.imageUrl}" alt="event poster"
+                        onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800'">
+                    <div class="event-thumb-overlay"></div>
+
+                    <div class="cat-tag" th:text="${event.category}">Category</div>
+
+                    <div class="status-dot"
+                        th:classappend="${event.status == 'UPCOMING'} ? 'upcoming' : (${event.status == 'ONGOING'} ? 'ongoing' : 'completed')">
+                        <i class="fas"
+                            th:classappend="${event.status == 'UPCOMING'} ? 'fa-hourglass-start' : (${event.status == 'ONGOING'} ? 'fa-circle' : 'fa-check')"></i>
+                        <span th:text="${event.status != null ? event.status : 'UPCOMING'}">UPCOMING</span>
+                    </div>
+                </div>
+
+                <div class="event-body">
+                    <div class="event-title" th:text="${event.title}">Event Title</div>
+                    <div class="event-meta">
+                        <div class="meta-row">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span
+                                th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'MMM dd, yyyy · hh:mm a') : 'TBA'}">Date</span>
+                        </div>
+                        <div class="meta-row">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span th:text="${event.venue}">Venue</span>
+                        </div>
+                        <div class="meta-row">
+                            <i class="fas fa-users"></i>
+                            <span>Max <strong
+                                    th:text="${event.maxParticipants != null ? event.maxParticipants : '—'}">100</strong>
+                                participants</span>
+                        </div>
+                    </div>
+
+                    <div class="event-footer">
+                        <span class="badge-pill"
+                            th:classappend="${event.entryFeeType == 'Paid'} ? 'badge-paid' : 'badge-free'"
+                            th:text="${event.price != null ? event.price : 'Free'}">Free</span>
+
+                        <a th:href="@{'/events/admin/edit/' + ${event.id}}" class="action-btn btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+
+                        <a th:href="@{'/events/' + ${event.id}}" target="_blank" class="action-btn btn-view">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+
+                        <!-- Attendance Button — highlighted for ONGOING events -->
+                        <a th:href="@{'/events/admin/' + ${event.id} + '/attendance'}" class="action-btn" th:style="${event.status == 'ONGOING'} ?
+                               'background:rgba(245,158,11,0.2);border-color:rgba(245,158,11,0.4);color:#f59e0b;animation:pulse-att 1.5s infinite;' :
+                               'background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.25);color:#a5b4fc;'">
+                            <i class="fas fa-clipboard-check"></i> Attendance
+                        </a>
+
+                        <button class="action-btn btn-delete" th:data-event-id="${event.id}"
+                            th:data-event-title="${event.title}"
+                            onclick="openDeleteModal(this.dataset.eventId, this.dataset.eventTitle)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <div th:if="${#lists.isEmpty(events)}" class="empty-state">
+                <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
+                <h2>No Events Found</h2>
+                <p>You haven't created any events yet. Get started by publishing your first event!</p>
+                <a href="/events/admin/create" class="btn-nav primary" style="margin: 0 auto; width:fit-content;">
+                    <i class="fas fa-plus"></i> Create First Event
+                </a>
+            </div>
+
+        </div><!-- /events-grid -->
+
+    </div><!-- /page-wrapper -->
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <h2>Delete Event?</h2>
+            <p id="deleteModalText">This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn-modal cancel" onclick="closeDeleteModal()">Cancel</button>
+                <form id="deleteForm" method="POST">
+                    <button type="submit" class="btn-modal confirm">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── Filter Cards ──
+        function filterCards() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const cat = document.getElementById('catFilter').value;
+
+            document.querySelectorAll('#eventsGrid .event-card').forEach(card => {
+                const title = (card.dataset.title || '').toLowerCase();
+                const s = card.dataset.status || '';
+                const c = card.dataset.category || '';
+
+                const matchQ = !q || title.includes(q);
+                const matchStatus = !status || s === status;
+                const matchCat = !cat || c === cat;
+
+                card.style.display = (matchQ && matchStatus && matchCat) ? '' : 'none';
+            });
+        }
+
+        // ── Delete Modal ──
+        let pendingDeleteId = null;
+
+        function openDeleteModal(id, title) {
+            pendingDeleteId = id;
+            document.getElementById('deleteModalText').textContent =
+                `"${title}" will be permanently deleted. This cannot be undone.`;
+            document.getElementById('deleteForm').action = `/events/admin/delete/${id}`;
+            document.getElementById('deleteModal').classList.add('open');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('open');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('deleteModal').addEventListener('click', function (e) {
+            if (e.target === this) closeDeleteModal();
+        });
+
+        // Auto-hide toasts
+        document.querySelectorAll('.toast').forEach(t => {
+            setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.5s'; }, 4000);
+        });
+    </script>
+</body>
+
+</html>

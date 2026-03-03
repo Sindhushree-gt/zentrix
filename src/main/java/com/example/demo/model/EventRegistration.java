@@ -22,40 +22,93 @@ public class EventRegistration {
 
     private LocalDateTime registrationDate;
 
+    // Ticket & Payment fields
+    @Column(unique = true)
+    private String ticketId;
+
+    private String registrationStatus = "REGISTERED"; // REGISTERED, CANCELLED
+
+    private String paymentStatus = "FREE"; // FREE, PAID, PENDING
+
+    // User-provided registration info
+    private String fullName;
+    private String email;
+    private String phone;
+    private String college;
+    private String yearOfStudy;
+
+    // Attendance tracking
+    private boolean attendanceMarked = false;
+    private LocalDateTime attendedAt;
+
+    // Results & Ranking
+    private String position; // "Winner", "Runner", "Participant"
+    private Integer pointsEarned = 0;
+
+    // Secret Voting System
+    private Double judgeScore = 0.0;
+    private Integer publicVotes = 0;
+    private Double finalScore = 0.0;
+
     public EventRegistration() {
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Event getEvent() { return event; }
+    public void setEvent(Event event) { this.event = event; }
 
-    public Event getEvent() {
-        return event;
-    }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
-    public void setEvent(Event event) {
-        this.event = event;
-    }
+    public LocalDateTime getRegistrationDate() { return registrationDate; }
+    public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }
 
-    public User getUser() {
-        return user;
-    }
+    public String getTicketId() { return ticketId; }
+    public void setTicketId(String ticketId) { this.ticketId = ticketId; }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
+    public String getRegistrationStatus() { return registrationStatus; }
+    public void setRegistrationStatus(String registrationStatus) { this.registrationStatus = registrationStatus; }
 
-    public LocalDateTime getRegistrationDate() {
-        return registrationDate;
-    }
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
 
-    public void setRegistrationDate(LocalDateTime registrationDate) {
-        this.registrationDate = registrationDate;
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getCollege() { return college; }
+    public void setCollege(String college) { this.college = college; }
+
+    public String getYearOfStudy() { return yearOfStudy; }
+    public void setYearOfStudy(String yearOfStudy) { this.yearOfStudy = yearOfStudy; }
+
+    public boolean isAttendanceMarked() { return attendanceMarked; }
+    public void setAttendanceMarked(boolean attendanceMarked) { this.attendanceMarked = attendanceMarked; }
+
+    public LocalDateTime getAttendedAt() { return attendedAt; }
+    public void setAttendedAt(LocalDateTime attendedAt) { this.attendedAt = attendedAt; }
+
+    public String getPosition() { return position; }
+    public void setPosition(String position) { this.position = position; }
+
+    public Integer getPointsEarned() { return pointsEarned; }
+    public void setPointsEarned(Integer pointsEarned) { this.pointsEarned = pointsEarned; }
+
+    public Double getJudgeScore() { return judgeScore; }
+    public void setJudgeScore(Double judgeScore) { this.judgeScore = judgeScore; }
+
+    public Integer getPublicVotes() { return publicVotes; }
+    public void setPublicVotes(Integer publicVotes) { this.publicVotes = publicVotes; }
+
+    public Double getFinalScore() { return finalScore; }
+    public void setFinalScore(Double finalScore) { this.finalScore = finalScore; }
 
     @PrePersist
     protected void onCreate() {

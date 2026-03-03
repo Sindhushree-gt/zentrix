@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${event.id != null} ? 'Edit Event | Zentrix Admin' : 'Create Event | Zentrix Admin'">Create Event |
+        Zentrix Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .admin-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(248, 68, 100, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 1000;
+        }
+
+        .admin-navbar .brand {
+            font-size: 1.4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #f84464, #ff6b9d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .admin-navbar .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            color: #fff;
+            border-color: rgba(248, 68, 100, 0.4);
+            background: rgba(248, 68, 100, 0.08);
+        }
+
+        .page-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 100px 24px 60px;
+        }
+
+        .page-header {
+            margin-bottom: 40px;
+        }
+
+        .page-header .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(248, 68, 100, 0.12);
+            border: 1px solid rgba(248, 68, 100, 0.3);
+            color: #f84464;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .page-header h1 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 40%, rgba(255, 255, 255, 0.6));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 15px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .form-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 30px;
+            transition: border-color 0.3s;
+        }
+
+        .form-card:hover {
+            border-color: rgba(248, 68, 100, 0.2);
+        }
+
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 22px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .section-label i {
+            color: #f84464;
+            font-size: 14px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .three-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        label span.required {
+            color: #f84464;
+            margin-left: 3px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="datetime-local"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #f84464;
+            background: rgba(248, 68, 100, 0.06);
+            box-shadow: 0 0 0 3px rgba(248, 68, 100, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            line-height: 1.6;
+        }
+
+        select option {
+            background: #1a1a2e;
+        }
+
+        /* Category Cards */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+
+        .cat-btn {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cat-btn input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .cat-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 10px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .cat-label .cat-icon {
+            font-size: 22px;
+        }
+
+        .cat-label .cat-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .cat-btn input:checked+.cat-label {
+            border-color: #f84464;
+            background: rgba(248, 68, 100, 0.12);
+        }
+
+        .cat-btn input:checked+.cat-label .cat-name {
+            color: #f84464;
+        }
+
+        .cat-label:hover {
+            border-color: rgba(248, 68, 100, 0.4);
+            background: rgba(248, 68, 100, 0.06);
+        }
+
+        /* Fee Toggle */
+        .fee-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .fee-option {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .fee-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .fee-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 18px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .fee-label i {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .fee-label .fee-text {
+            font-weight: 600;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .fee-option input:checked+.fee-label {
+            border-color: #f84464;
+            background: rgba(248, 68, 100, 0.1);
+        }
+
+        .fee-option input:checked+.fee-label i,
+        .fee-option input:checked+.fee-label .fee-text {
+            color: #f84464;
+        }
+
+        .fee-label:hover {
+            border-color: rgba(248, 68, 100, 0.4);
+        }
+
+        #paidAmountField {
+            margin-top: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        /* Poster Upload */
+        .upload-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: #f84464;
+            background: rgba(248, 68, 100, 0.06);
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(248, 68, 100, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            color: #f84464;
+        }
+
+        .upload-zone h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .upload-zone p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        #posterPreview {
+            display: none;
+            margin-top: 16px;
+            border-radius: 12px;
+            overflow: hidden;
+            max-height: 220px;
+        }
+
+        #posterPreview img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+        }
+
+        /* Status (edit mode only) */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .status-option {
+            position: relative;
+        }
+
+        .status-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .status-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.45);
+            transition: all 0.2s;
+        }
+
+        .status-option.upcoming input:checked+.status-label {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .status-option.ongoing input:checked+.status-label {
+            border-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .status-option.completed input:checked+.status-label {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .status-label:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Submit */
+        .submit-bar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 15px;
+            padding-top: 10px;
+        }
+
+        .btn-cancel {
+            padding: 14px 28px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .btn-publish {
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #f84464, #ff6b9d);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.25s;
+            box-shadow: 0 4px 20px rgba(248, 68, 100, 0.4);
+            letter-spacing: 0.3px;
+        }
+
+        .btn-publish:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(248, 68, 100, 0.55);
+        }
+
+        .btn-publish .rocket {
+            transition: transform 0.3s;
+        }
+
+        .btn-publish:hover .rocket {
+            transform: translateX(4px) translateY(-4px);
+        }
+
+        @media (max-width: 768px) {
+
+            .two-col,
+            .three-col {
+                grid-template-columns: 1fr;
+            }
+
+            .category-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .page-header h1 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Admin Navbar -->
+    <nav class="admin-navbar">
+        <div class="brand">⚡ Zentrix Admin</div>
+        <div class="nav-right">
+            <a href="/events/admin/manage" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Manage Events
+            </a>
+            <a href="/admin" class="btn-back">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="badge">
+                <i class="fas fa-calendar-plus"></i>
+                <span th:text="${event.id != null} ? 'EDIT EVENT' : 'NEW EVENT'">NEW EVENT</span>
+            </div>
+            <h1 th:text="${event.id != null} ? 'Edit Event Details' : 'Create a New Event'">Create a New Event</h1>
+            <p>Fill in the details below and publish your event to the platform.</p>
+        </div>
+
+        <!-- Form -->
+        <form th:action="${event.id != null} ? @{'/events/admin/edit/' + ${event.id}} : @{/events/admin/create}"
+            method="POST" onsubmit="return validateForm()">
+
+            <div class="form-grid">
+
+                <!-- SECTION 1: Basic Info -->
+                <div class="form-card">
+                    <div class="section-label">
+                        <i class="fas fa-info-circle"></i> Basic Information
+                    </div>
+
+                    <div class="field-group" style="margin-bottom: 20px;">
+                        <label>Event Name <span class="required">*</span></label>
+                        <input type="text" name="title" id="titleInput" th:value="${event.title}"
+                            placeholder="e.g. Zentrix Gaming Championship 2025" required maxlength="120">
+                    </div>
+
+                    <div class="field-group">
+                        <label>Description <span class="required">*</span></label>
+                        <textarea name="description" id="descInput" th:text="${event.description}"
+                            placeholder="Tell participants what this event is about, what to expect, prizes, and highlights..."
+                            required></textarea>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Category -->
+                <div class="form-card">
+                    <div class="section-label">
+                        <i class="fas fa-tag"></i> Event Category <span class="required"
+                            style="margin-left:4px;">*</span>
+                    </div>
+                    <div class="category-grid">
+                        <label class="cat-btn">
+                            <input type="radio" name="category" value="Gaming"
+                                th:checked="${event.category == 'Gaming'}" required>
+                            <div class="cat-label">
+                                <span class="cat-icon">🎮</span>
+                                <span class="cat-name">Gaming</span>
+                            </div>
+                        </label>
+                        <label class="cat-btn">
+                            <input type="radio" name="category" value="Talent"
+                                th:checked="${event.category == 'Talent'}">
+                            <div class="cat-label">
+                                <span class="cat-icon">🎤</span>
+                                <span class="cat-name">Talent</span>
+                            </div>
+                        </label>
+                        <label class="cat-btn">
+                            <input type="radio" name="category" value="Tech" th:checked="${event.category == 'Tech'}">
+                            <div class="cat-label">
+                                <span class="cat-icon">💻</span>
+                                <span class="cat-name">Tech</span>
+                            </div>
+                        </label>
+                        <label class="cat-btn">
+                            <input type="radio" name="category" value="Sports"
+                                th:checked="${event.category == 'Sports'}">
+                            <div class="cat-label">
+                                <span class="cat-icon">⚽</span>
+                                <span class="cat-name">Sports</span>
+                            </div>
+                        </label>
+                        <label class="cat-btn">
+                            <input type="radio" name="category" value="Cultural"
+                                th:checked="${event.category == 'Cultural'}">
+                            <div class="cat-label">
+                                <span class="cat-icon">🎭</span>
+                                <span class="cat-name">Cultural</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Date, Time, Venue -->
+                <div class="form-card">
+                    <div class="section-label">
+                        <i class="fas fa-clock"></i> Date, Time & Location
+                    </div>
+                    <div class="two-col">
+                        <div class="field-group">
+                            <label>Date & Time <span class="required">*</span></label>
+                            <input type="datetime-local" name="dateTime" id="dateTimeInput"
+                                th:value="${event.dateTime != null ? #temporals.format(event.dateTime, 'yyyy-MM-dd') + 'T' + #temporals.format(event.dateTime, 'HH:mm') : ''}"
+                                required>
+                        </div>
+                        <div class="field-group">
+                            <label>Venue / Online Link <span class="required">*</span></label>
+                            <input type="text" name="venue" id="venueInput" th:value="${event.venue}"
+                                placeholder="e.g. Main Hall, Block A  or  https://meet.xyz/zentrix" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: Entry & Participants -->
+                <div class="form-card">
+                    <div class="section-label">
+                        <i class="fas fa-ticket-alt"></i> Entry Fee & Capacity
+                    </div>
+
+                    <div class="two-col">
+                        <div class="field-group">
+                            <label>Entry Fee Type <span class="required">*</span></label>
+                            <div class="fee-toggle">
+                                <label class="fee-option">
+                                    <input type="radio" name="entryFeeType" value="Free" id="feeFree"
+                                        th:checked="${event.entryFeeType == null or event.entryFeeType == 'Free'}"
+                                        onchange="togglePaidField(this)">
+                                    <div class="fee-label">
+                                        <i class="fas fa-gift"></i>
+                                        <span class="fee-text">Free</span>
+                                    </div>
+                                </label>
+                                <label class="fee-option">
+                                    <input type="radio" name="entryFeeType" value="Paid" id="feePaid"
+                                        th:checked="${event.entryFeeType == 'Paid'}" onchange="togglePaidField(this)">
+                                    <div class="fee-label">
+                                        <i class="fas fa-rupee-sign"></i>
+                                        <span class="fee-text">Paid</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <div id="paidAmountField">
+                                <input type="number" name="price" id="priceInput"
+                                    th:value="${event.price != null and !event.price.startsWith('F') ? event.price.replace('₹','') : ''}"
+                                    placeholder="Enter amount in ₹" min="1">
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label>Max Participants <span class="required">*</span></label>
+                            <input type="number" name="maxParticipants" id="maxInput"
+                                th:value="${event.maxParticipants}" placeholder="e.g. 100" min="1" max="10000" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: Status (Edit Mode Only) -->
+                <div class="form-card" th:if="${event.id != null}">
+                    <div class="section-label">
+                        <i class="fas fa-toggle-on"></i> Event Status
+                    </div>
+                    <div class="status-grid">
+                        <label class="status-option upcoming">
+                            <input type="radio" name="status" value="UPCOMING"
+                                th:checked="${event.status == 'UPCOMING' or event.status == null}">
+                            <div class="status-label">
+                                <i class="fas fa-hourglass-start"></i> Upcoming
+                            </div>
+                        </label>
+                        <label class="status-option ongoing">
+                            <input type="radio" name="status" value="ONGOING" th:checked="${event.status == 'ONGOING'}">
+                            <div class="status-label">
+                                <i class="fas fa-circle-notch fa-spin"></i> Ongoing
+                            </div>
+                        </label>
+                        <label class="status-option completed">
+                            <input type="radio" name="status" value="COMPLETED"
+                                th:checked="${event.status == 'COMPLETED'}">
+                            <div class="status-label">
+                                <i class="fas fa-check-circle"></i> Completed
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <!-- Hidden status for create mode -->
+                <input th:if="${event.id == null}" type="hidden" name="status" value="UPCOMING">
+
+                <!-- SECTION 6: Poster URL -->
+                <div class="form-card">
+                    <div class="section-label">
+                        <i class="fas fa-image"></i> Event Poster
+                    </div>
+
+                    <div class="field-group">
+                        <label>Poster Image URL</label>
+                        <div style="position:relative;">
+                            <input type="url" name="imageUrl" id="imageUrlInput" th:value="${event.imageUrl}"
+                                placeholder="https://images.unsplash.com/photo-... or any direct image link"
+                                oninput="previewUrlPoster(this.value)">
+                            <i class="fas fa-link"
+                                style="position:absolute; right:14px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.25);"></i>
+                        </div>
+                        <p style="font-size:12px; color:rgba(255,255,255,0.35); margin-top:6px;">
+                            <i class="fas fa-info-circle" style="color:#f84464;"></i>
+                            Paste a direct image URL (Unsplash, Imgur, etc.). Leave blank to use the default image for
+                            the selected category.
+                        </p>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div id="posterPreview"
+                        th:style="${event.imageUrl != null and !event.imageUrl.isEmpty()} ? 'display:block; margin-top:16px; border-radius:12px; overflow:hidden;' : 'display:none; margin-top:16px; border-radius:12px; overflow:hidden;'">
+                        <img id="posterImg" th:src="${event.imageUrl}"
+                            style="width:100%; height:220px; object-fit:cover; border-radius:12px;" alt="Preview"
+                            onerror="this.parentElement.style.display='none'">
+                        <p style="font-size:12px; color:rgba(255,255,255,0.4); margin-top:8px; text-align:center;">Image
+                            preview</p>
+                    </div>
+                </div>
+
+                <!-- Submit Bar -->
+                <div class="submit-bar">
+                    <a href="/events/admin/manage" class="btn-cancel">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-publish" id="publishBtn">
+                        <i class="fas fa-rocket rocket"></i>
+                        <span th:text="${event.id != null} ? 'UPDATE EVENT' : 'PUBLISH EVENT'">PUBLISH EVENT</span>
+                    </button>
+                </div>
+
+            </div><!-- /form-grid -->
+        </form>
+    </div>
+
+    <script>
+        // ── Paid fee toggle ──
+        function togglePaidField(radio) {
+            const field = document.getElementById('paidAmountField');
+            const input = document.getElementById('priceInput');
+            if (radio.value === 'Paid') {
+                field.style.display = 'block';
+                input.required = true;
+            } else {
+                field.style.display = 'none';
+                input.required = false;
+                input.value = '';
+            }
+        }
+
+        // Init on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const paid = document.getElementById('feePaid');
+            const field = document.getElementById('paidAmountField');
+            if (paid && paid.checked) {
+                field.style.display = 'block';
+            } else {
+                field.style.display = 'none';
+            }
+        });
+
+        // ── Poster URL live preview ──
+        function previewUrlPoster(url) {
+            const preview = document.getElementById('posterPreview');
+            const img = document.getElementById('posterImg');
+            if (url && url.trim()) {
+                img.src = url.trim();
+                preview.style.display = 'block';
+                img.onerror = () => { preview.style.display = 'none'; };
+                img.onload = () => { preview.style.display = 'block'; img.onerror = null; };
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // ── Form validation ──
+        function validateForm() {
+            const cat = document.querySelector('input[name="category"]:checked');
+            if (!cat) { alert('Please select an event category.'); return false; }
+            return true;
+        }
+
+        // ── Publish button animation ──
+        document.querySelector('form').addEventListener('submit', function () {
+            if (!validateForm()) return false;
+            const btn = document.getElementById('publishBtn');
+            btn.style.opacity = '0.7';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+        });
+    </script>
+</body>
+
+</html>

@@ -7,29 +7,572 @@
     <title>Explore Events | Zentrix</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* ── Trending Strip ── */
+        .trending-strip-wrap {
+            margin-bottom: 32px;
+        }
+
+        .trending-strip-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .trending-strip-header h2 {
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trending-strip-header .fire-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #f84464, #ff6b9d);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(248, 68, 100, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(248, 68, 100, 0);
+            }
+        }
+
+        .trending-strip {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: none;
+        }
+
+        .trending-strip::-webkit-scrollbar {
+            display: none;
+        }
+
+        .trend-card {
+            flex-shrink: 0;
+            width: 220px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.25s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .trend-card:hover {
+            border-color: rgba(248, 68, 100, 0.35);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .trend-card-thumb {
+            width: 100%;
+            height: 110px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .trend-card-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.35s;
+        }
+
+        .trend-card:hover .trend-card-thumb img {
+            transform: scale(1.07);
+        }
+
+        .trend-card-fire {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(248, 68, 100, 0.9);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trend-card-body {
+            padding: 12px 14px;
+        }
+
+        .trend-card-title {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .trend-card-meta {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .trend-card-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .trend-card-meta i {
+            color: #f84464;
+            font-size: 9px;
+        }
+
+        .trend-card-cat {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+
+
+        /* ── Main Layout ── */
+        .dashboard-container {
+            display: flex;
+            min-height: calc(100vh - 65px);
+        }
+
+        .sidebar {
+            width: 240px;
+            min-height: 100vh;
+            padding: 20px 15px;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            position: sticky;
+            top: 65px;
+            height: calc(100vh - 65px);
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 15px;
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .sidebar-link.active {
+            background: rgba(248, 68, 100, 0.12);
+            color: #f84464;
+        }
+
+        .sidebar-link i {
+            width: 18px;
+            text-align: center;
+        }
+
+        /* ── Content ── */
+        .content-area {
+            flex: 1;
+            padding: 30px 32px;
+            max-width: 1000px;
+        }
+
+        /* Section header */
+        .sec-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .sec-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sec-title .dot {
+            width: 8px;
+            height: 8px;
+            background: #f84464;
+            border-radius: 50%;
+        }
+
+        .view-all {
+            font-size: 13px;
+            color: #f84464;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* ── Category Filters ── */
+        .cat-filter-bar {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 28px;
+            scrollbar-width: none;
+        }
+
+        .cat-filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            text-decoration: none;
+            cursor: pointer;
+            flex-shrink: 0;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.55);
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.2s;
+        }
+
+        .cat-chip:hover {
+            border-color: rgba(248, 68, 100, 0.4);
+            color: #f84464;
+        }
+
+        .cat-chip.active {
+            background: #f84464;
+            border-color: #f84464;
+            color: #fff;
+        }
+
+        /* ── Events Grid ── */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 22px;
+            margin-bottom: 50px;
+        }
+
+        .event-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            overflow: hidden;
+            transition: all 0.25s;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+        .event-card:hover {
+            border-color: rgba(248, 68, 100, 0.3);
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        .card-thumb {
+            position: relative;
+            height: 175px;
+            overflow: hidden;
+        }
+
+        .card-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+
+        .event-card:hover .card-thumb img {
+            transform: scale(1.05);
+        }
+
+        .thumb-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10, 10, 20, 0.85) 0%, transparent 60%);
+        }
+
+        .cat-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(10, 10, 20, 0.7);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .price-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .price-free {
+            background: rgba(16, 185, 129, 0.85);
+            color: #fff;
+        }
+
+        .price-paid {
+            background: rgba(248, 68, 100, 0.85);
+            color: #fff;
+        }
+
+        .spots-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .spots-fill {
+            height: 100%;
+            background: #f84464;
+            transition: width 0.5s;
+        }
+
+        .card-body {
+            padding: 16px;
+        }
+
+        .card-date {
+            font-size: 11px;
+            font-weight: 700;
+            color: #f84464;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-venue {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.45);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 14px;
+        }
+
+        .card-venue i {
+            color: #f84464;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 12px;
+        }
+
+        .attendees {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .attendees i {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-details {
+            background: rgba(248, 68, 100, 0.1);
+            border: 1px solid rgba(248, 68, 100, 0.25);
+            color: #f84464;
+            padding: 7px 16px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .event-card:hover .btn-details {
+            background: #f84464;
+            color: #fff;
+        }
+
+        /* ── Empty State ── */
+        .empty-state {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 48px;
+            color: rgba(248, 68, 100, 0.3);
+            margin-bottom: 16px;
+        }
+
+        /* ── Search Bar ── */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 12px 18px;
+            margin-bottom: 24px;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar:focus-within {
+            border-color: rgba(248, 68, 100, 0.4);
+        }
+
+        .search-bar i {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 15px;
+        }
+
+        .search-bar input {
+            background: none;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .trending-title {
+                font-size: 1.8rem;
+            }
+
+            .trending-wrap {
+                height: 320px;
+            }
+
+            .content-area {
+                padding: 20px 16px;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .events-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
 </head>
 
 <body>
-
     <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">Zentrix</div>
-        <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
-            <input type="text" placeholder="Search for events..." class="form-input" id="eventSearch"
-                style="background: var(--card-bg); border-radius: 20px; padding: 8px 15px;" onkeyup="filterEvents()">
-        </div>
         <div class="nav-links">
-            <a href="/dashboard"><i class="fas fa-home"></i></a>
-            <a href="/messages"><i class="fas fa-comment-dots"></i></a>
-            <a href="/notifications"><i class="fas fa-bell"></i></a>
-            <img th:src="${user.profilePhotoUrl != null ? user.profilePhotoUrl : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop'}"
-                class="user-avatar" style="width: 32px; height: 32px; border: none;">
+            <a th:href="${isAdmin} ? '/admin' : '/dashboard'"><i class="fas fa-home"></i></a>
+            <a th:if="${!isAdmin}" href="/messages"><i class="fas fa-comment-dots"></i></a>
+            <a th:if="${!isAdmin}" href="/notifications"><i class="fas fa-bell"></i></a>
+            <a th:if="${isAdmin}" href="/events/admin/manage" style="color:var(--accent); font-weight:700;">
+                <i class="fas fa-cog"></i> Manage
+            </a>
+            <img th:if="${user != null}"
+                th:src="${user.profilePhotoUrl != null ? user.profilePhotoUrl : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100'}"
+                class="user-avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;cursor:pointer;"
+                onclick="location.href='/profile'">
+            <span th:if="${isAdmin}" style="color:var(--accent);font-weight:800;font-size:13px;">
+                <i class="fas fa-user-shield"></i> Admin
+            </span>
         </div>
     </nav>
 
+
+
+    <!-- ═══════════ MAIN LAYOUT ═══════════ -->
     <div class="dashboard-container">
 
-        <!-- Left Sidebar -->
+        <!-- Sidebar -->
         <aside class="sidebar">
             <a href="/dashboard" class="sidebar-link"><i class="fas fa-home"></i> Home</a>
             <a href="/explore" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
@@ -38,130 +581,167 @@
             <a href="/messages" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
             <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
             <a href="/games" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
-            <a href="/logout" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
+            <a href="/logout" class="sidebar-link" style="margin-top:auto;"><i class="fas fa-sign-out-alt"></i>
                 Logout</a>
         </aside>
 
-        <!-- Center Content -->
-        <main class="social-feed" style="max-width: 1000px;">
+        <!-- Content -->
+        <main class="content-area">
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h1 style="font-size: 2rem; font-weight: 800;">Upcoming Events</h1>
+            <!-- Search -->
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search events by name, venue or category..."
+                    onkeyup="filterEvents()">
+            </div>
+
+            <!-- 🔥 Trending Now Strip -->
+            <div class="trending-strip-wrap" th:if="${!#lists.isEmpty(trending)}">
+                <div class="trending-strip-header">
+                    <h2>
+                        <span class="fire-badge"><i class="fas fa-fire"></i> TRENDING</span>
+                        Trending Now
+                    </h2>
+                </div>
+                <div class="trending-strip">
+                    <a th:each="ev : ${trending}" th:href="@{'/events/' + ${ev.id}}" class="trend-card">
+                        <div class="trend-card-thumb">
+                            <img th:src="${ev.imageUrl}" alt="event"
+                                onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=400'">
+                            <div class="trend-card-fire"><i class="fas fa-fire"></i> HOT</div>
+                            <div class="trend-card-cat" th:text="${ev.category}">Category</div>
+                        </div>
+                        <div class="trend-card-body">
+                            <div class="trend-card-title" th:text="${ev.title}">Event Name</div>
+                            <div class="trend-card-meta">
+                                <span><i class="fas fa-calendar-alt"></i>
+                                    <span
+                                        th:text="${ev.dateTime != null ? #temporals.format(ev.dateTime, 'MMM dd, yyyy') : 'TBA'}">Date</span>
+                                </span>
+                                <span><i class="fas fa-map-marker-alt"></i>
+                                    <span th:text="${ev.venue}">Venue</span>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
 
             <!-- Category Filters -->
-            <div style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 30px;"
-                class="custom-scrollbar">
-                <a th:href="@{/events(category='All')}" class="nav-btn"
-                    th:classappend="${activeCategory == 'All'} ? 'active' : ''"
-                    style="border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">All</a>
+            <div class="cat-filter-bar">
+                <a th:href="@{/events(category='All')}" class="cat-chip"
+                    th:classappend="${activeCategory == 'All' or activeCategory == null} ? ' active' : ''">
+                    <i class="fas fa-th"></i> All Events
+                </a>
+                <a th:href="@{/events(category='Gaming')}" class="cat-chip"
+                    th:classappend="${activeCategory == 'Gaming'} ? ' active' : ''">
+                    🎮 Gaming
+                </a>
+                <a th:href="@{/events(category='Talent')}" class="cat-chip"
+                    th:classappend="${activeCategory == 'Talent'} ? ' active' : ''">
+                    🎤 Talent
+                </a>
+                <a th:href="@{/events(category='Tech')}" class="cat-chip"
+                    th:classappend="${activeCategory == 'Tech'} ? ' active' : ''">
+                    💻 Tech
+                </a>
+                <a th:href="@{/events(category='Sports')}" class="cat-chip"
+                    th:classappend="${activeCategory == 'Sports'} ? ' active' : ''">
+                    ⚽ Sports
+                </a>
+                <a th:href="@{/events(category='Cultural')}" class="cat-chip"
+                    th:classappend="${activeCategory == 'Cultural'} ? ' active' : ''">
+                    🎭 Cultural
+                </a>
+            </div>
 
-                <a th:href="@{/events(category='Sports')}" class="nav-btn"
-                    th:classappend="${activeCategory == 'Sports'} ? 'active' : ''"
-                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">Sports</a>
-
-                <a th:href="@{/events(category='Cultural')}" class="nav-btn"
-                    th:classappend="${activeCategory == 'Cultural'} ? 'active' : ''"
-                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">Cultural</a>
-
-                <a th:href="@{/events(category='Tech')}" class="nav-btn"
-                    th:classappend="${activeCategory == 'Tech'} ? 'active' : ''"
-                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">Tech</a>
-
-                <a th:href="@{/events(category='Workshop')}" class="nav-btn"
-                    th:classappend="${activeCategory == 'Workshop'} ? 'active' : ''"
-                    style="background: transparent; border: 1px solid var(--glass-border); border-radius: 25px; flex-shrink: 0; padding: 10px 25px; text-decoration: none;">Workshops</a>
+            <!-- Upcoming Events Section -->
+            <div class="sec-header">
+                <div class="sec-title">
+                    <div class="dot"></div>
+                    <span
+                        th:text="${activeCategory == 'All' or activeCategory == null} ? 'Upcoming Events' : activeCategory + ' Events'">Upcoming
+                        Events</span>
+                </div>
+                <span style="color:rgba(255,255,255,0.35); font-size:13px;"
+                    th:text="${events.size()} + ' events found'">0
+                    events found</span>
             </div>
 
             <!-- Events Grid -->
-            <div class="events-grid"
-                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;"
-                id="eventContainer">
+            <div class="events-grid" id="eventsGrid">
 
-                <div th:each="event : ${events}" class="card event-card" th:data-title="${event.title}">
-                    <div style="position: relative;">
-                        <img th:src="${event.imageUrl}" class="card-img"
-                            style="height: 200px; object-fit: cover; width: 100%;">
-                        <div style="position: absolute; top: 15px; right: 15px; background: var(--accent); color: #fff; padding: 5px 12px; border-radius: 12px; font-weight: 700; font-size: 12px;"
-                            th:text="${event.category}">Category</div>
+                <a th:each="event : ${events}" th:href="@{'/events/' + ${event.id}}" class="event-card"
+                    th:data-title="${event.title}" th:data-category="${event.category}" th:data-venue="${event.venue}">
+
+                    <div class="card-thumb">
+                        <img th:src="${event.imageUrl}" alt="event"
+                            onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600'">
+                        <div class="thumb-overlay"></div>
+
+                        <!-- Price Badge -->
+                        <div class="price-badge"
+                            th:classappend="${event.entryFeeType == 'Paid'} ? 'price-paid' : 'price-free'"
+                            th:text="${event.price != null ? event.price : 'Free'}">Free</div>
+
+                        <!-- Category Badge -->
+                        <div class="cat-badge" th:text="${event.category}">Category</div>
+
+                        <!-- Spots bar (only if maxParticipants set) -->
+                        <div class="spots-bar" th:if="${event.maxParticipants != null}">
+                            <div class="spots-fill" style="width: 60%;"></div>
+                        </div>
                     </div>
-                    <div class="card-content" style="padding: 20px;">
-                        <div class="event-date"
-                            style="color: var(--accent); font-weight: 700; font-size: 13px; margin-bottom: 8px;">
+
+                    <div class="card-body">
+                        <div class="card-date">
+                            <i class="fas fa-calendar-alt"></i>
                             <span
-                                th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'MMM dd | hh:mm a') : 'TBA'}">Date</span>
+                                th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'EEE, MMM dd · hh:mm a') : 'Date TBA'}">Date</span>
                         </div>
-                        <h3 class="card-title" style="font-size: 1.25rem; font-weight: 700; margin-bottom: 10px;"
-                            th:text="${event.title}">Event Title</h3>
-                        <div class="card-subtitle" style="color: var(--text-secondary); margin-bottom: 15px;">
-                            <i class="fas fa-map-marker-alt"></i> <span th:text="${event.venue}">Venue</span>
+                        <div class="card-title" th:text="${event.title}">Event Title</div>
+                        <div class="card-venue">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span th:text="${event.venue}">Venue</span>
                         </div>
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 15px; border-top: 1px solid var(--glass-border);">
-                            <span class="event-price" style="font-weight: 800; font-size: 16px;"
-                                th:text="${event.price}">Free</span>
-                            <a th:href="@{'/events/' + ${event.id}}" class="nav-btn"
-                                style="padding: 8px 20px; font-size: 13px; text-decoration: none;">Details</a>
+                        <div class="card-footer">
+                            <div class="attendees">
+                                <i class="fas fa-users"></i>
+                                <span
+                                    th:text="${event.maxParticipants != null ? event.maxParticipants + ' spots' : 'Open'}">100
+                                    spots</span>
+                            </div>
+                            <div class="btn-details">View Details →</div>
                         </div>
                     </div>
+                </a>
+
+                <!-- Empty state -->
+                <div th:if="${#lists.isEmpty(events)}" class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
+                    <h2 style="font-size:1.3rem; font-weight:700; margin-bottom:8px;">No events found</h2>
+                    <p style="color:rgba(255,255,255,0.4); font-size:14px;">Try a different category or check back
+                        later.</p>
                 </div>
 
-                <!-- Empty State -->
-                <div th:if="${#lists.isEmpty(events)}" style="grid-column: 1 / -1; text-align: center; padding: 60px;">
-                    <i class="fas fa-calendar-times"
-                        style="font-size: 48px; color: var(--text-secondary); margin-bottom: 20px;"></i>
-                    <h2 style="color: #fff;">No events found in this category.</h2>
-                    <p style="color: var(--text-secondary);">Check back later for more exciting updates!</p>
-                </div>
-
-            </div>
+            </div><!-- /events-grid -->
 
         </main>
-
     </div>
 
     <script>
-        function filterEvents() {
-            let input = document.getElementById('eventSearch').value.toLowerCase();
-            let cards = document.getElementsByClassName('event-card');
 
-            for (let card of cards) {
-                let title = card.getAttribute('data-title').toLowerCase();
-                if (title.includes(input)) {
-                    card.style.display = "";
-                } else {
-                    card.style.display = "none";
-                }
-            }
+        // ── Search Filter ──
+        function filterEvents() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('#eventsGrid .event-card').forEach(card => {
+                const title = (card.dataset.title || '').toLowerCase();
+                const cat = (card.dataset.category || '').toLowerCase();
+                const venue = (card.dataset.venue || '').toLowerCase();
+                card.style.display = (!q || title.includes(q) || cat.includes(q) || venue.includes(q)) ? '' : 'none';
+            });
         }
     </script>
-
-    <style>
-        .nav-btn.active {
-            background: var(--accent);
-            color: #fff;
-            border-color: var(--accent);
-        }
-
-        .event-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .event-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: var(--glass-border);
-            border-radius: 10px;
-        }
-    </style>
-
 </body>
 
 </html>
