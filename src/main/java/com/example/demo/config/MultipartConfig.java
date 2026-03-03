@@ -9,12 +9,17 @@ import org.springframework.context.annotation.Configuration;
 public class MultipartConfig {
 
     @Bean
-    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> customizer() {
+    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> tomcatCustomizer() {
         return factory -> {
+            // Use both context and connector customizers to be absolutely sure
             factory.addContextCustomizers(context -> {
-                // This is the critical fix for FileCountLimitExceededException in Tomcat 10/11
-                // It sets the maximum number of permitted parts (files + form fields) in a multipart request
-                context.setMaxFileCount(100L);
+                // Increase the max file count (total parts) to 2000
+                context.setMaxFileCount(2000L);
+            });
+            
+            factory.addConnectorCustomizers(connector -> {
+                // Ensure maxParameterCount is also high
+                connector.setMaxParameterCount(5000);
             });
         };
     }
