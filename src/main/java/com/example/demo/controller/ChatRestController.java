@@ -242,11 +242,15 @@ public class ChatRestController {
                 Files.createDirectories(targetUploadPath);
             }
 
-            Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
-            Files.copy(file.getInputStream(), targetUploadPath.resolve(fileName));
+            byte[] bytes = file.getBytes();
+            Files.write(uploadPath.resolve(fileName), bytes);
+            Files.write(targetUploadPath.resolve(fileName), bytes);
+            System.out.println("[DEBUG] Successfully uploaded file: " + fileName);
 
             return ResponseEntity.ok(Map.of("url", "/uploads/" + fileName));
         } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("[ERROR] Upload failed: " + e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }

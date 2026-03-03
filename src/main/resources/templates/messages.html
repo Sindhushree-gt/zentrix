@@ -2335,17 +2335,36 @@
         }
 
         async function handleFileUpload(input) {
-            if (!input.files || !input.files[0]) return;
+            console.log('[DEBUG] handleFileUpload called with input:', input);
+            if (!input.files || !input.files[0]) {
+                console.log('[DEBUG] No file selected.');
+                return;
+            }
 
+            const file = input.files[0];
+            console.log('[DEBUG] Selected file:', file.name, 'Size:', file.size, 'Type:', file.type);
+            
             const formData = new FormData();
-            formData.append('file', input.files[0]);
+            formData.append('file', file);
 
             try {
+                console.log('[DEBUG] Sending POST to:', window.Zentrix.paths.upload);
                 const res = await fetch(window.Zentrix.paths.upload, {
                     method: 'POST',
                     body: formData
                 });
+                
+                console.log('[DEBUG] Upload response status:', res.status, res.statusText);
+                
+                if (!res.ok) {
+                    const text = await res.text();
+                    console.error('[ERROR] Upload failed with status:', res.status, 'Body:', text);
+                    alert('Upload failed: ' + res.status);
+                    throw new Error('Upload failed with status ' + res.status);
+                }
+                
                 const data = await res.json();
+                console.log('[DEBUG] Upload response data:', data);
 
                 if (data.url) {
                     const conv = conversationsData.find(c => c.id == activeConversationId);
@@ -2358,11 +2377,18 @@
                         parentId: replyingToId,
                         isGroup: isGroup
                     };
+                    console.log('[DEBUG] Sending WebSocket chat message with mediaUrl:', payload);
                     stompClient.send("/app/chat.send", {}, JSON.stringify(payload));
                     cancelReply();
+                } else {
+                    console.error('[ERROR] Upload succeeded but no URL returned:', data);
                 }
-            } catch (e) { console.error('Upload failed', e); }
-            input.value = '';
+            } catch (e) { 
+                console.error('[ERROR] Exception during upload:', e);
+                alert('An error occurred during upload. Check console for details.');
+            } finally {
+                input.value = '';
+            }
         }
 
         function initiateReply(id, text) {

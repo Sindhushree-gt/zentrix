@@ -72,19 +72,24 @@ public class ChatService {
         message.setVanish(conv.isVanishModeEnabled());
 
         // Determine MessageType
-        if (mediaUrl != null) {
+        if (mediaUrl != null && !mediaUrl.trim().isEmpty()) {
             message.setMessageType(MessageType.MEDIA);
+            System.out.println("[DEBUG] ChatService.sendMessage: Saving MEDIA message with URL: " + mediaUrl);
         } else {
             message.setMessageType(MessageType.TEXT);
+            System.out.println("[DEBUG] ChatService.sendMessage: Saving TEXT message");
         }
 
         if (parentId != null) {
             ChatMessage parent = chatMessageRepository.findById(parentId).orElse(null);
             message.setParentMessage(parent);
         }
+        
+        System.out.println("[DEBUG] ChatService.sendMessage: Saving message: content=" + content + ", mediaUrl=" + mediaUrl + ", type=" + message.getMessageType());
         ChatMessage saved = chatMessageRepository.save(message);
+        System.out.println("[DEBUG] ChatService.sendMessage: Message saved with ID: " + saved.getId());
 
-        conv.setLastMessage(content != null ? content : "Media shared");
+        conv.setLastMessage(content != null && !content.trim().isEmpty() ? content : "Media shared");
         conv.setLastMessageTime(LocalDateTime.now());
         conversationRepository.save(conv);
 
