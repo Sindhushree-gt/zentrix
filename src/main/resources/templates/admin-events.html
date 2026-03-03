@@ -369,7 +369,8 @@
 
         .event-footer {
             display: flex;
-            gap: 8px;
+            flex-wrap: wrap;
+            gap: 6px;
             align-items: center;
             padding-top: 14px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -397,9 +398,9 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
-            padding: 7px 15px;
+            padding: 6px 10px;
             border-radius: 9px;
-            font-size: 12px;
+            font-size: 11.5px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -432,7 +433,10 @@
             background: rgba(248, 68, 100, 0.1);
             color: #f84464;
             border: 1px solid rgba(248, 68, 100, 0.25);
-            margin-left: auto;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            flex-shrink: 0;
         }
 
         .btn-delete:hover {
@@ -726,6 +730,17 @@
                                'background:rgba(245,158,11,0.2);border-color:rgba(245,158,11,0.4);color:#f59e0b;animation:pulse-att 1.5s infinite;' :
                                'background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.25);color:#a5b4fc;'">
                             <i class="fas fa-clipboard-check"></i> Attendance
+                        </a>
+
+                        <!-- Results button - Universal for ALL statuses -->
+                        <a th:href="@{'/events/admin/' + ${event.id} + '/attendance?declare=true'}" class="action-btn"
+                            th:style="${event.status == 'ONGOING'} ? 
+                                     'background:rgba(16,185,129,0.15); border-color:rgba(16,185,129,0.3); color:#34d399;' : 
+                                     (${event.status == 'COMPLETED'} ? 
+                                      'background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.2); color:#f59e0b;' :
+                                      'background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.5);')">
+                            <i th:class="${event.status == 'COMPLETED' ? 'fas fa-award' : 'fas fa-trophy'}"></i>
+                            <span th:text="${event.status == 'COMPLETED' ? 'View Results' : 'Results'}">Results</span>
                         </a>
 
                         <button class="action-btn btn-delete" th:data-event-id="${event.id}"

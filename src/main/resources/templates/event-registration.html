@@ -844,10 +844,14 @@
                 </div>
             </div>
 
-            <!-- Public Voting System -->
+            <!-- Event Standings & Results (Universal) -->
             <div class="voting-section"
                 th:if="${(event.status == 'ONGOING' or event.status == 'COMPLETED') and not #lists.isEmpty(candidates)}">
-                <h2><i class="fas fa-vote-yea" style="color:#f84464;"></i> Secret Voting System</h2>
+                <h2><i th:class="${event.status == 'COMPLETED' ? 'fas fa-trophy' : 'fas fa-star'}"
+                        style="color:#fbbf24;"></i>
+                    <span th:text="${event.status == 'COMPLETED' ? 'Final Event Results' : 'Event Leaderboard'}">Event
+                        Standings</span>
+                </h2>
                 <div th:if="${param.voteSuccess}" class="alert-already"
                     style="background:rgba(16,185,129,0.1); border-color:rgba(16,185,129,0.3); color:#10b981; margin-bottom:15px;">
                     <i class="fas fa-check-circle"></i> Vote securely cast!

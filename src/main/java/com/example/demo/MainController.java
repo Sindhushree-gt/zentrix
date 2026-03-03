@@ -180,6 +180,7 @@ public class MainController {
         // Only let admin session through
         if (!"admin".equals(session.getAttribute("user"))) return "redirect:/login";
         model.addAttribute("users", userRepository.findAll());
+        model.addAttribute("events", eventRepository.findAll());
         model.addAttribute("totalEvents", eventRepository.count());
         model.addAttribute("upcomingEvents", eventRepository.countByStatus("UPCOMING"));
         model.addAttribute("ongoingEvents", eventRepository.countByStatus("ONGOING"));

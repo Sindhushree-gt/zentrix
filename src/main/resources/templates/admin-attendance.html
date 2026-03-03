@@ -591,7 +591,11 @@
 
     <div class="page">
 
-        <!-- ── Alert Banners ── -->
+        <div th:if="${param.completed}" class="alert alert-success">
+            <i class="fas fa-flag-checkered"></i>
+            Event Results declared! <strong>XP awarded</strong>, <strong>Leaderboard updated</strong>, and 📍 Status set
+            to <strong>COMPLETED</strong>.
+        </div>
         <div th:if="${param.started}" class="alert alert-success">
             <i class="fas fa-play-circle"></i>
             Event marked as <strong>ONGOING</strong>! Attendance tracking is now live.
@@ -791,11 +795,11 @@
 
                 <div class="form-group" style="margin-bottom: 20px;">
                     <div class="rank-label">
-                        <label>⚖️ Judge Scores (out of 100)</label>
-                        <span style="font-size:11px; color:#10b981;">60% Weighting</span>
+                        <label>📊 Performance / Judge Scores</label>
+                        <span style="font-size:11px; color:#10b981;">Weighted Final Score</span>
                     </div>
                     <div
-                        style="max-height: 160px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px inset rgba(255,255,255,0.05);">
+                        style="max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px inset rgba(255,255,255,0.05);">
                         <div th:each="reg : ${registrations}" th:if="${reg.attendanceMarked}"
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 4px;">
                             <div style="font-size: 13px;">
@@ -809,11 +813,24 @@
                                 style="width: 70px; padding: 6px; border-radius: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; text-align:center;">
                         </div>
                         <div th:if="${#lists.isEmpty(registrations.?[attendanceMarked])}"
-                            style="font-size:12px; color:rgba(255,255,255,0.4); text-align:center;">No attendees marked
-                            yet.</div>
+                            style="background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.1); padding:20px; border-radius:12px; text-align:center;">
+                            <div style="font-size:30px; margin-bottom:10px; opacity:0.3;"><i
+                                    class="fas fa-user-clock"></i></div>
+                            <p style="font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:15px;">No attendees
+                                marked yet. You must mark attendance to declare winners.</p>
+                            <form th:action="@{'/events/admin/' + ${event.id} + '/attendance/mark-all'}" method="post"
+                                style="display:inline;">
+                                <input type="hidden" name="next" value="declare">
+                                <button type="submit" class="btn btn-ghost" style="font-size:12px; padding:6px 14px;">
+                                    <i class="fas fa-check-double"></i> Mark Everyone Present & Proceed
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                    <p style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:8px;">* The final score determines
-                        the true ranking. You may choose to follow the calculated scores to pick the winners below.</p>
+                    <p th:if="${!#lists.isEmpty(registrations.?[attendanceMarked])}"
+                        style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:8px;">
+                        * The final score determines the true ranking. Use these scores to pick the winners below.
+                    </p>
                 </div>
 
                 <div class="form-group">
@@ -882,6 +899,14 @@
         function closeResultsModal() {
             document.getElementById('resultsModal').classList.remove('open');
         }
+
+        // Check if declare modal should be open on load
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('declare') === 'true') {
+                openResultsModal();
+            }
+        };
     </script>
 
 </body>
