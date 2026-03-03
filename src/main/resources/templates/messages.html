@@ -51,6 +51,27 @@
             display: flex;
             color: var(--text-main);
             overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('/images/chat-pattern.png');
+            background-repeat: repeat;
+            background-size: 350px;
+            opacity: 0.06;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body > * {
+            position: relative;
+            z-index: 1;
         }
 
         /* Container & Layout */
@@ -397,27 +418,7 @@
             display: flex;
             flex-direction: column;
             scroll-behavior: smooth;
-            position: relative;
-        }
-
-        .messages-area::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: url('/images/chat-pattern.png');
-            background-repeat: repeat;
-            background-size: 350px;
-            opacity: 0.06;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .messages-area > * {
-            position: relative;
-            z-index: 1;
+            background: transparent !important;
         }
 
         .msg-bubble {
@@ -1348,8 +1349,8 @@
             --modal-border: #30363d;
         }
 
-        body[data-theme="midnight"] .messages-area::before,
-        body[data-theme="dark"] .messages-area::before {
+        body[data-theme="midnight"]::before,
+        body[data-theme="dark"]::before {
             filter: invert(1) brightness(1.5);
             opacity: 0.08;
         }
@@ -1387,8 +1388,10 @@
             --input-bg: #ffffff;
         }
 
-        body[data-theme] .messages-area {
-            background-color: var(--bg-color) !important;
+        body[data-theme] .sidebar,
+        body[data-theme] .chat-main {
+            background-color: var(--glass-bg) !important;
+            backdrop-filter: blur(10px);
         }
 
         [data-theme] .msg-bubble.sent {
