@@ -217,11 +217,7 @@ public class MainController {
         return "achievements";
     }
 
-    @GetMapping("/messages")
-    public String messages(HttpSession session) {
-        if (!isLoggedIn(session)) return "redirect:/login";
-        return "redirect:/dashboard";
-    }
+
 
     @GetMapping("/notifications")
     public String notifications(HttpSession session) {
