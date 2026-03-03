@@ -25,6 +25,7 @@ public class Event {
     // New fields for admin create event flow
     private String status = "UPCOMING";  // UPCOMING, ONGOING, COMPLETED
     private Integer maxParticipants;
+    private Integer fixedParticipants = 0; // Pre-filled or manual count done by admin
     private String entryFeeType = "Free"; // Free or Paid
     private String eventMode = "Offline"; // Offline or Online
     private String meetingLink;           // For online events
@@ -128,4 +129,7 @@ public class Event {
 
     public String getMeetingLink() { return meetingLink; }
     public void setMeetingLink(String meetingLink) { this.meetingLink = meetingLink; }
+
+    public Integer getFixedParticipants() { return fixedParticipants; }
+    public void setFixedParticipants(Integer fixedParticipants) { this.fixedParticipants = fixedParticipants; }
 }

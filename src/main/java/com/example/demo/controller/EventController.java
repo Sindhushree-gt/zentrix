@@ -116,7 +116,10 @@ public class EventController {
 
         boolean isRegistered = (user != null) &&
                 eventRegistrationRepository.findByEventAndUser(event, user).isPresent();
-        long registrationCount = eventRegistrationRepository.countByEvent(event);
+        long dbRegistrationCount = eventRegistrationRepository.countByEvent(event);
+        long fixedCount = (event.getFixedParticipants() != null) ? event.getFixedParticipants() : 0;
+        long registrationCount = dbRegistrationCount + fixedCount;
+        
         // Use -1 for unlimited spots
         int spotsLeft = (event.getMaxParticipants() != null && event.getMaxParticipants() > 0)
                 ? Math.max(0, event.getMaxParticipants() - (int) registrationCount) : -1;
@@ -316,6 +319,7 @@ public class EventController {
             @RequestParam String entryFeeType,
             @RequestParam(required = false) String price,
             @RequestParam Integer maxParticipants,
+            @RequestParam(required = false, defaultValue = "0") Integer fixedParticipants,
             @RequestParam(required = false) String imageUrl,
             HttpSession session) throws IOException {
 
@@ -328,6 +332,7 @@ public class EventController {
         event.setVenue(venue);
         event.setEntryFeeType(entryFeeType);
         event.setMaxParticipants(maxParticipants);
+        event.setFixedParticipants(fixedParticipants);
         event.setStatus("UPCOMING");
         event.setOrganizer("Zentrix Admin");
 
@@ -372,6 +377,7 @@ public class EventController {
             @RequestParam String entryFeeType,
             @RequestParam(required = false) String price,
             @RequestParam Integer maxParticipants,
+            @RequestParam(required = false, defaultValue = "0") Integer fixedParticipants,
             @RequestParam String status,
             @RequestParam(required = false) String imageUrl,
             HttpSession session) throws IOException {
@@ -386,6 +392,7 @@ public class EventController {
         event.setVenue(venue);
         event.setEntryFeeType(entryFeeType);
         event.setMaxParticipants(maxParticipants);
+        event.setFixedParticipants(fixedParticipants);
         event.setStatus(status);
         event.setPrice("Free".equals(entryFeeType) ? "Free"
                 : (price != null && !price.isBlank() ? "\u20b9" + price : "Paid"));

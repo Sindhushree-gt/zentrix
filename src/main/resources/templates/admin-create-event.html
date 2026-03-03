@@ -690,6 +690,13 @@
                             <input type="number" name="maxParticipants" id="maxInput"
                                 th:value="${event.maxParticipants}" placeholder="e.g. 100" min="1" max="10000" required>
                         </div>
+
+                        <div class="field-group">
+                            <label>Fixed Attendees Count</label>
+                            <input type="number" name="fixedParticipants" id="fixedInput"
+                                th:value="${event.fixedParticipants != null ? event.fixedParticipants : 0}"
+                                placeholder="e.g. 20" min="0" max="10000">
+                        </div>
                     </div>
                 </div>
 
