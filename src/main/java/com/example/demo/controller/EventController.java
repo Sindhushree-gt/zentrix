@@ -326,8 +326,8 @@ public class EventController {
             @RequestParam(required = false, defaultValue = "0") Integer fixedParticipants,
             @RequestParam(required = false, defaultValue = "Offline") String eventMode,
             @RequestParam(required = false) String meetingLink,
-            @RequestParam(required = false) org.springframework.web.multipart.MultipartFile imageFile,
-            HttpSession session) throws IOException {
+            @RequestParam(required = false) String imageUrl,
+            HttpSession session) {
 
         if (!isAdmin(session)) return "redirect:/login";
 
@@ -354,32 +354,9 @@ public class EventController {
             event.setDateTime(LocalDateTime.parse(dateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
         } catch (Exception ignored) {}
 
-        // Use provided file or fallback to default category image
-        if (imageFile != null && !imageFile.isEmpty()) {
-            try {
-                String fileName = java.util.UUID.randomUUID().toString() + "_" + imageFile.getOriginalFilename();
-                String uploadDir = "src/main/resources/static/uploads/events/";
-                java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
-                if (!java.nio.file.Files.exists(uploadPath)) {
-                    java.nio.file.Files.createDirectories(uploadPath);
-                }
-                
-                String targetUploadDir = "target/classes/static/uploads/events/";
-                java.nio.file.Path targetUploadPath = java.nio.file.Paths.get(targetUploadDir);
-                if (!java.nio.file.Files.exists(targetUploadPath)) {
-                    java.nio.file.Files.createDirectories(targetUploadPath);
-                }
-
-                java.nio.file.Files.copy(imageFile.getInputStream(), uploadPath.resolve(fileName),
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                java.nio.file.Files.copy(imageFile.getInputStream(), targetUploadPath.resolve(fileName),
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-                event.setImageUrl("/uploads/events/" + fileName);
-            } catch (Exception e) {
-                e.printStackTrace();
-                event.setImageUrl(getDefaultImage(category));
-            }
+        // Use provided URL or fallback to default category image
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            event.setImageUrl(imageUrl);
         } else {
             event.setImageUrl(getDefaultImage(category));
         }
@@ -412,8 +389,8 @@ public class EventController {
             @RequestParam(required = false, defaultValue = "Offline") String eventMode,
             @RequestParam(required = false) String meetingLink,
             @RequestParam String status,
-            @RequestParam(required = false) org.springframework.web.multipart.MultipartFile imageFile,
-            HttpSession session) throws IOException {
+            @RequestParam(required = false) String imageUrl,
+            HttpSession session) {
 
         if (!isAdmin(session)) return "redirect:/login";
         Event event = eventRepository.findById(id).orElse(null);
@@ -440,31 +417,9 @@ public class EventController {
             event.setDateTime(LocalDateTime.parse(dateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
         } catch (Exception ignored) {}
 
-        // Update image file only if a new one is provided
-        if (imageFile != null && !imageFile.isEmpty()) {
-            try {
-                String fileName = java.util.UUID.randomUUID().toString() + "_" + imageFile.getOriginalFilename();
-                String uploadDir = "src/main/resources/static/uploads/events/";
-                java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
-                if (!java.nio.file.Files.exists(uploadPath)) {
-                    java.nio.file.Files.createDirectories(uploadPath);
-                }
-                
-                String targetUploadDir = "target/classes/static/uploads/events/";
-                java.nio.file.Path targetUploadPath = java.nio.file.Paths.get(targetUploadDir);
-                if (!java.nio.file.Files.exists(targetUploadPath)) {
-                    java.nio.file.Files.createDirectories(targetUploadPath);
-                }
-
-                java.nio.file.Files.copy(imageFile.getInputStream(), uploadPath.resolve(fileName),
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                java.nio.file.Files.copy(imageFile.getInputStream(), targetUploadPath.resolve(fileName),
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-                event.setImageUrl("/uploads/events/" + fileName);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        // Update imageUrl if a new one is provided
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            event.setImageUrl(imageUrl);
         }
         // else keep existing imageUrl unchanged
 

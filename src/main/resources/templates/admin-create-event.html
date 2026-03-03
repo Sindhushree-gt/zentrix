@@ -557,7 +557,7 @@
 
         <!-- Form -->
         <form th:action="${event.id != null} ? @{'/events/admin/edit/' + ${event.id}} : @{/events/admin/create}"
-            method="POST" onsubmit="return validateForm()" enctype="multipart/form-data">
+            method="POST" onsubmit="return validateForm()">
 
             <div class="form-grid">
 
@@ -760,16 +760,16 @@
                     </div>
 
                     <div class="field-group">
-                        <label>Upload Poster Image</label>
+                        <label>Poster Image URL</label>
                         <div style="position:relative;">
-                            <input type="file" name="imageFile" id="imageFileInput" accept="image/*"
-                                onchange="previewFilePoster(this)"
+                            <input type="url" name="imageUrl" id="imageUrlInput" th:value="${event.imageUrl}"
+                                oninput="previewUrlPoster(this.value)" placeholder="https://example.com/poster.jpg"
                                 style="width:100%; padding:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff;">
                         </div>
                         <p style="font-size:12px; color:rgba(255,255,255,0.35); margin-top:6px;">
                             <i class="fas fa-info-circle" style="color:#f84464;"></i>
-                            Upload an image file (PNG, JPG). Leave blank to use the default image for the selected
-                            category or keep existing image.
+                            Paste a direct link to an image (JPG, PNG). If left blank, a default image based on the
+                            category will be used.
                         </p>
                     </div>
 
@@ -838,18 +838,16 @@
             }
         });
 
-        // ── Poster file live preview ──
-        function previewFilePoster(input) {
+        // ── Poster URL live preview ──
+        function previewUrlPoster(url) {
             const preview = document.getElementById('posterPreview');
             const img = document.getElementById('posterImg');
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    img.src = e.target.result;
-                    preview.style.display = 'block';
-                    img.onerror = null;
+            if (url && url.trim() !== '') {
+                img.src = url;
+                preview.style.display = 'block';
+                img.onerror = function () {
+                    preview.style.display = 'none';
                 };
-                reader.readAsDataURL(input.files[0]);
             } else {
                 preview.style.display = 'none';
             }
