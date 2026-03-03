@@ -615,7 +615,9 @@ public class EventController {
 
     /** Mark ALL registered participants as attended */
     @PostMapping("/admin/{id}/attendance/mark-all")
-    public String markAllAttendance(@PathVariable Long id, HttpSession session) {
+    public String markAllAttendance(@PathVariable Long id, 
+                                     @RequestParam(required = false) String next, 
+                                     HttpSession session) {
         if (!isAdmin(session)) return "redirect:/login";
         Event event = eventRepository.findById(id).orElse(null);
         if (event != null) {
@@ -628,7 +630,9 @@ public class EventController {
             }
             eventRegistrationRepository.saveAll(regs);
         }
-        return "redirect:/events/admin/" + id + "/attendance?markedAll=true";
+        String redirect = "redirect:/events/admin/" + id + "/attendance?markedAll=true";
+        if ("declare".equals(next)) redirect += "&declare=true";
+        return redirect;
     }
 
     // ─────────────────────────────────────────────────────────
