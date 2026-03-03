@@ -1350,8 +1350,8 @@
 
         body[data-theme="midnight"] .messages-area::before,
         body[data-theme="dark"] .messages-area::before {
-            filter: invert(1);
-            opacity: 0.03;
+            filter: invert(1) brightness(1.5);
+            opacity: 0.08;
         }
 
         body[data-theme="dark"] {
@@ -1387,8 +1387,8 @@
             --input-bg: #ffffff;
         }
 
-        [data-theme] .messages-area {
-            background: var(--bg-color);
+        body[data-theme] .messages-area {
+            background-color: var(--bg-color) !important;
         }
 
         [data-theme] .msg-bubble.sent {
