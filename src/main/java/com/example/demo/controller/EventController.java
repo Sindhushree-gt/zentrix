@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.net.InetAddress;
 
 @Controller
 @RequestMapping("/events")
@@ -295,16 +296,30 @@ public class EventController {
         if (reg == null) return "redirect:/events";
 
         // Construct full URL and a text summary for the QR code
-        String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+        String serverName = request.getServerName();
+        String port = String.valueOf(request.getServerPort());
+        
+        // Localhost Fix: Try to get actual IP if running locally so phone can scan
+        if (serverName.equals("localhost") || serverName.equals("127.0.0.1")) {
+            try {
+                serverName = InetAddress.getLocalHost().getHostAddress();
+            } catch (Exception e) {
+                // fallback to localhost if IP detection fails
+            }
+        }
+        
+        String baseUrl = request.getScheme() + "://" + serverName + ":" + port;
         String fullUrl = baseUrl + "/events/ticket/" + ticketId;
         
-        // Formatted summary so scanning shows info even if link is unreachable (localhost issue)
-        String qrData = "Zentrix E-Ticket\n" +
-                        "Attendee: " + reg.getFullName() + "\n" +
-                        "Event: " + reg.getEvent().getTitle() + "\n" +
+        // Formatted summary for the scanner
+        String qrData = "ZENTRIX VERIFIED TICKET\n" +
+                        "----------------------\n" +
                         "ID: " + ticketId + "\n" +
-                        "Status: " + reg.getRegistrationStatus() + "\n" +
-                        "Verify: " + fullUrl;
+                        "NAME: " + reg.getFullName() + "\n" +
+                        "EVENT: " + reg.getEvent().getTitle() + "\n" +
+                        "STATUS: " + reg.getRegistrationStatus() + "\n" +
+                        "----------------------\n" +
+                        "Link: " + fullUrl;
         
         model.addAttribute("ticketUrl", qrData);
 
