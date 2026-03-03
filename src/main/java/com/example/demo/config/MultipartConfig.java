@@ -12,20 +12,14 @@ public class MultipartConfig {
     @Bean
     public MultipartConfigElement multipartConfigElement() {
         MultipartConfigFactory factory = new MultipartConfigFactory();
-        factory.setMaxFileSize(DataSize.ofMegabytes(100)); // Use explicit size instead of -1
+        
+        // DataSize.ofMegabytes(100) is equivalent to 100MB
+        factory.setMaxFileSize(DataSize.ofMegabytes(100));
         factory.setMaxRequestSize(DataSize.ofMegabytes(200));
+        
+        // Note: Spring Boot 3 handles max-file-count via application.properties:
+        // spring.servlet.multipart.max-file-count=100
+        
         return factory.createMultipartConfig();
-    }
-
-    @Bean
-    public org.springframework.boot.web.server.WebServerFactoryCustomizer<org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory> tomcatCustomizer() {
-        return factory -> factory.addConnectorCustomizers(connector -> {
-            if (connector.getProtocolHandler() instanceof org.apache.coyote.http11.AbstractHttp11Protocol) {
-                // Set maxFileCount on the multipart config via Tomcat's internal properties if needed
-                // But usually, maxParameterCount covers most cases. 
-                // Specifically for FileCountLimitExceededException:
-                connector.setProperty("maxFileCount", "100");
-            }
-        });
     }
 }
