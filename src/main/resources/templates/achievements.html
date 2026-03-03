@@ -567,6 +567,39 @@
                 </div>
             </div>
 
+            <!-- Mystery Gift Section -->
+            <div class="mystery-card" th:if="${user != null}">
+                <div class="mystery-icon">
+                    <i th:class="${user.xp >= 5000} ? 'fas fa-gift' : 'fas fa-lock'"></i>
+                </div>
+                <div class="mystery-info">
+                    <h3>
+                        <i class="fas fa-sparkles" style="color:#fbbf24;"></i>
+                        Mystery Gift Unlock
+                    </h3>
+                    <p th:if="${user.xp == null or user.xp < 5000}">
+                        Keep competing! Achieve <strong>5000 XP</strong> to unlock your special mystery reward coupon.
+                    </p>
+                    <p th:if="${user.xp != null and user.xp >= 5000}" style="color:#4ade80; font-weight:700;">
+                        Congratulations! You've unlocked the Elite Zentrix Reward.
+                    </p>
+
+                    <div class="mystery-bar">
+                        <div class="mystery-fill"
+                            th:style="'width: ' + (${user.xp != null and user.xp >= 5000 ? 100 : (user.xp != null ? (user.xp * 100 / 5000) : 0)}) + '%'">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:15px;" th:if="${user.xp != null and user.xp >= 5000}">
+                        <div class="mystery-coupon">ZENTRIX-ELITE-2025</div>
+                        <p style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:8px;">
+                            <i class="fas fa-info-circle"></i> Screenshot this coupon and DM it to admin to claim your
+                            gift!
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- My Achievements Section -->
             <div class="achievements-section" th:if="${user != null}">
                 <h2><i class="fas fa-award" style="color:#f84464;"></i> My Honors & Achievements</h2>
