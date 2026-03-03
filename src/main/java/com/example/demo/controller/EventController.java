@@ -114,8 +114,11 @@ public class EventController {
         Event event = eventRepository.findById(id).orElse(null);
         if (event == null) return "redirect:/events";
 
-        boolean isRegistered = (user != null) &&
-                eventRegistrationRepository.findByEventAndUser(event, user).isPresent();
+        EventRegistration userReg = null;
+        if (user != null) {
+            userReg = eventRegistrationRepository.findByEventAndUser(event, user).orElse(null);
+        }
+        boolean isRegistered = (userReg != null);
         long dbRegistrationCount = eventRegistrationRepository.countByEvent(event);
         long fixedCount = (event.getFixedParticipants() != null) ? event.getFixedParticipants() : 0;
         long registrationCount = dbRegistrationCount + fixedCount;
@@ -145,6 +148,7 @@ public class EventController {
         model.addAttribute("user", user);
         model.addAttribute("isAdmin", adminViewing);
         model.addAttribute("isRegistered", isRegistered);
+        model.addAttribute("userReg", userReg);
         model.addAttribute("registrationCount", registrationCount);
         model.addAttribute("spotsLeft", spotsLeft);
         model.addAttribute("related", related);
