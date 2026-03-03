@@ -322,8 +322,9 @@ public class EventController {
             @RequestParam String venue,
             @RequestParam String entryFeeType,
             @RequestParam(required = false) String price,
-            @RequestParam Integer maxParticipants,
             @RequestParam(required = false, defaultValue = "0") Integer fixedParticipants,
+            @RequestParam(required = false, defaultValue = "Offline") String eventMode,
+            @RequestParam(required = false) String meetingLink,
             @RequestParam(required = false) org.springframework.web.multipart.MultipartFile imageFile,
             HttpSession session) throws IOException {
 
@@ -339,6 +340,8 @@ public class EventController {
         event.setFixedParticipants(fixedParticipants);
         event.setStatus("UPCOMING");
         event.setOrganizer("Zentrix Admin");
+        event.setEventMode(eventMode);
+        event.setMeetingLink(meetingLink);
 
         if ("Free".equals(entryFeeType)) {
             event.setPrice("Free");
@@ -403,8 +406,9 @@ public class EventController {
             @RequestParam String venue,
             @RequestParam String entryFeeType,
             @RequestParam(required = false) String price,
-            @RequestParam Integer maxParticipants,
             @RequestParam(required = false, defaultValue = "0") Integer fixedParticipants,
+            @RequestParam(required = false, defaultValue = "Offline") String eventMode,
+            @RequestParam(required = false) String meetingLink,
             @RequestParam String status,
             @RequestParam(required = false) org.springframework.web.multipart.MultipartFile imageFile,
             HttpSession session) throws IOException {
@@ -421,8 +425,14 @@ public class EventController {
         event.setMaxParticipants(maxParticipants);
         event.setFixedParticipants(fixedParticipants);
         event.setStatus(status);
-        event.setPrice("Free".equals(entryFeeType) ? "Free"
-                : (price != null && !price.isBlank() ? "\u20b9" + price : "Paid"));
+        event.setEventMode(eventMode);
+        event.setMeetingLink(meetingLink);
+        
+        if ("Free".equals(entryFeeType)) {
+            event.setPrice("Free");
+        } else {
+            event.setPrice(price != null && !price.isBlank() ? "\u20b9" + price : "Paid");
+        }
 
         try {
             event.setDateTime(LocalDateTime.parse(dateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));

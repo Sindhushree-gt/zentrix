@@ -643,9 +643,31 @@
                                 required>
                         </div>
                         <div class="field-group">
-                            <label>Venue / Online Link <span class="required">*</span></label>
+                            <label>Venue / Location <span class="required">*</span></label>
                             <input type="text" name="venue" id="venueInput" th:value="${event.venue}"
-                                placeholder="e.g. Main Hall, Block A  or  https://meet.xyz/zentrix" required>
+                                placeholder="e.g. Main Hall, Block A" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: Event Mode -->
+                <div class="form-card">
+                    <div class="section-label">
+                        <i class="fas fa-globe"></i> Event Mode
+                    </div>
+                    <div class="two-col">
+                        <div class="field-group">
+                            <label>Mode <span class="required">*</span></label>
+                            <select name="eventMode" id="modeSelect" onchange="toggleModeFields()" required>
+                                <option value="Offline" th:selected="${event.eventMode == 'Offline'}">Offline</option>
+                                <option value="Online" th:selected="${event.eventMode == 'Online'}">Online</option>
+                            </select>
+                        </div>
+                        <div class="field-group" id="meetingLinkGroup"
+                            th:style="${event.eventMode == 'Online'} ? 'display:flex;' : 'display:none;'">
+                            <label>Meeting Link <span class="required">*</span></label>
+                            <input type="text" name="meetingLink" id="linkInput" th:value="${event.meetingLink}"
+                                placeholder="https://meet.google.com/xyz" th:required="${event.eventMode == 'Online'}">
                         </div>
                     </div>
                 </div>
@@ -789,6 +811,19 @@
                 field.style.display = 'none';
                 input.required = false;
                 input.value = '';
+            }
+        }
+
+        function toggleModeFields() {
+            const mode = document.getElementById('modeSelect').value;
+            const group = document.getElementById('meetingLinkGroup');
+            const input = document.getElementById('linkInput');
+            if (mode === 'Online') {
+                group.style.display = 'flex';
+                input.required = true;
+            } else {
+                group.style.display = 'none';
+                input.required = false;
             }
         }
 
