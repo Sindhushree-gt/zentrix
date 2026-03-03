@@ -522,6 +522,112 @@
             flex: 1;
         }
 
+        /* ── Vote Section ── */
+        .vote-section {
+            background: linear-gradient(135deg, rgba(248, 68, 100, 0.08) 0%, rgba(20, 20, 35, 0) 100%);
+            border: 1px solid rgba(248, 68, 100, 0.15);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vote-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .vote-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .vote-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: #f84464;
+            background: rgba(248, 68, 100, 0.05);
+        }
+
+        .vote-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(248, 68, 100, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            color: #f84464;
+        }
+
+        .vote-count {
+            font-size: 13px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .btn-vote {
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-vote:hover {
+            background: #f84464;
+            border-color: #f84464;
+            box-shadow: 0 4px 15px rgba(248, 68, 100, 0.3);
+        }
+
+        .btn-vote i {
+            transition: transform 0.3s;
+        }
+
+        .btn-vote:hover i {
+            transform: scale(1.3);
+        }
+
+        .progress-bar-small {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #f84464;
+            width: 0;
+            transition: width 1s;
+        }
+
         @media (max-width: 768px) {
             .trending-title {
                 font-size: 1.8rem;
@@ -587,6 +693,61 @@
 
         <!-- Content -->
         <main class="content-area">
+
+            <!-- Alerts -->
+            <div th:if="${param.voteSuccess}"
+                style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#10b981; padding:15px; border-radius:12px; margin-bottom:20px; font-size:14px;">
+                <i class="fas fa-check-circle"></i> Your vote has been recorded! 🗳️
+            </div>
+            <div th:if="${param.alreadyVotedInPoll}"
+                style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); color:#f59e0b; padding:15px; border-radius:12px; margin-bottom:20px; font-size:14px;">
+                <i class="fas fa-exclamation-triangle"></i> You have already voted in this poll period. One vote per
+                student.
+            </div>
+
+            <!-- 🗳️ EVENT VOTING POLL SECTION -->
+            <div th:if="${!#lists.isEmpty(votingPolls)}" class="vote-section">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div>
+                        <h2 style="font-size: 1.5rem; font-weight: 900; margin-bottom: 8px;">
+                            Vote for the Next Event! 🗳️
+                        </h2>
+                        <p style="color: rgba(255,255,255,0.45); font-size: 14px;">
+                            Tell us which event you want to see next. The winner becomes UPCOMING!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="vote-grid">
+                    <div th:each="poll : ${votingPolls}" class="vote-card">
+                        <div class="vote-icon">
+                            <i th:class="${poll.category == 'Gaming' ? 'fas fa-gamepad' : 
+                                          (poll.category == 'Tech' ? 'fas fa-code' : 
+                                          (poll.category == 'Sports' ? 'fas fa-trophy' : 'fas fa-star'))}"></i>
+                        </div>
+                        <h3 th:text="${poll.title}" style="font-size: 15px; font-weight: 800; margin-bottom: 8px;">Event
+                        </h3>
+
+                        <div class="vote-count">
+                            <i class="fas fa-heart" style="color:#f84464;"></i>
+                            <span th:text="${poll.pollVotes}">0</span> votes
+                        </div>
+
+                        <form th:action="@{'/events/' + ${poll.id} + '/poll-vote'}" method="POST">
+                            <button type="submit" class="btn-vote">
+                                <i class="far fa-heart"></i> Vote
+                            </button>
+                        </form>
+
+                        <!-- Deadline timer -->
+                        <div style="font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 15px;">
+                            <i class="far fa-clock"></i> Ends:
+                            <span
+                                th:text="${poll.votingEndDate != null ? #temporals.format(poll.votingEndDate, 'MMM dd') : 'Soon'}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Search -->
             <div class="search-bar">

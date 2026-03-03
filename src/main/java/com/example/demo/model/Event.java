@@ -30,6 +30,12 @@ public class Event {
     private String eventMode = "Offline"; // Offline or Online
     private String meetingLink;           // For online events
 
+    // Voting / Poll Feature
+    private LocalDateTime votingStartDate;
+    private LocalDateTime votingEndDate;
+    private Integer pollVotes = 0;
+    private String votingStatus = "OPEN"; // OPEN, CLOSED
+
     public Event() {
     }
 
@@ -132,4 +138,16 @@ public class Event {
 
     public Integer getFixedParticipants() { return fixedParticipants; }
     public void setFixedParticipants(Integer fixedParticipants) { this.fixedParticipants = fixedParticipants; }
+
+    public LocalDateTime getVotingStartDate() { return votingStartDate; }
+    public void setVotingStartDate(LocalDateTime votingStartDate) { this.votingStartDate = votingStartDate; }
+
+    public LocalDateTime getVotingEndDate() { return votingEndDate; }
+    public void setVotingEndDate(LocalDateTime votingEndDate) { this.votingEndDate = votingEndDate; }
+
+    public Integer getPollVotes() { return pollVotes != null ? pollVotes : 0; }
+    public void setPollVotes(Integer pollVotes) { this.pollVotes = pollVotes; }
+
+    public String getVotingStatus() { return votingStatus; }
+    public void setVotingStatus(String votingStatus) { this.votingStatus = votingStatus; }
 }
