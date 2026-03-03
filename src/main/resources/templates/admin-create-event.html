@@ -557,7 +557,7 @@
 
         <!-- Form -->
         <form th:action="${event.id != null} ? @{'/events/admin/edit/' + ${event.id}} : @{/events/admin/create}"
-            method="POST" onsubmit="return validateForm()">
+            method="POST" onsubmit="return validateForm()" enctype="multipart/form-data">
 
             <div class="form-grid">
 
@@ -738,18 +738,16 @@
                     </div>
 
                     <div class="field-group">
-                        <label>Poster Image URL</label>
+                        <label>Upload Poster Image</label>
                         <div style="position:relative;">
-                            <input type="url" name="imageUrl" id="imageUrlInput" th:value="${event.imageUrl}"
-                                placeholder="https://images.unsplash.com/photo-... or any direct image link"
-                                oninput="previewUrlPoster(this.value)">
-                            <i class="fas fa-link"
-                                style="position:absolute; right:14px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.25);"></i>
+                            <input type="file" name="imageFile" id="imageFileInput" accept="image/*"
+                                onchange="previewFilePoster(this)"
+                                style="width:100%; padding:12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:#fff;">
                         </div>
                         <p style="font-size:12px; color:rgba(255,255,255,0.35); margin-top:6px;">
                             <i class="fas fa-info-circle" style="color:#f84464;"></i>
-                            Paste a direct image URL (Unsplash, Imgur, etc.). Leave blank to use the default image for
-                            the selected category.
+                            Upload an image file (PNG, JPG). Leave blank to use the default image for the selected
+                            category or keep existing image.
                         </p>
                     </div>
 
@@ -805,15 +803,18 @@
             }
         });
 
-        // ── Poster URL live preview ──
-        function previewUrlPoster(url) {
+        // ── Poster file live preview ──
+        function previewFilePoster(input) {
             const preview = document.getElementById('posterPreview');
             const img = document.getElementById('posterImg');
-            if (url && url.trim()) {
-                img.src = url.trim();
-                preview.style.display = 'block';
-                img.onerror = () => { preview.style.display = 'none'; };
-                img.onload = () => { preview.style.display = 'block'; img.onerror = null; };
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                    img.onerror = null;
+                };
+                reader.readAsDataURL(input.files[0]);
             } else {
                 preview.style.display = 'none';
             }
