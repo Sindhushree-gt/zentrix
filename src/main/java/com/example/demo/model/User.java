@@ -33,12 +33,21 @@ public class User implements Serializable {
     private String aboutMe;
     private String skills;
 
+    // Gamification & Ranking
+    private Integer xp = 0;
+    private String level = "Novice"; // Novice, Bronze, Silver, Gold, Platinum
+
     @ManyToMany
     @JoinTable(name = "user_followers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "follower_id"))
     private transient Set<User> followers = new HashSet<>();
 
     @ManyToMany(mappedBy = "followers")
     private transient Set<User> following = new HashSet<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_voted_events", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "event_id")
+    private Set<Long> votedEvents = new HashSet<>();
 
     public User() {
     }
@@ -164,6 +173,12 @@ public class User implements Serializable {
         this.following = following;
     }
 
+    public Integer getXp() { return xp; }
+    public void setXp(Integer xp) { this.xp = xp; }
+
+    public String getLevel() { return level; }
+    public void setLevel(String level) { this.level = level; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -177,5 +192,13 @@ public class User implements Serializable {
     @Override
     public int hashCode() {
         return 31;
+    }
+
+    public Set<Long> getVotedEvents() {
+        return votedEvents;
+    }
+
+    public void setVotedEvents(Set<Long> votedEvents) {
+        this.votedEvents = votedEvents;
     }
 }

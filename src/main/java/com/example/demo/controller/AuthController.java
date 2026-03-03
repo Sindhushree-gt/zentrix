@@ -40,7 +40,7 @@ public class AuthController {
             @org.springframework.web.bind.annotation.RequestParam String password,
             jakarta.servlet.http.HttpSession session) {
         if ("admin".equals(username) && "admin123".equals(password)) {
-            session.setAttribute("adminMode", true);
+            session.setAttribute("user", "admin");
             return "redirect:/admin";
         }
         User user = userRepository.findByUsername(username);

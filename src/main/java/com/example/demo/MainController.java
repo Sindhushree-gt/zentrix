@@ -50,6 +50,12 @@ public class MainController {
     @Autowired
     private NotificationRepository notificationRepository;
 
+    @Autowired
+    private EventRepository eventRepository;
+
+    @Autowired
+    private com.example.demo.repository.EventRegistrationRepository eventRegistrationRepository;
+
     @GetMapping("/")
     public String root() {
         return "home";
@@ -134,6 +140,10 @@ public class MainController {
     @Transactional
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpSession session) {
+        Object sessionUser = session.getAttribute("user");
+        // Admin should land on admin dashboard, not student dashboard
+        if ("admin".equals(sessionUser)) return "redirect:/admin";
+
         User user = getUserFromSession(session);
         if (user == null) {
             return "redirect:/login";
@@ -166,8 +176,64 @@ public class MainController {
     }
 
     @GetMapping("/admin")
-    public String admin(Model model) {
+    public String admin(Model model, HttpSession session) {
+        // Only let admin session through
+        if (!"admin".equals(session.getAttribute("user"))) return "redirect:/login";
         model.addAttribute("users", userRepository.findAll());
+        model.addAttribute("totalEvents", eventRepository.count());
+        model.addAttribute("upcomingEvents", eventRepository.countByStatus("UPCOMING"));
+        model.addAttribute("ongoingEvents", eventRepository.countByStatus("ONGOING"));
         return "admin-dashboard";
+    }
+
+    // ── Stub routes: sidebar links that don't have full pages yet ──
+
+    @GetMapping("/explore")
+    public String explore(HttpSession session) {
+        if (!isLoggedIn(session)) return "redirect:/login";
+        // Explore currently shows the events page as a browse experience
+        return "redirect:/events";
+    }
+
+    @GetMapping("/achievements")
+    public String achievements(Model model, HttpSession session) {
+        if (!isLoggedIn(session)) return "redirect:/login";
+        
+        Object sessionUser = session.getAttribute("user");
+        if (sessionUser instanceof User) {
+            User u = (User) sessionUser;
+            User dbUser = userRepository.findById(u.getId()).orElse(u);
+            model.addAttribute("user", dbUser);
+            model.addAttribute("isAdmin", false);
+            model.addAttribute("attendedCount", eventRegistrationRepository.countByUserAndAttendanceMarked(dbUser, true));
+            // Fetch all COMPLETED event registrations with a position
+            List<EventRegistration> userAchievements = eventRegistrationRepository.findByUser(dbUser).stream()
+                    .filter(r -> r.getPosition() != null && !"Participant".equals(r.getPosition()) && !"Absent".equals(r.getPosition()))
+                    .collect(Collectors.toList());
+            model.addAttribute("achievements", userAchievements);
+        } else {
+            model.addAttribute("user", null);
+            model.addAttribute("isAdmin", true);
+            model.addAttribute("achievements", List.of());
+        }
+
+        List<User> leaderboard = userRepository.findAllByOrderByXpDesc();
+        model.addAttribute("leaderboard", leaderboard);
+        
+        return "achievements";
+    }
+
+
+
+    @GetMapping("/notifications")
+    public String notifications(HttpSession session) {
+        if (!isLoggedIn(session)) return "redirect:/login";
+        return "redirect:/dashboard";
+    }
+
+    /** True if any valid session (student or admin) exists */
+    private boolean isLoggedIn(HttpSession session) {
+        Object u = session.getAttribute("user");
+        return u instanceof User || "admin".equals(u);
     }
 }
