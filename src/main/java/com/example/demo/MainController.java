@@ -184,6 +184,8 @@ public class MainController {
         model.addAttribute("totalEvents", eventRepository.count());
         model.addAttribute("upcomingEvents", eventRepository.countByStatus("UPCOMING"));
         model.addAttribute("ongoingEvents", eventRepository.countByStatus("ONGOING"));
+        model.addAttribute("votingCount", eventRepository.countByStatus("VOTING"));
+        model.addAttribute("completedCount", eventRepository.countByStatus("COMPLETED"));
         return "admin-dashboard";
     }
 

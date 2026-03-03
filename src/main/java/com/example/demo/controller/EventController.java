@@ -426,6 +426,7 @@ public class EventController {
         model.addAttribute("upcomingCount", eventRepository.countByStatus("UPCOMING"));
         model.addAttribute("ongoingCount", eventRepository.countByStatus("ONGOING"));
         model.addAttribute("completedCount", eventRepository.countByStatus("COMPLETED"));
+        model.addAttribute("votingCount", eventRepository.countByStatus("VOTING"));
         return "admin-events";
     }
 
