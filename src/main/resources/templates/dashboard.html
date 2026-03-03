@@ -92,10 +92,10 @@
                         class="user-avatar" alt="User">
                     <div class="post-user-info">
                         <h4>
-                            <span th:text="${post.user.username}">Username</span>
+                            <span th:text="${post.user != null ? post.user.username : 'Unknown User'}">Username</span>
                             <span th:each="collab : ${post.collaborations}"
                                 th:if="${collab.status.name() == 'ACCEPTED'}">
-                                & <span th:text="${collab.user.username}">CollabUser</span>
+                                & <span th:text="${collab.user != null ? collab.user.username : 'Unknown User'}">CollabUser</span>
                             </span>
                         </h4>
                         <span th:text="${#temporals.format(post.createdAt, 'dd-MM-yyyy HH:mm')}">Date</span>
