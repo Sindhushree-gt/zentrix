@@ -732,13 +732,15 @@
                             <i class="fas fa-clipboard-check"></i> Attendance
                         </a>
 
-                        <!-- Declare Results (Direct link to modal context in attendance page) -->
-                        <a th:if="${event.status == 'ONGOING' or event.status == 'UPCOMING'}"
-                            th:href="@{'/events/admin/' + ${event.id} + '/attendance?declare=true'}" class="action-btn"
+                        <!-- Results button - Universal for ALL statuses -->
+                        <a th:href="@{'/events/admin/' + ${event.id} + '/attendance?declare=true'}" class="action-btn"
                             th:style="${event.status == 'ONGOING'} ? 
                                      'background:rgba(16,185,129,0.15); border-color:rgba(16,185,129,0.3); color:#34d399;' : 
-                                     'background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.5);'">
-                            <i class="fas fa-trophy"></i> Results
+                                     (${event.status == 'COMPLETED'} ? 
+                                      'background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.2); color:#f59e0b;' :
+                                      'background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.5);')">
+                            <i th:class="${event.status == 'COMPLETED' ? 'fas fa-award' : 'fas fa-trophy'}"></i>
+                            <span th:text="${event.status == 'COMPLETED' ? 'View Results' : 'Results'}">Results</span>
                         </a>
 
                         <button class="action-btn btn-delete" th:data-event-id="${event.id}"
