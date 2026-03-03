@@ -314,6 +314,106 @@
             color: #38bdf8;
         }
 
+        /* ── Achievements Grid ── */
+        .achievements-section {
+            margin-bottom: 40px;
+        }
+
+        .achievements-section h2 {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .achievement-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .achievement-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(248, 68, 100, 0.4);
+            background: linear-gradient(135deg, rgba(248, 68, 100, 0.1), rgba(255, 255, 255, 0.02));
+        }
+
+        .award-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .award-winner {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+        }
+
+        .award-runner {
+            background: rgba(226, 232, 240, 0.15);
+            color: #e2e8f0;
+        }
+
+        .award-info h4 {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            color: #fff;
+        }
+
+        .award-info p {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .award-xp {
+            font-size: 12px;
+            font-weight: 700;
+            color: #4ade80;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .empty-achievements {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .empty-achievements i {
+            font-size: 40px;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.2;
+        }
+
         /* ── Leaderboard Table ── */
         .lb-table {
             width: 100%;
@@ -467,61 +567,32 @@
                 </div>
             </div>
 
-            <!-- Mystery Gift Section -->
-            <div class="mystery-card" th:if="${user != null}">
-                <div class="mystery-icon">
-                    <i
-                        th:class="${attendedCount != null and attendedCount >= 3} ? 'fas fa-box-open' : 'fas fa-box'"></i>
-                </div>
-                <div class="mystery-info" th:if="${attendedCount == null or attendedCount < 3}">
-                    <h3>Mystery Gift Box</h3>
-                    <p>Attend <strong style="color:#fff;"
-                            th:text="${3 - (attendedCount != null ? attendedCount : 0)}">3</strong> more events to
-                        unlock a surprise coupon code!</p>
-                    <div class="mystery-bar">
-                        <div class="mystery-fill"
-                            th:style="'width:' + (${attendedCount != null ? attendedCount : 0} * 33.33) + '%'"></div>
-                    </div>
-                    <div style="font-size:11px; color:rgba(255,255,255,0.4); margin-top:6px;"
-                        th:text="${attendedCount != null ? attendedCount : 0} + ' / 3 Events Attended'">0 / 3 Events
-                        Attended</div>
-                </div>
-                <div class="mystery-info" th:if="${attendedCount != null and attendedCount >= 3}">
-                    <h3><i class="fas fa-magic" style="color:#fcd34d;"></i> Mystery Gift Unlocked!</h3>
-                    <p>Congratulations! You've successfully attended 3+ events and unlocked your surprise reward:</p>
-                    <div class="mystery-coupon">ZTX-VIP-FREE50</div>
-                </div>
-            </div>
+            <!-- My Achievements Section -->
+            <div class="achievements-section" th:if="${user != null}">
+                <h2><i class="fas fa-award" style="color:#f84464;"></i> My Honors & Achievements</h2>
 
-            <!-- Badges Info -->
-            <div class="badge-system">
-                <h4>Ranking Tiers</h4>
-                <div class="badges-row">
-                    <div class="tier c-novice">
-                        <i class="fas fa-star"></i>
-                        <div class="t-name">Novice</div>
-                        <div class="t-req">0+ XP</div>
+                <div class="achievements-grid" th:if="${not #lists.isEmpty(achievements)}">
+                    <div th:each="ach : ${achievements}" class="achievement-card">
+                        <div class="award-icon"
+                            th:classappend="${ach.position == 'Winner'} ? 'award-winner' : 'award-runner'">
+                            <i th:class="${ach.position == 'Winner'} ? 'fas fa-trophy' : 'fas fa-medal'"></i>
+                        </div>
+                        <div class="award-info">
+                            <p th:text="${ach.position} + ' • ' + ${#temporals.format(ach.event.dateTime, 'MMM yyyy')}">
+                                WINNER • MAR 2025</p>
+                            <h4 th:text="${ach.event.title}">Event Title</h4>
+                            <div class="award-xp">
+                                <i class="fas fa-bolt"></i>
+                                <span th:text="'+' + ${ach.pointsEarned} + ' XP Earned'">+100 XP Earned</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="tier c-bronze">
-                        <i class="fas fa-medal"></i>
-                        <div class="t-name">Bronze</div>
-                        <div class="t-req">50+ XP</div>
-                    </div>
-                    <div class="tier c-silver">
-                        <i class="fas fa-medal"></i>
-                        <div class="t-name">Silver</div>
-                        <div class="t-req">200+ XP</div>
-                    </div>
-                    <div class="tier c-gold">
-                        <i class="fas fa-award"></i>
-                        <div class="t-name">Gold</div>
-                        <div class="t-req">500+ XP</div>
-                    </div>
-                    <div class="tier c-platinum">
-                        <i class="fas fa-gem"></i>
-                        <div class="t-name">Platinum</div>
-                        <div class="t-req">1000+ XP</div>
-                    </div>
+                </div>
+
+                <div class="empty-achievements" th:if="${#lists.isEmpty(achievements)}">
+                    <i class="fas fa-certificate"></i>
+                    <p>No major honors yet. Compete in events and finish as a winner or runner-up to earn your place
+                        here!</p>
                 </div>
             </div>
 

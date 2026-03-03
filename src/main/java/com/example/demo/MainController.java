@@ -206,9 +206,15 @@ public class MainController {
             model.addAttribute("user", dbUser);
             model.addAttribute("isAdmin", false);
             model.addAttribute("attendedCount", eventRegistrationRepository.countByUserAndAttendanceMarked(dbUser, true));
+            // Fetch all COMPLETED event registrations with a position
+            List<EventRegistration> userAchievements = eventRegistrationRepository.findByUser(dbUser).stream()
+                    .filter(r -> r.getPosition() != null && !"Participant".equals(r.getPosition()) && !"Absent".equals(r.getPosition()))
+                    .collect(Collectors.toList());
+            model.addAttribute("achievements", userAchievements);
         } else {
             model.addAttribute("user", null);
             model.addAttribute("isAdmin", true);
+            model.addAttribute("achievements", List.of());
         }
 
         List<User> leaderboard = userRepository.findAllByOrderByXpDesc();
