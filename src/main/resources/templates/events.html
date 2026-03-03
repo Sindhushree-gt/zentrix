@@ -725,13 +725,9 @@
                                           (poll.category == 'Tech' ? 'fas fa-code' : 
                                           (poll.category == 'Sports' ? 'fas fa-trophy' : 'fas fa-star'))}"></i>
                         </div>
-                        <h3 th:text="${poll.title}" style="font-size: 15px; font-weight: 800; margin-bottom: 8px;">Event
+                        <h3 th:text="${poll.title}" style="font-size: 15px; font-weight: 800; margin-bottom: 20px;">
+                            Event
                         </h3>
-
-                        <div class="vote-count">
-                            <i class="fas fa-heart" style="color:#f84464;"></i>
-                            <span th:text="${poll.pollVotes}">0</span> votes
-                        </div>
 
                         <form th:action="@{'/events/' + ${poll.id} + '/poll-vote'}" method="POST">
                             <button type="submit" class="btn-vote">
