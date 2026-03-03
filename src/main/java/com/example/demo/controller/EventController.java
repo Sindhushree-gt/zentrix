@@ -117,6 +117,12 @@ public class EventController {
         EventRegistration userReg = null;
         if (user != null) {
             userReg = eventRegistrationRepository.findByEventAndUser(event, user).orElse(null);
+            
+            // Fix for missing ticket IDs in legacy records
+            if (userReg != null && (userReg.getTicketId() == null || userReg.getTicketId().isBlank())) {
+                userReg.setTicketId(generateTicketId(event));
+                eventRegistrationRepository.save(userReg);
+            }
         }
         boolean isRegistered = (userReg != null);
         long dbRegistrationCount = eventRegistrationRepository.countByEvent(event);
@@ -199,7 +205,7 @@ public class EventController {
             @RequestParam(required = false) String college,
             @RequestParam(required = false) String yearOfStudy,
             HttpSession session) {
-        User user = getUser(session);
+        User user = getUserFromSession(session);
         if (user == null) return "redirect:/login";
 
         Event event = eventRepository.findById(id).orElse(null);
@@ -228,7 +234,7 @@ public class EventController {
     // ─────────────────────────────────────────────────────────
     @GetMapping("/{id}/payment")
     public String showPaymentPage(@PathVariable Long id, Model model, HttpSession session) {
-        User user = getUser(session);
+        User user = getUserFromSession(session);
         if (user == null) return "redirect:/login";
 
         Event event = eventRepository.findById(id).orElse(null);
@@ -253,7 +259,7 @@ public class EventController {
             @RequestParam(required = false) String cardNumber,
             HttpSession session) {
 
-        User user = getUser(session);
+        User user = getUserFromSession(session);
         if (user == null) return "redirect:/login";
 
         Event event = eventRepository.findById(id).orElse(null);
@@ -278,15 +284,19 @@ public class EventController {
     // ─────────────────────────────────────────────────────────
     @GetMapping("/ticket/{ticketId}")
     public String showTicket(@PathVariable String ticketId, Model model, HttpSession session) {
-        User user = getUser(session);
-        if (user == null) return "redirect:/login";
+        User user = getUserFromSession(session);
+        boolean adminViewing = isAdmin(session);
+        
+        // Allow if logged in as user or admin
+        if (user == null && !adminViewing) return "redirect:/login";
 
         EventRegistration reg = eventRegistrationRepository.findByTicketId(ticketId).orElse(null);
         if (reg == null) return "redirect:/events";
 
         model.addAttribute("registration", reg);
         model.addAttribute("event", reg.getEvent());
-        model.addAttribute("user", reg.getUser());
+        model.addAttribute("user", reg.getUser() != null ? reg.getUser() : user);
+        model.addAttribute("isAdmin", adminViewing);
         return "ticket";
     }
 
@@ -596,7 +606,7 @@ public class EventController {
     // ─────────────────────────────────────────────────────────
     @PostMapping("/{id}/join")
     public String joinOnlineEvent(@PathVariable Long id, HttpSession session) {
-        User user = getUser(session);
+        User user = getUserFromSession(session);
         if (user == null) return "redirect:/login";
 
         Event event = eventRepository.findById(id).orElse(null);
@@ -640,15 +650,13 @@ public class EventController {
 
     private String generateTicketId(Event event) {
         String prefix = "ZTX";
-        String cat = event.getCategory() != null ? event.getCategory().substring(0, 2).toUpperCase() : "EV";
+        String fullCat = event.getCategory() != null ? event.getCategory().toUpperCase() : "EV";
+        String cat = fullCat.length() >= 2 ? fullCat.substring(0, 2) : (fullCat + "X").substring(0, 2);
         String uid = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         return prefix + "-" + cat + "-" + uid;
     }
 
-    private User getUser(HttpSession session) {
-        Object obj = session.getAttribute("user");
-        return (obj instanceof User) ? (User) obj : null;
-    }
+
 
     private boolean isAdmin(HttpSession session) {
         return "admin".equals(session.getAttribute("user"));

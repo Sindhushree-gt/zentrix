@@ -539,31 +539,10 @@
                         <span th:text="${registration.registrationStatus}">REGISTERED</span>
                     </div>
                 </div>
-                <!-- Mini QR (decorative) -->
+                <!-- Real QR Code -->
                 <div class="mini-qr">
-                    <svg width="74" height="74" viewBox="0 0 74 74">
-                        <rect width="74" height="74" fill="white" />
-                        <rect x="5" y="5" width="28" height="28" fill="black" />
-                        <rect x="8" y="8" width="22" height="22" fill="white" />
-                        <rect x="11" y="11" width="16" height="16" fill="black" />
-                        <rect x="41" y="5" width="28" height="28" fill="black" />
-                        <rect x="44" y="8" width="22" height="22" fill="white" />
-                        <rect x="47" y="11" width="16" height="16" fill="black" />
-                        <rect x="5" y="41" width="28" height="28" fill="black" />
-                        <rect x="8" y="44" width="22" height="22" fill="white" />
-                        <rect x="11" y="47" width="16" height="16" fill="black" />
-                        <rect x="41" y="41" width="5" height="5" fill="black" />
-                        <rect x="48" y="41" width="5" height="5" fill="black" />
-                        <rect x="55" y="41" width="5" height="5" fill="black" />
-                        <rect x="62" y="41" width="5" height="5" fill="black" />
-                        <rect x="41" y="48" width="5" height="5" fill="black" />
-                        <rect x="55" y="48" width="5" height="5" fill="black" />
-                        <rect x="41" y="55" width="5" height="5" fill="black" />
-                        <rect x="48" y="55" width="5" height="5" fill="black" />
-                        <rect x="62" y="55" width="5" height="5" fill="black" />
-                        <rect x="41" y="62" width="5" height="5" fill="black" />
-                        <rect x="55" y="62" width="5" height="5" fill="black" />
-                    </svg>
+                    <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + ${registration.ticketId}"
+                        alt="QR Code" style="width:100%; height:100%; object-fit:contain;">
                 </div>
             </div>
         </div><!-- /ticket -->
