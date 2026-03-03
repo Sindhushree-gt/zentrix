@@ -288,15 +288,25 @@ public class EventController {
         User user = getUserFromSession(session);
         boolean adminViewing = isAdmin(session);
         
-        // Allow if logged in as user or admin
-        if (user == null && !adminViewing) return "redirect:/login";
+        // Publicly accessible for QR code verification
+        // (Previously restricted to logged-in users only)
 
         EventRegistration reg = eventRegistrationRepository.findByTicketId(ticketId).orElse(null);
         if (reg == null) return "redirect:/events";
 
-        // Construct full URL for QR code (works on LAN/Local if scanned by same network)
+        // Construct full URL and a text summary for the QR code
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
-        model.addAttribute("ticketUrl", baseUrl + "/events/ticket/" + ticketId);
+        String fullUrl = baseUrl + "/events/ticket/" + ticketId;
+        
+        // Formatted summary so scanning shows info even if link is unreachable (localhost issue)
+        String qrData = "Zentrix E-Ticket\n" +
+                        "Attendee: " + reg.getFullName() + "\n" +
+                        "Event: " + reg.getEvent().getTitle() + "\n" +
+                        "ID: " + ticketId + "\n" +
+                        "Status: " + reg.getRegistrationStatus() + "\n" +
+                        "Verify: " + fullUrl;
+        
+        model.addAttribute("ticketUrl", qrData);
 
         model.addAttribute("registration", reg);
         model.addAttribute("event", reg.getEvent());

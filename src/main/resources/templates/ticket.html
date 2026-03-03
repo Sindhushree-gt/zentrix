@@ -457,6 +457,11 @@
     <!-- ═════ TICKET ═════ -->
     <div class="ticket-wrapper">
         <div class="ticket" id="ticketCard">
+            <!-- Public Verification Banner (Only shows when scanned/public) -->
+            <div th:if="${session.user == null}"
+                style="background: #10b981; color: #fff; padding: 12px; text-align: center; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; border-radius: 20px 20px 0 0;">
+                <i class="fas fa-shield-check"></i> Zentrix Official Verified Ticket
+            </div>
             <div class="ticket-watermark">ZENTRIX</div>
 
             <!-- Top Section -->
