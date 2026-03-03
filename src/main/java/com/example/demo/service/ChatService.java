@@ -44,7 +44,7 @@ public class ChatService {
 
     @Transactional
     public ChatMessage sendMessage(User sender, Long destinationId, String content, String mediaUrl, Long parentId,
-            boolean isGroup) {
+            boolean isGroup, boolean isForwarded) {
         Conversation conv;
         if (isGroup) {
             conv = conversationRepository.findById(destinationId)
@@ -70,6 +70,7 @@ public class ChatService {
 
         ChatMessage message = new ChatMessage(conv, sender, content, mediaUrl);
         message.setVanish(conv.isVanishModeEnabled());
+        message.setForwarded(isForwarded);
 
         // Determine MessageType
         if (mediaUrl != null && !mediaUrl.trim().isEmpty()) {

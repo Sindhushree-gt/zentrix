@@ -32,6 +32,7 @@ public class ChatWebSocketController {
         String mediaUrl = (String) payload.get("mediaUrl");
         Long parentId = (payload.get("parentId") != null) ? Long.valueOf(payload.get("parentId").toString()) : null;
         boolean isGroup = (payload.get("isGroup") != null) && (boolean) payload.get("isGroup");
+        boolean isForwarded = (payload.get("isForwarded") != null) && (boolean) payload.get("isForwarded");
 
         if (senderId == null || destinationId == null)
             return;
@@ -40,7 +41,7 @@ public class ChatWebSocketController {
         if (sender == null)
             return;
 
-        ChatMessage message = chatService.sendMessage(sender, destinationId, content, mediaUrl, parentId, isGroup);
+        ChatMessage message = chatService.sendMessage(sender, destinationId, content, mediaUrl, parentId, isGroup, isForwarded);
         Conversation conv = message.getConversation();
 
         // Broadcast to all participants in the conversation

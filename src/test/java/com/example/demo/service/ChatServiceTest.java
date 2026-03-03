@@ -62,7 +62,7 @@ class ChatServiceTest {
         when(conversationRepository.save(any(Conversation.class))).thenAnswer(i -> i.getArguments()[0]);
         when(messageRepository.save(any(ChatMessage.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        ChatMessage result = chatService.sendMessage(sender, recipient.getId(), "Hello", null, null, false);
+        ChatMessage result = chatService.sendMessage(sender, recipient.getId(), "Hello", null, null, false, false);
 
         assertNotNull(result);
         assertEquals("Hello", result.getContent());
@@ -78,7 +78,7 @@ class ChatServiceTest {
                 .thenReturn(Optional.of(conversation));
         when(messageRepository.save(any(ChatMessage.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        ChatMessage result = chatService.sendMessage(sender, recipient.getId(), "Hi again", null, null, false);
+        ChatMessage result = chatService.sendMessage(sender, recipient.getId(), "Hi again", null, null, false, false);
 
         assertNotNull(result);
         assertEquals("Hi again", result.getContent());
@@ -96,7 +96,7 @@ class ChatServiceTest {
         when(messageRepository.findById(100L)).thenReturn(Optional.of(parent));
         when(messageRepository.save(any(ChatMessage.class))).thenAnswer(i -> i.getArguments()[0]);
 
-        ChatMessage result = chatService.sendMessage(sender, recipient.getId(), "This is a reply", null, 100L, false);
+        ChatMessage result = chatService.sendMessage(sender, recipient.getId(), "This is a reply", null, 100L, false, false);
 
         assertNotNull(result);
         assertEquals(parent, result.getParentMessage());
