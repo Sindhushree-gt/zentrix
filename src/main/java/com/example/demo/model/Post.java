@@ -114,4 +114,20 @@ public class Post {
     public void setCollaborations(java.util.List<PostCollaboration> collaborations) {
         this.collaborations = collaborations;
     }
+
+    public java.util.List<PostLike> getLikes() {
+        return likes;
+    }
+
+    public void setLikes(java.util.List<PostLike> likes) {
+        this.likes = likes;
+    }
+
+    public java.util.List<PostComment> getComments() {
+        return comments;
+    }
+
+    public void setComments(java.util.List<PostComment> comments) {
+        this.comments = comments;
+    }
 }
