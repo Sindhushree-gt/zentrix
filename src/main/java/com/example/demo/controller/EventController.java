@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.Comparator;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.net.InetAddress;
@@ -61,6 +63,8 @@ public class EventController {
     // ─────────────────────────────────────────────────────────
     @GetMapping
     public String listEvents(@RequestParam(required = false) String category, Model model, HttpSession session) {
+        resolveExpiredPolls(); // Maintenance: Auto-pick winners
+        
         User user = getUserFromSession(session);
         boolean adminViewing = isAdmin(session);
         if (user != null) {
@@ -69,31 +73,110 @@ public class EventController {
             session.setAttribute("userId", user.getId());
         }
 
-        // Redirect to login only if neither student nor admin
+        // Redirect only if neither student nor admin
         if (user == null && !adminViewing) return "redirect:/login";
 
         // All events (filtered by category if given)
-        List<Event> allEvents;
+        List<Event> allItems;
         if (category != null && !category.isEmpty() && !category.equalsIgnoreCase("All")) {
-            allEvents = eventRepository.findByCategory(category);
+            allItems = eventRepository.findByCategory(category);
         } else {
-            allEvents = eventRepository.findAll();
+            allItems = eventRepository.findAll();
         }
 
-        // Trending = first 3 UPCOMING events
-        List<Event> trending = eventRepository.findByStatus("UPCOMING")
-                .stream().limit(3).collect(Collectors.toList());
+        // Separate Polls from Registered Events
+        List<Event> votingPolls = allItems.stream()
+                .filter(e -> "VOTING".equals(e.getStatus()))
+                .filter(e -> e.getVotingEndDate() == null || e.getVotingEndDate().isAfter(LocalDateTime.now()))
+                .collect(Collectors.toList());
+        
+        List<Event> regularEvents = allItems.stream()
+                .filter(e -> !"VOTING".equals(e.getStatus()) && !"REJECTED".equals(e.getStatus()))
+                .collect(Collectors.toList());
 
-        // Upcoming = all UPCOMING events
-        List<Event> upcoming = eventRepository.findByStatus("UPCOMING");
+        // Trending = first 3 UPCOMING regular events
+        List<Event> trending = regularEvents.stream()
+                .filter(e -> "UPCOMING".equals(e.getStatus()))
+                .limit(3).collect(Collectors.toList());
 
-        model.addAttribute("events", allEvents);
+        model.addAttribute("events", regularEvents);
+        model.addAttribute("votingPolls", votingPolls);
         model.addAttribute("trending", trending);
-        model.addAttribute("upcoming", upcoming);
         model.addAttribute("activeCategory", category != null ? category : "All");
         model.addAttribute("user", user);
         model.addAttribute("isAdmin", adminViewing);
         return "events";
+    }
+
+    @PostMapping("/{id}/poll-vote")
+    public String castPollVote(@PathVariable Long id, HttpSession session) {
+        User user = getUserFromSession(session);
+        if (user == null) return "redirect:/login";
+
+        Event event = eventRepository.findById(id).orElse(null);
+        if (event == null || !"VOTING".equals(event.getStatus())) return "redirect:/events?error=invalid_event";
+
+        // Restriction: One User = One Vote across the system pools
+        User dbUser = userRepository.findById(user.getId()).orElse(user);
+        
+        // Check if user has already voted for any event that is currently in VOTING status
+        List<Event> currentPolls = eventRepository.findAll().stream()
+                .filter(e -> "VOTING".equals(e.getStatus()))
+                .collect(Collectors.toList());
+        
+        boolean alreadyVoted = false;
+        for(Event p : currentPolls) {
+            if(dbUser.getVotedEvents().contains(p.getId())) {
+                alreadyVoted = true;
+                break;
+            }
+        }
+
+        if (alreadyVoted) return "redirect:/events?alreadyVotedInPoll=true";
+
+        // Cast vote
+        event.setPollVotes(event.getPollVotes() + 1);
+        eventRepository.save(event);
+
+        dbUser.getVotedEvents().add(id);
+        userRepository.save(dbUser);
+        
+        return "redirect:/events?voteSuccess=true";
+    }
+
+    private void resolveExpiredPolls() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Event> expiredPolls = eventRepository.findAll().stream()
+                .filter(e -> "VOTING".equals(e.getStatus()))
+                .filter(e -> e.getVotingEndDate() != null && e.getVotingEndDate().isBefore(now))
+                .collect(Collectors.toList());
+
+        if (expiredPolls.isEmpty()) return;
+
+        // Group by category to pick one winner per category poll
+        Map<String, List<Event>> groups = expiredPolls.stream()
+                .collect(Collectors.groupingBy(e -> e.getCategory() != null ? e.getCategory() : "Misc"));
+
+        for (List<Event> group : groups.values()) {
+            Event winner = group.stream()
+                    .max(Comparator.comparingInt(Event::getPollVotes))
+                    .orElse(null);
+            
+            if (winner != null) {
+                winner.setStatus("UPCOMING");
+                winner.setVotingStatus("CLOSED");
+                eventRepository.save(winner);
+                
+                // Reject others in same expired group
+                for (Event e : group) {
+                    if (!e.getId().equals(winner.getId())) {
+                        e.setStatus("REJECTED");
+                        e.setVotingStatus("CLOSED");
+                        eventRepository.save(e);
+                    }
+                }
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────
@@ -343,6 +426,7 @@ public class EventController {
         model.addAttribute("upcomingCount", eventRepository.countByStatus("UPCOMING"));
         model.addAttribute("ongoingCount", eventRepository.countByStatus("ONGOING"));
         model.addAttribute("completedCount", eventRepository.countByStatus("COMPLETED"));
+        model.addAttribute("votingCount", eventRepository.countByStatus("VOTING"));
         return "admin-events";
     }
 
@@ -367,6 +451,9 @@ public class EventController {
             @RequestParam(required = false, defaultValue = "Offline") String eventMode,
             @RequestParam(required = false) String meetingLink,
             @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String votingStartDate,
+            @RequestParam(required = false) String votingEndDate,
             HttpSession session) {
 
         if (!isAdmin(session)) return "redirect:/login";
@@ -379,7 +466,7 @@ public class EventController {
         event.setEntryFeeType(entryFeeType);
         event.setMaxParticipants(maxParticipants);
         event.setFixedParticipants(fixedParticipants);
-        event.setStatus("UPCOMING");
+        event.setStatus(status != null ? status : "UPCOMING");
         event.setOrganizer("Zentrix Admin");
         event.setEventMode(eventMode);
         event.setMeetingLink(meetingLink);
@@ -394,11 +481,20 @@ public class EventController {
             event.setDateTime(LocalDateTime.parse(dateTime, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")));
         } catch (Exception ignored) {}
 
-        // Use provided URL or fallback to default category image
+        // Use provided URL or fallback
         if (imageUrl != null && !imageUrl.isBlank()) {
             event.setImageUrl(imageUrl);
         } else {
             event.setImageUrl(getDefaultImage(category));
+        }
+
+        if ("VOTING".equals(event.getStatus())) {
+            try {
+                if (votingStartDate != null && !votingStartDate.isBlank())
+                    event.setVotingStartDate(LocalDateTime.parse(votingStartDate));
+                if (votingEndDate != null && !votingEndDate.isBlank())
+                    event.setVotingEndDate(LocalDateTime.parse(votingEndDate));
+            } catch (Exception ignored) {}
         }
 
         eventRepository.save(event);
@@ -430,6 +526,8 @@ public class EventController {
             @RequestParam(required = false) String meetingLink,
             @RequestParam String status,
             @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) String votingStartDate,
+            @RequestParam(required = false) String votingEndDate,
             HttpSession session) {
 
         if (!isAdmin(session)) return "redirect:/login";
@@ -444,13 +542,21 @@ public class EventController {
         event.setMaxParticipants(maxParticipants);
         event.setFixedParticipants(fixedParticipants);
         event.setStatus(status);
-        event.setEventMode(eventMode);
         event.setMeetingLink(meetingLink);
-        
+
         if ("Free".equals(entryFeeType)) {
             event.setPrice("Free");
         } else {
             event.setPrice(price != null && !price.isBlank() ? "\u20b9" + price : "Paid");
+        }
+
+        if ("VOTING".equals(status)) {
+            try {
+                if (votingStartDate != null && !votingStartDate.isBlank())
+                    event.setVotingStartDate(LocalDateTime.parse(votingStartDate));
+                if (votingEndDate != null && !votingEndDate.isBlank())
+                    event.setVotingEndDate(LocalDateTime.parse(votingEndDate));
+            } catch (Exception ignored) {}
         }
 
         try {

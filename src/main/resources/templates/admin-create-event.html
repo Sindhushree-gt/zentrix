@@ -722,36 +722,81 @@
                     </div>
                 </div>
 
-                <!-- SECTION 5: Status (Edit Mode Only) -->
-                <div class="form-card" th:if="${event.id != null}">
+                <!-- SECTION 5: Status & Scheduling -->
+                <div class="form-card">
                     <div class="section-label">
-                        <i class="fas fa-toggle-on"></i> Event Status
+                        <i class="fas fa-toggle-on"></i> Event Status & Scheduling
                     </div>
-                    <div class="status-grid">
+
+                    <div th:if="${event.id != null}" class="status-grid" style="margin-bottom: 24px;">
                         <label class="status-option upcoming">
                             <input type="radio" name="status" value="UPCOMING"
-                                th:checked="${event.status == 'UPCOMING' or event.status == null}">
+                                th:checked="${event.status == 'UPCOMING' or event.status == null}"
+                                onclick="togglePollSection(false)">
                             <div class="status-label">
                                 <i class="fas fa-hourglass-start"></i> Upcoming
                             </div>
                         </label>
+                        <label class="status-option" style="border-radius: 12px; overflow: hidden;">
+                            <input type="radio" name="status" value="VOTING" th:checked="${event.status == 'VOTING'}"
+                                onclick="togglePollSection(true)">
+                            <div class="status-label"
+                                style="border-color: #f84464; color: #f84464; background: rgba(248, 68, 100, 0.05);">
+                                <i class="fas fa-vote-yea"></i> Open for Voting
+                            </div>
+                        </label>
                         <label class="status-option ongoing">
-                            <input type="radio" name="status" value="ONGOING" th:checked="${event.status == 'ONGOING'}">
+                            <input type="radio" name="status" value="ONGOING" th:checked="${event.status == 'ONGOING'}"
+                                onclick="togglePollSection(false)">
                             <div class="status-label">
                                 <i class="fas fa-circle-notch fa-spin"></i> Ongoing
                             </div>
                         </label>
                         <label class="status-option completed">
                             <input type="radio" name="status" value="COMPLETED"
-                                th:checked="${event.status == 'COMPLETED'}">
+                                th:checked="${event.status == 'COMPLETED'}" onclick="togglePollSection(false)">
                             <div class="status-label">
                                 <i class="fas fa-check-circle"></i> Completed
                             </div>
                         </label>
                     </div>
+
+                    <!-- For Create Mode Shortcut -->
+                    <div th:if="${event.id == null}" style="margin-bottom: 20px;">
+                        <label>Initial Status</label>
+                        <select name="status" onchange="togglePollSection(this.value === 'VOTING')">
+                            <option value="UPCOMING">Upcoming (Registration Open)</option>
+                            <option value="VOTING">Voting Poll (Users decide if this happens)</option>
+                        </select>
+                    </div>
+
+                    <!-- Poll Settings (Conditional) -->
+                    <div id="pollSettings" th:style="${event.status == 'VOTING'} ? 'display:block;' : 'display:none;'">
+                        <div
+                            style="background: rgba(248,68,100,0.05); border: 1px dashed rgba(248,68,100,0.3); border-radius: 14px; padding: 20px;">
+                            <h4
+                                style="font-size: 14px; color: #f84464; margin-bottom: 15px; display:flex; align-items:center; gap:8px;">
+                                <i class="fas fa-clock"></i> Voting Period Settings
+                            </h4>
+                            <div class="two-col">
+                                <div class="field-group">
+                                    <label>Voting Start Date</label>
+                                    <input type="datetime-local" name="votingStartDate"
+                                        th:value="${event.votingStartDate != null ? #temporals.format(event.votingStartDate, 'yyyy-MM-dd') + 'T' + #temporals.format(event.votingStartDate, 'HH:mm') : ''}">
+                                </div>
+                                <div class="field-group">
+                                    <label>Voting End Date (Deadline)</label>
+                                    <input type="datetime-local" name="votingEndDate"
+                                        th:value="${event.votingEndDate != null ? #temporals.format(event.votingEndDate, 'yyyy-MM-dd') + 'T' + #temporals.format(event.votingEndDate, 'HH:mm') : ''}">
+                                </div>
+                            </div>
+                            <p style="font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 12px;">
+                                * When the deadline passes, the system will check if this event has the most votes in
+                                its category.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <!-- Hidden status for create mode -->
-                <input th:if="${event.id == null}" type="hidden" name="status" value="UPCOMING">
 
                 <!-- SECTION 6: Poster URL -->
                 <div class="form-card">
@@ -858,6 +903,26 @@
             const cat = document.querySelector('input[name="category"]:checked');
             if (!cat) { alert('Please select an event category.'); return false; }
             return true;
+        }
+
+        function togglePollSection(show) {
+            const settings = document.getElementById('pollSettings');
+            if (settings) settings.style.display = show ? 'block' : 'none';
+            if (show) {
+                const start = document.getElementsByName('votingStartDate')[0];
+                const end = document.getElementsByName('votingEndDate')[0];
+                if (start && !start.value) {
+                    let now = new Date();
+                    // Local ISO string hack
+                    let offset = now.getTimezoneOffset() * 60000;
+                    let localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
+                    start.value = localISOTime;
+
+                    let threeDaysLater = new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000));
+                    let localISOEnd = (new Date(threeDaysLater - offset)).toISOString().slice(0, 16);
+                    end.value = localISOEnd;
+                }
+            }
         }
 
         // ── Publish button animation ──

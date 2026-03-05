@@ -50,6 +50,7 @@ public class ChatMessage {
     private boolean isVanish = false;
     private boolean isPinned = false;
     private LocalDateTime pinnedAt;
+    private boolean isForwarded = false;
 
     public ChatMessage() {
         this.timestamp = LocalDateTime.now();
@@ -175,5 +176,13 @@ public class ChatMessage {
 
     public void setPinnedAt(LocalDateTime pinnedAt) {
         this.pinnedAt = pinnedAt;
+    }
+
+    public boolean isForwarded() {
+        return isForwarded;
+    }
+
+    public void setForwarded(boolean forwarded) {
+        isForwarded = forwarded;
     }
 }
