@@ -5,6 +5,7 @@ import com.example.demo.repository.FollowRequestRepository;
 import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.PostRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.RewardService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -49,6 +50,9 @@ public class ProfileController {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private RewardService rewardService;
 
     @Autowired
     private com.example.demo.repository.PostCollaborationRepository postCollaborationRepository;
@@ -280,7 +284,7 @@ public class ProfileController {
                     post, collabUser, com.example.demo.model.CollaborationStatus.PENDING);
             postCollaborationRepository.save(collaboration);
         }
-
+        rewardService.awardTalentPost(user); // Coins for Posting 🎨
         return "redirect:/profile";
     }
 

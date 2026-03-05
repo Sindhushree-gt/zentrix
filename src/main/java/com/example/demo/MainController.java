@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.HttpSession;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,6 +47,9 @@ public class MainController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private com.example.demo.service.RewardService rewardService;
 
     @Autowired
     private NotificationRepository notificationRepository;
@@ -155,6 +159,7 @@ public class MainController {
 
         List<PostCollaboration> pendingRequests = postCollaborationRepository
                 .findByUserAndStatus(user, CollaborationStatus.PENDING);
+        model.addAttribute("user", user);
         model.addAttribute("pendingCount", pendingRequests.size());
 
         model.addAttribute("posts", postRepository.findAllByOrderByCreatedAtDesc());
@@ -172,6 +177,13 @@ public class MainController {
         model.addAttribute("notifications", notificationRepository.findByUserOrderByCreatedAtDesc(user));
         model.addAttribute("unreadNotifCount", notificationRepository.countByUserAndIsRead(user, false));
 
+        // Fetch active voting polls
+        List<Event> votingPolls = eventRepository.findAll().stream()
+                .filter(e -> "VOTING".equals(e.getStatus()))
+                .filter(e -> e.getVotingEndDate() == null || e.getVotingEndDate().isAfter(LocalDateTime.now()))
+                .collect(Collectors.toList());
+        model.addAttribute("votingPolls", votingPolls);
+
         return "dashboard";
     }
 
@@ -186,6 +198,9 @@ public class MainController {
         model.addAttribute("ongoingEvents", eventRepository.countByStatus("ONGOING"));
         model.addAttribute("votingCount", eventRepository.countByStatus("VOTING"));
         model.addAttribute("completedCount", eventRepository.countByStatus("COMPLETED"));
+        model.addAttribute("rewardConfig", rewardService.getConfig());
+        User user = getUserFromSession(session);
+        model.addAttribute("user", user);
         return "admin-dashboard";
     }
 

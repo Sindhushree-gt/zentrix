@@ -3,16 +3,23 @@ package com.example.demo.controller;
 import com.example.demo.model.Event;
 import com.example.demo.model.EventRegistration;
 import com.example.demo.model.User;
+import com.example.demo.model.EventSeatTier;
+import com.example.demo.model.EventSeat;
+import com.example.demo.repository.EventSeatRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.EventRepository;
 import com.example.demo.repository.EventRegistrationRepository;
+import com.example.demo.repository.EventSeatTierRepository;
+import com.example.demo.service.RewardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import org.springframework.scheduling.annotation.Scheduled;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -34,6 +41,15 @@ public class EventController {
 
     @Autowired
     private EventRegistrationRepository eventRegistrationRepository;
+
+    @Autowired
+    private EventSeatRepository eventSeatRepository;
+
+    @Autowired
+    private EventSeatTierRepository eventSeatTierRepository;
+
+    @Autowired
+    private RewardService rewardService;
 
     private User getUserFromSession(HttpSession session) {
         Object sessionUser = session.getAttribute("user");
@@ -109,17 +125,15 @@ public class EventController {
     }
 
     @PostMapping("/{id}/poll-vote")
-    public String castPollVote(@PathVariable Long id, HttpSession session) {
+    public String castPollVote(@PathVariable Long id, HttpSession session, HttpServletRequest request) {
         User user = getUserFromSession(session);
         if (user == null) return "redirect:/login";
 
         Event event = eventRepository.findById(id).orElse(null);
         if (event == null || !"VOTING".equals(event.getStatus())) return "redirect:/events?error=invalid_event";
 
-        // Restriction: One User = One Vote across the system pools
         User dbUser = userRepository.findById(user.getId()).orElse(user);
         
-        // Check if user has already voted for any event that is currently in VOTING status
         List<Event> currentPolls = eventRepository.findAll().stream()
                 .filter(e -> "VOTING".equals(e.getStatus()))
                 .collect(Collectors.toList());
@@ -132,16 +146,20 @@ public class EventController {
             }
         }
 
-        if (alreadyVoted) return "redirect:/events?alreadyVotedInPoll=true";
+        String referer = request.getHeader("Referer");
+        String redirectBase = (referer != null && !referer.contains("/login")) ? referer : "/events";
+        if (redirectBase.contains("?")) redirectBase = redirectBase.split("\\?")[0];
 
-        // Cast vote
+        if (alreadyVoted) return "redirect:" + redirectBase + "?alreadyVotedInPoll=true";
+
         event.setPollVotes(event.getPollVotes() + 1);
         eventRepository.save(event);
 
         dbUser.getVotedEvents().add(id);
+        rewardService.awardVoting(dbUser); // Award coins for voting 🗳️
         userRepository.save(dbUser);
         
-        return "redirect:/events?voteSuccess=true";
+        return "redirect:" + redirectBase + "?voteSuccess=true";
     }
 
     private void resolveExpiredPolls() {
@@ -211,31 +229,47 @@ public class EventController {
         }
         boolean isRegistered = (userReg != null);
         long dbRegistrationCount = eventRegistrationRepository.countByEvent(event);
-        long fixedCount = (event.getFixedParticipants() != null) ? event.getFixedParticipants() : 0;
-        long registrationCount = dbRegistrationCount + fixedCount;
+        long registrationCount = dbRegistrationCount;
         
         // Use -1 for unlimited spots
-        int spotsLeft = (event.getMaxParticipants() != null && event.getMaxParticipants() > 0)
-                ? Math.max(0, event.getMaxParticipants() - (int) registrationCount) : -1;
+        Integer totalCapacity = event.getMaxParticipants();
+        if (event.getSeatTiers() != null && !event.getSeatTiers().isEmpty()) {
+            totalCapacity = event.getSeatTiers().stream().mapToInt(EventSeatTier::getCapacity).sum();
+            // sync maxParticipants for UI consistency if needed
+        }
+
+        int spotsLeft = (totalCapacity != null && totalCapacity > 0)
+                ? Math.max(0, totalCapacity - (int) registrationCount) : -1;
+        model.addAttribute("totalCapacity", totalCapacity); // For UI display
 
         // Related events (same category, exclude current)
         List<Event> related = eventRepository.findByCategory(event.getCategory())
                 .stream().filter(e -> !e.getId().equals(id)).limit(3).collect(Collectors.toList());
 
-        // For Secret Voting System (when event is ONGOING)
+        // For Secret Voting System (when event is ONGOING) or Finalist voting (when event is VOTING)
         boolean hasVoted = false;
         List<EventRegistration> candidates = new java.util.ArrayList<>();
-        if ("ONGOING".equals(event.getStatus()) || "COMPLETED".equals(event.getStatus())) {
+        if ("ONGOING".equals(event.getStatus()) || "COMPLETED".equals(event.getStatus()) || "VOTING".equals(event.getStatus())) {
             if (user != null) {
                 User dbUser = userRepository.findById(user.getId()).orElse(user);
                 hasVoted = dbUser.getVotedEvents().contains(id);
             }
-            candidates = eventRegistrationRepository.findByEvent(event).stream()
-                    .filter(EventRegistration::isAttendanceMarked)
-                    .collect(Collectors.toList());
+            if ("VOTING".equals(event.getStatus())) {
+                candidates = eventRegistrationRepository.findByEvent(event).stream()
+                        .filter(EventRegistration::isFinalist)
+                        .collect(Collectors.toList());
+            } else {
+                candidates = eventRegistrationRepository.findByEvent(event).stream()
+                        .filter(EventRegistration::isAttendanceMarked)
+                        .collect(Collectors.toList());
+            }
         }
 
+        List<EventSeat> seats = event.getSeats();
+        seats.sort(Comparator.comparing(EventSeat::getRowLabel).thenComparing(EventSeat::getSeatNumber));
+
         model.addAttribute("event", event);
+        model.addAttribute("seats", seats);
         model.addAttribute("user", user);
         model.addAttribute("isAdmin", adminViewing);
         model.addAttribute("isRegistered", isRegistered);
@@ -257,7 +291,7 @@ public class EventController {
         if (user == null) return "redirect:/login";
 
         Event event = eventRepository.findById(id).orElse(null);
-        if (event == null || !"ONGOING".equals(event.getStatus())) return "redirect:/events/" + id;
+        if (event == null || !("ONGOING".equals(event.getStatus()) || "VOTING".equals(event.getStatus()))) return "redirect:/events/" + id;
 
         User dbUser = userRepository.findById(user.getId()).orElse(null);
         if (dbUser == null) return "redirect:/login";
@@ -279,6 +313,67 @@ public class EventController {
     }
 
     // ─────────────────────────────────────────────────────────
+    //  SEATING: Hold seats for 5 minutes
+    // ─────────────────────────────────────────────────────────
+    @PostMapping("/{id}/hold-seats")
+    @ResponseBody
+    public Map<String, Object> holdSeats(@PathVariable Long id, @RequestBody List<Long> seatIds, HttpSession session) {
+        Map<String, Object> response = new java.util.HashMap<>();
+        User user = getUserFromSession(session);
+        if (user == null) {
+            response.put("success", false);
+            response.put("message", "Please login to select seats.");
+            return response;
+        }
+
+        Event event = eventRepository.findById(id).orElse(null);
+        if (event == null) {
+            response.put("success", false);
+            response.put("message", "Event not found.");
+            return response;
+        }
+
+        List<EventSeat> seatsToHold = eventSeatRepository.findAllById(seatIds);
+        LocalDateTime now = LocalDateTime.now();
+
+        // Check availability
+        for (EventSeat seat : seatsToHold) {
+            boolean isHoldExpired = "HOLD".equals(seat.getStatus()) && seat.getHoldExpiresAt() != null && seat.getHoldExpiresAt().isBefore(now);
+            if (!"AVAILABLE".equals(seat.getStatus()) && !isHoldExpired) {
+                response.put("success", false);
+                response.put("message", "Seat " + seat.getSeatIdentifier() + " is currently unavailable.");
+                return response;
+            }
+        }
+
+        // Apply HOLD
+        for (EventSeat seat : seatsToHold) {
+            seat.setStatus("HOLD");
+            seat.setHoldExpiresAt(now.plusMinutes(5));
+            seat.setBookedByUser(user);
+        }
+        eventSeatRepository.saveAll(seatsToHold);
+
+        response.put("success", true);
+        return response;
+    }
+
+    @Scheduled(fixedRate = 30000) // Run every 30 seconds
+    public void releaseExpiredHolds() {
+        LocalDateTime now = LocalDateTime.now();
+        List<EventSeat> expiredSeats = eventSeatRepository.findByStatusAndHoldExpiresAtBefore("HOLD", now);
+        if (!expiredSeats.isEmpty()) {
+            for (EventSeat seat : expiredSeats) {
+                seat.setStatus("AVAILABLE");
+                seat.setHoldExpiresAt(null);
+                seat.setBookedByUser(null);
+            }
+            eventSeatRepository.saveAll(expiredSeats);
+            System.out.println("Released " + expiredSeats.size() + " expired seat holds.");
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────
     //  REGISTER: Entry point — decides Free vs Paid
     // ─────────────────────────────────────────────────────────
     @PostMapping("/{id}/register")
@@ -289,6 +384,8 @@ public class EventController {
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String college,
             @RequestParam(required = false) String yearOfStudy,
+            @RequestParam(required = false) String selectedTier,
+            @RequestParam(required = false) List<Long> selectedSeatIds,
             HttpSession session) {
         User user = getUserFromSession(session);
         if (user == null) return "redirect:/login";
@@ -306,11 +403,19 @@ public class EventController {
         session.setAttribute("regPhone", phone);
         session.setAttribute("regCollege", college);
         session.setAttribute("regYear", yearOfStudy);
+        session.setAttribute("regTier", selectedTier);
+        session.setAttribute("regSeatIds", selectedSeatIds);
 
         if ("Paid".equalsIgnoreCase(event.getEntryFeeType())) {
+            User dbUser = userRepository.findById(user.getId()).orElse(user);
+            if (dbUser.isHasFreeEntry()) {
+                dbUser.setHasFreeEntry(false);
+                userRepository.save(dbUser);
+                return completeRegistration(event, dbUser, "FREE", fullName, email, phone, college, yearOfStudy, selectedTier, selectedSeatIds);
+            }
             return "redirect:/events/" + id + "/payment";
         } else {
-            return completeRegistration(event, user, "FREE", fullName, email, phone, college, yearOfStudy);
+            return completeRegistration(event, user, "FREE", fullName, email, phone, college, yearOfStudy, selectedTier, selectedSeatIds);
         }
     }
 
@@ -329,8 +434,23 @@ public class EventController {
             return "redirect:/events/" + id + "?alreadyRegistered=true";
         }
 
+        User dbUser = userRepository.findById(user.getId()).orElse(user);
+        
+        // Calculate discounted price if applicable
+        String originalPrice = event.getPrice();
+        double priceVal = parsePrice(originalPrice);
+        double finalPrice = priceVal;
+        boolean isDiscounted = false;
+
+        if (dbUser.isHasDiscount()) {
+            finalPrice = priceVal * 0.5;
+            isDiscounted = true;
+        }
+
         model.addAttribute("event", event);
-        model.addAttribute("user", user);
+        model.addAttribute("user", dbUser);
+        model.addAttribute("isDiscounted", isDiscounted);
+        model.addAttribute("finalPrice", "₹" + (int)finalPrice);
         return "payment";
     }
 
@@ -360,8 +480,18 @@ public class EventController {
         String phone       = (String) session.getAttribute("regPhone");
         String college     = (String) session.getAttribute("regCollege");
         String yearOfStudy = (String) session.getAttribute("regYear");
+        String selectedTier = (String) session.getAttribute("regTier");
+        List<Long> selectedSeatIds = (List<Long>) session.getAttribute("regSeatIds");
 
-        return completeRegistration(event, user, "PAID", fullName, email, phone, college, yearOfStudy);
+        User dbUser = userRepository.findById(user.getId()).orElse(user);
+        String paymentStatus = "PAID";
+        if (dbUser.isHasDiscount()) {
+            dbUser.setHasDiscount(false);
+            userRepository.save(dbUser);
+            paymentStatus = "PAID (DISCOUNTED)";
+        }
+
+        return completeRegistration(event, dbUser, paymentStatus, fullName, email, phone, college, yearOfStudy, selectedTier, selectedSeatIds);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -406,6 +536,19 @@ public class EventController {
         
         model.addAttribute("ticketUrl", qrData);
 
+        // Fetch Booked Seats for this user and event
+        if (reg.getUser() != null) {
+            List<EventSeat> bookedSeats = eventSeatRepository.findByEventAndBookedByUser(reg.getEvent(), reg.getUser());
+            model.addAttribute("bookedSeats", bookedSeats);
+            
+            // Add seat info to QR data if seats exist
+            if (!bookedSeats.isEmpty()) {
+                String seatsStr = bookedSeats.stream().map(EventSeat::getSeatIdentifier).collect(Collectors.joining(", "));
+                qrData += "\nSEATS: " + seatsStr;
+                model.addAttribute("ticketUrl", qrData); // update with seats
+            }
+        }
+
         model.addAttribute("registration", reg);
         model.addAttribute("event", reg.getEvent());
         model.addAttribute("user", reg.getUser() != null ? reg.getUser() : user);
@@ -447,13 +590,19 @@ public class EventController {
             @RequestParam String entryFeeType,
             @RequestParam(required = false) String price,
             @RequestParam Integer maxParticipants,
-            @RequestParam(required = false, defaultValue = "0") Integer fixedParticipants,
             @RequestParam(required = false, defaultValue = "Offline") String eventMode,
             @RequestParam(required = false) String meetingLink,
             @RequestParam(required = false) String imageUrl,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String votingStartDate,
             @RequestParam(required = false) String votingEndDate,
+            @RequestParam(required = false, defaultValue = "0") Integer totalRows,
+            @RequestParam(required = false, defaultValue = "0") Integer seatsPerRow,
+            @RequestParam(required = false, defaultValue = "Standard") String seatLayoutType,
+            @RequestParam(required = false, defaultValue = "0") Integer vipSeatCount,
+            @RequestParam(required = false, defaultValue = "0.0") Double vipPrice,
+            @RequestParam(required = false, defaultValue = "0.0") Double regularPrice,
+            @RequestParam(required = false, defaultValue = "false") boolean finalVotingEnabled,
             HttpSession session) {
 
         if (!isAdmin(session)) return "redirect:/login";
@@ -465,11 +614,11 @@ public class EventController {
         event.setVenue(venue);
         event.setEntryFeeType(entryFeeType);
         event.setMaxParticipants(maxParticipants);
-        event.setFixedParticipants(fixedParticipants);
         event.setStatus(status != null ? status : "UPCOMING");
         event.setOrganizer("Zentrix Admin");
         event.setEventMode(eventMode);
         event.setMeetingLink(meetingLink);
+        event.setFinalVotingEnabled(finalVotingEnabled);
 
         if ("Free".equals(entryFeeType)) {
             event.setPrice("Free");
@@ -497,6 +646,34 @@ public class EventController {
             } catch (Exception ignored) {}
         }
 
+        event.setTotalRows(totalRows);
+        event.setSeatsPerRow(seatsPerRow);
+        event.setSeatLayoutType(seatLayoutType);
+        event.setVipSeatCount(vipSeatCount);
+        event.setVipPrice(vipPrice);
+        event.setRegularPrice(regularPrice);
+
+        // Populate seatTiers for backward compatibility/pricing display logic
+        event.getSeatTiers().clear();
+        if (vipPrice > 0 || vipSeatCount > 0) {
+            EventSeatTier vipTier = new EventSeatTier();
+            vipTier.setTierName("VIP");
+            vipTier.setPrice(vipPrice);
+            vipTier.setCapacity(vipSeatCount);
+            vipTier.setEvent(event);
+            event.getSeatTiers().add(vipTier);
+        }
+        
+        EventSeatTier regTier = new EventSeatTier();
+        regTier.setTierName("REGULAR");
+        regTier.setPrice(regularPrice);
+        regTier.setCapacity((totalRows * seatsPerRow) - vipSeatCount);
+        regTier.setEvent(event);
+        event.getSeatTiers().add(regTier);
+
+        // Generate the grid!
+        generateSeatGrid(event);
+
         eventRepository.save(event);
         return "redirect:/events/admin/manage?created=true";
     }
@@ -521,13 +698,19 @@ public class EventController {
             @RequestParam String entryFeeType,
             @RequestParam(required = false) String price,
             @RequestParam Integer maxParticipants,
-            @RequestParam(required = false, defaultValue = "0") Integer fixedParticipants,
             @RequestParam(required = false, defaultValue = "Offline") String eventMode,
             @RequestParam(required = false) String meetingLink,
             @RequestParam String status,
             @RequestParam(required = false) String imageUrl,
             @RequestParam(required = false) String votingStartDate,
             @RequestParam(required = false) String votingEndDate,
+            @RequestParam(required = false, defaultValue = "0") Integer totalRows,
+            @RequestParam(required = false, defaultValue = "0") Integer seatsPerRow,
+            @RequestParam(required = false, defaultValue = "Standard") String seatLayoutType,
+            @RequestParam(required = false, defaultValue = "0") Integer vipSeatCount,
+            @RequestParam(required = false, defaultValue = "0.0") Double vipPrice,
+            @RequestParam(required = false, defaultValue = "0.0") Double regularPrice,
+            @RequestParam(required = false, defaultValue = "false") boolean finalVotingEnabled,
             HttpSession session) {
 
         if (!isAdmin(session)) return "redirect:/login";
@@ -540,9 +723,9 @@ public class EventController {
         event.setVenue(venue);
         event.setEntryFeeType(entryFeeType);
         event.setMaxParticipants(maxParticipants);
-        event.setFixedParticipants(fixedParticipants);
         event.setStatus(status);
         event.setMeetingLink(meetingLink);
+        event.setFinalVotingEnabled(finalVotingEnabled);
 
         if ("Free".equals(entryFeeType)) {
             event.setPrice("Free");
@@ -569,14 +752,72 @@ public class EventController {
         }
         // else keep existing imageUrl unchanged
 
+        // Update Seat Grid Configuration
+        boolean reGenGrid = false;
+        if (!event.getTotalRows().equals(totalRows) || !event.getSeatsPerRow().equals(seatsPerRow) || 
+            !event.getVipSeatCount().equals(vipSeatCount) || !event.getVipPrice().equals(vipPrice) || 
+            !event.getRegularPrice().equals(regularPrice)) {
+            reGenGrid = true;
+        }
+
+        event.setTotalRows(totalRows);
+        event.setSeatsPerRow(seatsPerRow);
+        event.setSeatLayoutType(seatLayoutType);
+        event.setVipSeatCount(vipSeatCount);
+        event.setVipPrice(vipPrice);
+        event.setRegularPrice(regularPrice);
+
+        // Update tiers for backward compatibility
+        event.getSeatTiers().clear();
+        if (vipPrice > 0 || vipSeatCount > 0) {
+            EventSeatTier vipTier = new EventSeatTier();
+            vipTier.setTierName("VIP");
+            vipTier.setPrice(vipPrice);
+            vipTier.setCapacity(vipSeatCount);
+            vipTier.setEvent(event);
+            event.getSeatTiers().add(vipTier);
+        }
+        
+        EventSeatTier regTier = new EventSeatTier();
+        regTier.setTierName("REGULAR");
+        regTier.setPrice(regularPrice);
+        regTier.setCapacity((totalRows * seatsPerRow) - vipSeatCount);
+        regTier.setEvent(event);
+        event.getSeatTiers().add(regTier);
+
+        if (reGenGrid) {
+            generateSeatGrid(event);
+        }
+
         eventRepository.save(event);
         return "redirect:/events/admin/manage?updated=true";
     }
 
+    @Transactional
     @PostMapping("/admin/delete/{id}")
     public String deleteEvent(@PathVariable Long id, HttpSession session) {
         if (!isAdmin(session)) return "redirect:/login";
-        eventRepository.deleteById(id);
+        
+        Event event = eventRepository.findById(id).orElse(null);
+        if (event != null) {
+            // Manual cleanup to be 100% sure and avoid FK constraint errors in all environments
+            List<EventRegistration> registrations = eventRegistrationRepository.findByEvent(event);
+            if (!registrations.isEmpty()) {
+                eventRegistrationRepository.deleteAll(registrations);
+            }
+            
+            // Seats are cascaded in model, but manual is safer given the errors seen
+            List<EventSeat> seats = eventSeatRepository.findByEvent(event);
+            if (!seats.isEmpty()) {
+                eventSeatRepository.deleteAll(seats);
+            }
+            
+            // Explicitly clear voting logs so they don't block deletion (FK)
+            userRepository.deleteFromVotedEvents(id);
+            
+            eventRepository.delete(event);
+        }
+        
         return "redirect:/events/admin/manage?deleted=true";
     }
 
@@ -657,7 +898,7 @@ public class EventController {
                 
                 int pVotes = reg.getPublicVotes() != null ? reg.getPublicVotes() : 0;
                 double publicScore = maxVotes > 0 ? ((double) pVotes / maxVotes) * 100.0 : 0.0;
-                double finalScore = (jScore * 0.6) + (publicScore * 0.4);
+                double finalScore = (jScore * 0.5) + (publicScore * 0.5);
                 reg.setFinalScore(finalScore);
 
                 // Assign Rank
@@ -674,11 +915,19 @@ public class EventController {
                 reg.setPosition(position);
                 reg.setPointsEarned(points);
 
-                // Update User XP
+                // Update User XP & Coins
                 User u = reg.getUser();
                 if (u != null) {
                     u.setXp((u.getXp() == null ? 0 : u.getXp()) + points);
                     u.setLevel(calculateLevel(u.getXp()));
+                    
+                    // Zen Coins Award depending on position
+                    if ("Winner".equals(position)) {
+                        rewardService.awardWinner(u);
+                    } else if ("Runner".equals(position)) {
+                        rewardService.awardRunner(u);
+                    }
+                    
                     userRepository.save(u);
                 }
             } else {
@@ -689,6 +938,53 @@ public class EventController {
         eventRegistrationRepository.saveAll(registrations);
 
         return "redirect:/events/admin/" + id + "/attendance?completed=true";
+    }
+
+    @PostMapping("/admin/{id}/nominate-finalists")
+    public String nominateFinalists(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long finalist1_id,
+            @RequestParam(required = false) String finalist1_media,
+            @RequestParam(required = false) String finalist1_desc,
+            @RequestParam(required = false) Long finalist2_id,
+            @RequestParam(required = false) String finalist2_media,
+            @RequestParam(required = false) String finalist2_desc,
+            @RequestParam(required = false) Long finalist3_id,
+            @RequestParam(required = false) String finalist3_media,
+            @RequestParam(required = false) String finalist3_desc,
+            HttpSession session) {
+
+        if (!isAdmin(session)) return "redirect:/login";
+
+        Event event = eventRepository.findById(id).orElse(null);
+        if (event == null) return "redirect:/events/admin/manage";
+
+        // Set the event status to Voting
+        event.setStatus("VOTING");
+        // Auto set voting end date to 2 days from now if not set
+        if (event.getVotingEndDate() == null) {
+            event.setVotingEndDate(LocalDateTime.now().plusDays(2));
+        }
+        eventRepository.save(event);
+
+        // Map finalists input
+        Long[] fIds = {finalist1_id, finalist2_id, finalist3_id};
+        String[] fMedias = {finalist1_media, finalist2_media, finalist3_media};
+        String[] fDescs = {finalist1_desc, finalist2_desc, finalist3_desc};
+
+        for (int i = 0; i < 3; i++) {
+            if (fIds[i] != null) {
+                EventRegistration reg = eventRegistrationRepository.findById(fIds[i]).orElse(null);
+                if (reg != null) {
+                    reg.setFinalist(true);
+                    reg.setFinalistMediaUrl(fMedias[i]);
+                    reg.setFinalistDescription(fDescs[i]);
+                    eventRegistrationRepository.save(reg);
+                }
+            }
+        }
+
+        return "redirect:/events/admin/manage";
     }
 
     private String calculateLevel(int xp) {
@@ -716,6 +1012,8 @@ public class EventController {
         reg.setAttendanceMarked(true);
         reg.setAttendedAt(LocalDateTime.now());
         eventRegistrationRepository.save(reg);
+        
+        rewardService.awardAttendance(reg.getUser()); // award coins for attending 🪙
         return "redirect:/events/admin/" + id + "/attendance?marked=" + ticketId;
     }
 
@@ -732,6 +1030,7 @@ public class EventController {
                 if (!reg.isAttendanceMarked()) {
                     reg.setAttendanceMarked(true);
                     reg.setAttendedAt(LocalDateTime.now());
+                    rewardService.awardAttendance(reg.getUser()); // Coins for attending 🪙
                 }
             }
             eventRegistrationRepository.saveAll(regs);
@@ -757,6 +1056,7 @@ public class EventController {
             reg.setAttendanceMarked(true);
             reg.setAttendedAt(LocalDateTime.now());
             eventRegistrationRepository.save(reg);
+            rewardService.awardAttendance(user); // Zen Coins for joining 🪙
         }
 
         // Redirect to the meeting link
@@ -772,12 +1072,51 @@ public class EventController {
     // ─────────────────────────────────────────────────────────
     private String completeRegistration(Event event, User user, String paymentStatus,
                                          String fullName, String email, String phone,
-                                         String college, String yearOfStudy) {
+                                         String college, String yearOfStudy, String selectedTier,
+                                         List<Long> selectedSeatIds) {
+        
+        // Enforce seat limit in backend
+        if (event.getMaxParticipants() != null && event.getMaxParticipants() > 0) {
+            long currentCount = eventRegistrationRepository.countByEvent(event);
+            if (currentCount >= event.getMaxParticipants()) {
+                return "redirect:/events/" + event.getId() + "?error=full";
+            }
+        }
+
+        // Tier-specific check
+        if (selectedTier != null && !selectedTier.isBlank() && event.getSeatTiers() != null) {
+            EventSeatTier selectedTierObj = null;
+            for (EventSeatTier t : event.getSeatTiers()) {
+                if (selectedTier.equalsIgnoreCase(t.getTierName())) {
+                    selectedTierObj = t;
+                    break;
+                }
+            }
+            
+            if (selectedTierObj != null) {
+                if (selectedTierObj.getRegisteredCount() >= selectedTierObj.getCapacity()) {
+                    return "redirect:/events/" + event.getId() + "?error=tier_full";
+                }
+                selectedTierObj.setRegisteredCount(selectedTierObj.getRegisteredCount() + 1);
+            }
+        }
+
+        // Individual Seats Check & Update
+        if (selectedSeatIds != null && !selectedSeatIds.isEmpty()) {
+            List<EventSeat> seatsToBook = eventSeatRepository.findAllById(selectedSeatIds);
+            for (EventSeat seat : seatsToBook) {
+                seat.setStatus("BOOKED");
+                seat.setBookedByUser(user);
+            }
+            eventSeatRepository.saveAll(seatsToBook);
+        }
+
         EventRegistration reg = new EventRegistration();
         reg.setEvent(event);
         reg.setUser(user);
         reg.setPaymentStatus(paymentStatus);
         reg.setRegistrationStatus("REGISTERED");
+        reg.setSelectedTier(selectedTier);
         reg.setTicketId(generateTicketId(event));
         reg.setFullName(fullName);
         reg.setEmail(email);
@@ -785,7 +1124,52 @@ public class EventController {
         reg.setCollege(college);
         reg.setYearOfStudy(yearOfStudy);
         eventRegistrationRepository.save(reg);
-        return "redirect:/events/ticket/" + reg.getTicketId();
+        eventRepository.save(event); // Save the incremented tier count
+        
+        rewardService.awardRegistration(user); // Award coins for registering 🍪
+        return "redirect:/events/ticket/" + reg.getTicketId() + "?success=true";
+    }
+
+    private void generateSeatGrid(Event event) {
+        if (event.getTotalRows() <= 0 || event.getSeatsPerRow() <= 0) return;
+
+        // Clear existing seats if we're re-generating
+        event.getSeats().clear();
+        
+        int vipCount = event.getVipSeatCount();
+        int assignedVip = 0;
+        
+        for (int row = 0; row < event.getTotalRows(); row++) {
+            String rowLabel = String.valueOf((char) ('A' + row));
+            
+            for (int seatNum = 1; seatNum <= event.getSeatsPerRow(); seatNum++) {
+                EventSeat seat = new EventSeat();
+                seat.setEvent(event);
+                seat.setRowLabel(rowLabel);
+                seat.setSeatNumber(seatNum);
+                
+                if (assignedVip < vipCount) {
+                    seat.setSeatType("VIP");
+                    seat.setPrice(event.getVipPrice());
+                    assignedVip++;
+                } else {
+                    seat.setSeatType("REGULAR");
+                    seat.setPrice(event.getRegularPrice());
+                }
+                
+                seat.setStatus("AVAILABLE");
+                event.getSeats().add(seat);
+            }
+        }
+    }
+
+    private Double parsePrice(String price) {
+        if (price == null || price.equalsIgnoreCase("Free")) return 0.0;
+        try {
+            return Double.parseDouble(price.replace("₹", "").trim());
+        } catch (Exception e) {
+            return 0.0;
+        }
     }
 
     private String generateTicketId(Event event) {

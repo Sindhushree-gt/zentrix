@@ -2,6 +2,9 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "events")
@@ -25,19 +28,51 @@ public class Event {
     // New fields for admin create event flow
     private String status = "UPCOMING";  // UPCOMING, ONGOING, COMPLETED
     private Integer maxParticipants;
-    private Integer fixedParticipants = 0; // Pre-filled or manual count done by admin
     private String entryFeeType = "Free"; // Free or Paid
     private String eventMode = "Offline"; // Offline or Online
     private String meetingLink;           // For online events
 
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<EventSeatTier> seatTiers = new ArrayList<>();
+
+    // NEW: Individual Seat Grid Selection (BMOS Style)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventSeat> seats = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventRegistration> registrations = new ArrayList<>();
+    
+    // Administrative grid setup
+    private Integer totalRows = 0;      // E.g. 10 (A-J)
+    private Integer seatsPerRow = 0;    // E.g. 20
+    private String seatLayoutType = "Standard"; // Standard, Auditorium, Hall
+    
     // Voting / Poll Feature
     private LocalDateTime votingStartDate;
     private LocalDateTime votingEndDate;
     private Integer pollVotes = 0;
     private String votingStatus = "OPEN"; // OPEN, CLOSED
 
+    // Simplified Seat Setup
+    private Integer vipSeatCount = 0;
+    private Double vipPrice = 0.0;
+    private Double regularPrice = 0.0;
+
+    // Final Voting Phase Option
+    private boolean finalVotingEnabled = false;
+
     public Event() {
     }
+
+    public Integer getVipSeatCount() { return vipSeatCount; }
+    public void setVipSeatCount(Integer vipSeatCount) { this.vipSeatCount = vipSeatCount; }
+
+    public Double getVipPrice() { return vipPrice; }
+    public void setVipPrice(Double vipPrice) { this.vipPrice = vipPrice; }
+
+    public Double getRegularPrice() { return regularPrice; }
+    public void setRegularPrice(Double regularPrice) { this.regularPrice = regularPrice; }
 
     public Long getId() {
         return id;
@@ -136,8 +171,18 @@ public class Event {
     public String getMeetingLink() { return meetingLink; }
     public void setMeetingLink(String meetingLink) { this.meetingLink = meetingLink; }
 
-    public Integer getFixedParticipants() { return fixedParticipants; }
-    public void setFixedParticipants(Integer fixedParticipants) { this.fixedParticipants = fixedParticipants; }
+    public List<EventSeatTier> getSeatTiers() { return seatTiers; }
+    public void setSeatTiers(List<EventSeatTier> seatTiers) { 
+        if (seatTiers == null) {
+            this.seatTiers.clear();
+        } else {
+            this.seatTiers.clear();
+            this.seatTiers.addAll(seatTiers);
+            for (EventSeatTier tier : seatTiers) {
+                tier.setEvent(this);
+            }
+        }
+    }
 
     public LocalDateTime getVotingStartDate() { return votingStartDate; }
     public void setVotingStartDate(LocalDateTime votingStartDate) { this.votingStartDate = votingStartDate; }
@@ -148,6 +193,24 @@ public class Event {
     public Integer getPollVotes() { return pollVotes != null ? pollVotes : 0; }
     public void setPollVotes(Integer pollVotes) { this.pollVotes = pollVotes; }
 
+    public List<EventSeat> getSeats() { return seats; }
+    public void setSeats(List<EventSeat> seats) { this.seats = seats; }
+
+    public Integer getTotalRows() { return totalRows != null ? totalRows : 0; }
+    public void setTotalRows(Integer totalRows) { this.totalRows = totalRows; }
+
+    public Integer getSeatsPerRow() { return seatsPerRow != null ? seatsPerRow : 0; }
+    public void setSeatsPerRow(Integer seatsPerRow) { this.seatsPerRow = seatsPerRow; }
+
+    public String getSeatLayoutType() { return seatLayoutType; }
+    public void setSeatLayoutType(String seatLayoutType) { this.seatLayoutType = seatLayoutType; }
+
     public String getVotingStatus() { return votingStatus; }
     public void setVotingStatus(String votingStatus) { this.votingStatus = votingStatus; }
+
+    public boolean isFinalVotingEnabled() { return finalVotingEnabled; }
+    public void setFinalVotingEnabled(boolean finalVotingEnabled) { this.finalVotingEnabled = finalVotingEnabled; }
+
+    public List<EventRegistration> getRegistrations() { return registrations; }
+    public void setRegistrations(List<EventRegistration> registrations) { this.registrations = registrations; }
 }

@@ -392,6 +392,256 @@
             color: #f84464;
         }
 
+        /* Tier Preview */
+        .seat-tiers-preview {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 20px;
+        }
+
+        .tier-preview-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .tier-pill-row {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .tier-pill-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .tier-name-pill {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .tier-price-pill {
+            font-size: 13px;
+            color: #10b981;
+            font-weight: 800;
+        }
+
+        .tier-status-pill {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .tier-status-pill.avail {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .tier-status-pill.full {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        /* Seating Grid (BMOS) */
+        .seat-map-container {
+            margin: 40px 0;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+        }
+
+        .screen-display {
+            width: 80%;
+            height: 6px;
+            background: linear-gradient(90deg, transparent, #f84464, transparent);
+            margin: 0 auto 60px;
+            border-radius: 100px;
+            box-shadow: 0 10px 30px rgba(248, 68, 100, 0.4);
+            position: relative;
+        }
+
+        .screen-display::after {
+            content: "SCREEN THIS WAY";
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 10px;
+            letter-spacing: 8px;
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 800;
+        }
+
+        .rows-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .seat-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .row-label {
+            width: 30px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 800;
+        }
+
+        .seat {
+            width: 28px;
+            height: 28px;
+            border: 1.5px solid #10b981;
+            /* Green for Regular Available */
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: rgba(16, 185, 129, 0.8);
+            font-weight: 800;
+        }
+
+        .seat.vip {
+            border-color: #fbbf24;
+            /* Yellow for VIP Available */
+            background: rgba(251, 191, 36, 0.05);
+            color: rgba(251, 191, 36, 0.8);
+        }
+
+        .seat:hover:not(.booked):not(.hold) {
+            transform: scale(1.15);
+            border-color: #f97316;
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+        }
+
+        .seat.booked {
+            background: #ef4444;
+            /* Red for Booked */
+            border-color: #ef4444;
+            cursor: not-allowed;
+            pointer-events: none;
+            color: #fff;
+        }
+
+        .seat.selected {
+            background: #f97316;
+            /* Orange for Selected */
+            border-color: #f97316;
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+            color: #fff;
+        }
+
+        .seat.hold {
+            background: #6b7280;
+            /* Gray for Hold */
+            border-color: #6b7280;
+            cursor: not-allowed;
+            pointer-events: none;
+            color: #fff;
+            opacity: 0.6;
+        }
+
+        .seat-legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .legend-box {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .legend-box.available {
+            border: 1.5px solid #10b981;
+        }
+
+        .legend-box.selected {
+            background: #fbbf24;
+        }
+
+        .legend-box.booked {
+            background: #ef4444;
+        }
+
+        .booking-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1001;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .booking-bar.visible {
+            transform: translateY(0);
+        }
+
+        .booking-total-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .booking-total-amt {
+            font-size: 24px;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .summary-pill {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            color: #f84464;
+            font-weight: 700;
+        }
+
         /* CTA Buttons */
         .btn-register {
             width: 100%;
@@ -800,6 +1050,18 @@
                 You're already registered for this event!
             </div>
 
+            <div th:if="${param.error == 'full'}" class="alert-already"
+                style="background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.3); color:#ef4444;">
+                <i class="fas fa-exclamation-triangle"></i>
+                Sorry, this event just reached full capacity.
+            </div>
+
+            <div th:if="${param.error == 'tier_full'}" class="alert-already"
+                style="background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.3); color:#ef4444;">
+                <i class="fas fa-exclamation-triangle"></i>
+                The selected seat category is currently full. Please try another one.
+            </div>
+
             <!-- Info Pills -->
             <div class="info-pills">
                 <div class="pill">
@@ -833,6 +1095,58 @@
                 <div class="about-text" th:text="${event.description}">Description...</div>
             </div>
 
+            <!-- BMOS Seat Map -->
+            <div th:if="${event.totalRows > 0}" class="seat-map-container" id="seatMapSection">
+                <div class="section-label" style="text-align:left; margin-bottom: 20px;">
+                    <i class="fas fa-couch"></i> Select Your Seats
+                </div>
+
+                <!-- Legend -->
+                <div class="seat-legend">
+                    <div class="legend-item">
+                        <div class="legend-box vip" style="background: #fbbf24; border: 1px solid #fbbf24;"></div>
+                        <span>VIP</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box available"
+                            style="background: rgba(16, 185, 129, 0.1); border: 1.5px solid #10b981;"></div>
+                        <span>Regular</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box selected" style="background: #f97316; border: 1px solid #f97316;"></div>
+                        <span>Selected</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box booked" style="background: #ef4444; border: 1px solid #ef4444;"></div>
+                        <span>Booked</span>
+                    </div>
+                </div>
+
+                <!-- Stage Indicator -->
+                <div class="screen-display"></div>
+                <div
+                    style="font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 5px; margin-bottom: 50px; text-transform: uppercase;">
+                    STAGE</div>
+
+                <div class="rows-container">
+                    <div th:each="rowLabel : ${#numbers.sequence(0, event.totalRows - 1)}" class="seat-row">
+                        <span class="row-label" th:text="${T(java.lang.Character).toString(65 + rowLabel)}">A</span>
+
+                        <th:block th:each="seat : ${seats}"
+                            th:if="${seat.rowLabel == T(java.lang.Character).toString(65 + rowLabel)}">
+                            <div class="seat"
+                                th:classappend="${seat.status == 'BOOKED' ? 'booked' : (seat.status == 'HOLD' ? 'hold' : 'available')} + ' ' + ${#strings.toLowerCase(seat.seatType)}"
+                                th:attr="data-id=${seat.id}, data-price=${seat.price}, data-label=${seat.seatIdentifier}"
+                                onclick="toggleSeatSelection(this)"
+                                th:title="${seat.seatIdentifier} + ' - ₹' + ${seat.price} + ' (' + ${seat.seatType} + ')'"
+                                th:text="${seat.seatNumber}">
+                                1
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+
             <!-- Organizer -->
             <div class="organizer-card">
                 <div class="org-avatar"
@@ -846,10 +1160,11 @@
 
             <!-- Event Standings & Results (Universal) -->
             <div class="voting-section"
-                th:if="${(event.status == 'ONGOING' or event.status == 'COMPLETED') and not #lists.isEmpty(candidates)}">
+                th:if="${(event.status == 'ONGOING' or event.status == 'COMPLETED' or event.status == 'VOTING') and not #lists.isEmpty(candidates)}">
                 <h2><i th:class="${event.status == 'COMPLETED' ? 'fas fa-trophy' : 'fas fa-star'}"
                         style="color:#fbbf24;"></i>
-                    <span th:text="${event.status == 'COMPLETED' ? 'Final Event Results' : 'Event Leaderboard'}">Event
+                    <span
+                        th:text="${event.status == 'COMPLETED' ? 'Final Event Results' : (event.status == 'VOTING' ? 'Finalist Voting phase' : 'Event Leaderboard')}">Event
                         Standings</span>
                 </h2>
                 <div th:if="${param.voteSuccess}" class="alert-already"
@@ -883,7 +1198,8 @@
                             </div>
                         </div>
                         <!-- Provide form or final score based on status -->
-                        <form th:if="${!hasVoted and event.status == 'ONGOING' and !isAdmin}"
+                        <form
+                            th:if="${!hasVoted and (event.status == 'ONGOING' or event.status == 'VOTING') and !isAdmin}"
                             th:action="@{'/events/' + ${event.id} + '/vote/' + ${cand.id}}" method="post">
                             <button type="submit"
                                 style="background:#f84464; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:700; cursor:pointer;"><i
@@ -925,8 +1241,25 @@
                 <!-- Price -->
                 <div class="price-display">
                     <div class="price-label">Entry Fee</div>
-                    <div class="price-tag" th:classappend="${event.entryFeeType == 'Paid'} ? 'paid' : 'free'"
-                        th:text="${event.price != null ? event.price : 'Free'}">Free</div>
+                    <div class="price-tag" th:classappend="${event.entryFeeType == 'Paid'} ? 'paid' : 'free'">
+                        <span th:if="${!#lists.isEmpty(event.seatTiers)}">Starting from ₹<span
+                                th:text="${event.seatTiers[0].price}">100</span></span>
+                        <span th:if="${#lists.isEmpty(event.seatTiers)}"
+                            th:text="${event.price != null ? event.price : 'Free'}">Free</span>
+                    </div>
+                </div>
+
+                <!-- Seat Tiers (BookMyShow Style) -->
+                <div th:if="${!#lists.isEmpty(event.seatTiers)}" class="seat-tiers-preview">
+                    <div class="tier-preview-label">Available Categories</div>
+                    <div th:each="tier : ${event.seatTiers}" class="tier-pill-row">
+                        <span th:text="${tier.tierName}" class="tier-name-pill">VIP</span>
+                        <span class="tier-price-pill" th:text="${'₹' + tier.price}">₹500</span>
+                        <span class="tier-status-pill"
+                            th:classappend="${tier.registeredCount >= tier.capacity} ? 'full' : 'avail'"
+                            th:text="${tier.registeredCount >= tier.capacity ? 'Sold Out' : (tier.capacity - tier.registeredCount) + ' Left'}">
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Attendees -->
@@ -935,22 +1268,22 @@
                         <div class="att-label">Registered</div>
                         <div class="att-num" th:text="${registrationCount}">0</div>
                     </div>
-                    <div th:if="${event.maxParticipants != null}" style="text-align:right;">
+                    <div th:if="${totalCapacity != null}" style="text-align:right;">
                         <div class="att-label">Max Capacity</div>
-                        <div style="font-size:1.2rem; font-weight:700;" th:text="${event.maxParticipants}">100</div>
+                        <div style="font-size:1.2rem; font-weight:700;" th:text="${totalCapacity}">100</div>
                     </div>
                 </div>
 
                 <!-- Seats Meter -->
-                <div class="seats-meter" th:if="${event.maxParticipants != null and spotsLeft >= 0}">
+                <div class="seats-meter" th:if="${totalCapacity != null and spotsLeft >= 0}">
                     <div class="seats-label">
                         <span>Seats filled</span>
                         <span th:text="${spotsLeft + ' spots left'}">50 spots left</span>
                     </div>
                     <div class="seats-bar">
                         <div class="seats-fill"
-                            th:classappend="${spotsLeft == 0} ? 'low' : (${spotsLeft lt 20} ? 'mid' : 'high')"
-                            th:style="'width:' + (${event.maxParticipants > 0 ? (registrationCount * 100 / event.maxParticipants) : 0}) + '%'">
+                            th:classappend="${spotsLeft == 0} ? 'low' : (${spotsLeft lt (totalCapacity * 0.2)} ? 'mid' : 'high')"
+                            th:style="'width:' + (${totalCapacity > 0 ? (registrationCount * 100 / totalCapacity) : 0}) + '%'">
                         </div>
                     </div>
                 </div>
@@ -1050,7 +1383,7 @@
                         <span
                             th:text="${event.dateTime != null ? #temporals.format(event.dateTime, 'MMM dd, yyyy · hh:mm a') : 'TBA'}">Date</span>
                         &nbsp;·&nbsp;
-                        <span th:text="${event.price != null ? event.price : 'Free'}"
+                        <span id="modalPriceDisplay" th:text="${event.price != null ? event.price : 'Free'}"
                             style="color:#10b981; font-weight:700;">Free</span>
                     </p>
                 </div>
@@ -1058,6 +1391,20 @@
 
             <!-- Registration Form -->
             <form th:action="@{'/events/' + ${event.id} + '/register'}" method="POST" id="regForm">
+
+                <div th:if="${!#lists.isEmpty(event.seatTiers)}" class="mfield">
+                    <label>Select Seat Category <span style="color:#f84464;">*</span></label>
+                    <div class="input-wrap">
+                        <i class="fas fa-chair"></i>
+                        <select name="selectedTier" id="tierSelect" required onchange="updateModalPrice(this)">
+                            <option value="">-- Select Category --</option>
+                            <option th:each="tier : ${event.seatTiers}" th:value="${tier.tierName}"
+                                th:text="${tier.tierName + ' (₹' + tier.price + ')'}"
+                                th:disabled="${tier.registeredCount >= tier.capacity}" th:data-price="${tier.price}">
+                            </option>
+                        </select>
+                    </div>
+                </div>
 
                 <div class="mfield">
                     <label>Full Name <span style="color:#f84464;">*</span></label>
@@ -1131,7 +1478,109 @@
         </div>
     </div>
 
-    <script>
+    <!-- ═══════════ BOOKING BAR (BMOS) ═══════════ -->
+    <div class="booking-bar" id="bookingBar">
+        <div class="summary-left">
+            <span class="booking-total-label">Selected Seats: <span id="selectedCount"
+                    class="summary-pill">0</span></span>
+            <div id="selectedLabels" style="font-size: 14px; font-weight: 700; color: #fff; margin-top: 5px;"></div>
+        </div>
+        <div class="summary-right" style="display: flex; align-items: center; gap: 30px;">
+            <div style="text-align: right;">
+                <span class="booking-total-label">Total Amount</span>
+                <div class="booking-total-amt" id="totalAmt">₹0.00</div>
+            </div>
+            <button class="btn-register" onclick="showRegModalWithSeats()" style="width: 240px; margin-bottom: 0;">
+                <i class="fas fa-arrow-right"></i> Proceed to Book
+            </button>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let selectedSeats = [];
+        let totalPrice = 0;
+
+        function toggleSeatSelection(seatEl) {
+            if (seatEl.classList.contains('booked')) return;
+
+            const seatId = seatEl.getAttribute('data-id');
+            const price = parseFloat(seatEl.getAttribute('data-price'));
+            const label = seatEl.getAttribute('data-label');
+
+            if (seatEl.classList.contains('selected')) {
+                // Deselect
+                seatEl.classList.remove('selected');
+                selectedSeats = selectedSeats.filter(s => s.id !== seatId);
+                totalPrice -= price;
+            } else {
+                // Select
+                seatEl.classList.add('selected');
+                selectedSeats.push({ id: seatId, price: price, label: label });
+                totalPrice += price;
+            }
+
+            updateBookingBar();
+        }
+
+        function updateBookingBar() {
+            const bar = document.getElementById('bookingBar');
+            const countLabel = document.getElementById('selectedCount');
+            const labelsDiv = document.getElementById('selectedLabels');
+            const priceDiv = document.getElementById('totalAmt');
+
+            if (selectedSeats.length > 0) {
+                bar.classList.add('visible');
+                countLabel.innerText = selectedSeats.length;
+                labelsDiv.innerText = selectedSeats.map(s => s.label).join(', ');
+                priceDiv.innerText = '₹' + totalPrice.toFixed(2);
+            } else {
+                bar.classList.remove('visible');
+            }
+        }
+
+        function showRegModalWithSeats() {
+            // First hit the backend to HOLD these seats
+            const eventId = "[[${event.id}]]";
+            const seatIds = selectedSeats.map(s => s.id);
+
+            fetch(`/events/${eventId}/hold-seats`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(seatIds)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        openRegModal('paid');
+                        // Add seats info to modal
+                        const modalNote = document.querySelector('.modal-note');
+                        if (modalNote) {
+                            modalNote.innerHTML = `<i class="fas fa-clock"></i> Seats held for 5 minutes. <br> Selected: ${selectedSeats.map(s => s.label).join(', ')}`;
+                        }
+                        // Update modal price
+                        const disp = document.getElementById('modalPriceDisplay');
+                        if (disp) disp.innerText = '₹' + totalPrice.toFixed(2);
+
+                        // Add hidden fields for seat IDs
+                        const form = document.getElementById('regForm');
+                        const existing = form.querySelectorAll('input[name="selectedSeatIds"]');
+                        existing.forEach(e => e.remove());
+
+                        seatIds.forEach(id => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'selectedSeatIds';
+                            input.value = id;
+                            form.appendChild(input);
+                        });
+                    } else {
+                        alert('Error: ' + data.message);
+                        location.reload(); // Refresh to see updated availability
+                    }
+                });
+        }
+
+        // Original script content continues...
         let currentMode = 'free';
 
         function openRegModal(mode) {
@@ -1151,6 +1600,20 @@
 
         function closeRegModal() {
             document.getElementById('regModalOverlay').classList.remove('open');
+        }
+
+        function updateModalPrice(select) {
+            const display = document.getElementById('modalPriceDisplay');
+            if (!display) return;
+            const option = select.options[select.selectedIndex];
+            if (option.value) {
+                const price = option.getAttribute('data-price');
+                display.textContent = '₹' + price;
+                display.style.color = '#10b981';
+            } else {
+                display.textContent = '[[${event.price != null ? event.price : "Free"}]]';
+                display.style.color = '';
+            }
         }
 
         // Close on overlay click

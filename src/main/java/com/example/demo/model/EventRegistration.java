@@ -20,6 +20,8 @@ public class EventRegistration {
     @JoinColumn(name = "user_id")
     private User user;
 
+    private String selectedTier; // VIP, GOLD, etc.
+
     private LocalDateTime registrationDate;
 
     // Ticket & Payment fields
@@ -49,6 +51,12 @@ public class EventRegistration {
     private Double judgeScore = 0.0;
     private Integer publicVotes = 0;
     private Double finalScore = 0.0;
+
+    // Finalist Top 3 feature
+    private boolean isFinalist = false;
+    private String finalistMediaUrl;
+    @Column(columnDefinition = "TEXT")
+    private String finalistDescription;
 
     public EventRegistration() {
     }
@@ -109,6 +117,18 @@ public class EventRegistration {
 
     public Double getFinalScore() { return finalScore; }
     public void setFinalScore(Double finalScore) { this.finalScore = finalScore; }
+
+    public String getSelectedTier() { return selectedTier; }
+    public void setSelectedTier(String selectedTier) { this.selectedTier = selectedTier; }
+
+    public boolean isFinalist() { return isFinalist; }
+    public void setFinalist(boolean finalist) { isFinalist = finalist; }
+
+    public String getFinalistMediaUrl() { return finalistMediaUrl; }
+    public void setFinalistMediaUrl(String finalistMediaUrl) { this.finalistMediaUrl = finalistMediaUrl; }
+
+    public String getFinalistDescription() { return finalistDescription; }
+    public void setFinalistDescription(String finalistDescription) { this.finalistDescription = finalistDescription; }
 
     @PrePersist
     protected void onCreate() {

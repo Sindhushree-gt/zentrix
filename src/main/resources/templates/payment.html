@@ -482,6 +482,10 @@
                 <span class="lbl">Registration Fee</span>
                 <span class="val" th:text="${event.price}">₹500</span>
             </div>
+            <div class="order-line" th:if="${isDiscounted}">
+                <span class="lbl">Coin Reward Discount (50%)</span>
+                <span class="val" style="color:#10b981;">- 50%</span>
+            </div>
             <div class="order-line">
                 <span class="lbl">Platform Fee</span>
                 <span class="val" style="color:#10b981;">FREE</span>
@@ -493,7 +497,7 @@
 
             <div class="total-line">
                 <div class="total-lbl">Total</div>
-                <div class="total-val" th:text="${event.price}">₹500</div>
+                <div class="total-val" th:text="${finalPrice != null ? finalPrice : event.price}">₹500</div>
             </div>
         </div>
 

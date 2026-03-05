@@ -49,6 +49,16 @@ public class User implements Serializable {
     @Column(name = "event_id")
     private Set<Long> votedEvents = new HashSet<>();
 
+    // Zentrix Coins & Rewards
+    private Integer coins = 0;
+    private LocalDate lastLoginDate;
+    
+    // Premium Features
+    private boolean isPremium = false;
+    private java.time.LocalDateTime profileBoostUntil;
+    private boolean hasDiscount = false;
+    private boolean hasFreeEntry = false;
+
     public User() {
     }
 
@@ -201,4 +211,28 @@ public class User implements Serializable {
     public void setVotedEvents(Set<Long> votedEvents) {
         this.votedEvents = votedEvents;
     }
+
+    // Zentrix Coins & Rewards Getters/Setters
+    public Integer getCoins() { return coins != null ? coins : 0; }
+    public void setCoins(Integer coins) { this.coins = coins; }
+    public void addCoins(int amount) { this.coins = getCoins() + amount; }
+
+    public LocalDate getLastLoginDate() { return lastLoginDate; }
+    public void setLastLoginDate(LocalDate lastLoginDate) { this.lastLoginDate = lastLoginDate; }
+
+    public boolean isPremium() { return isPremium; }
+    public void setPremium(boolean isPremium) { this.isPremium = isPremium; }
+
+    public java.time.LocalDateTime getProfileBoostUntil() { return profileBoostUntil; }
+    public void setProfileBoostUntil(java.time.LocalDateTime profileBoostUntil) { this.profileBoostUntil = profileBoostUntil; }
+
+    public boolean isProfileBoosted() {
+        return profileBoostUntil != null && profileBoostUntil.isAfter(java.time.LocalDateTime.now());
+    }
+
+    public boolean isHasDiscount() { return hasDiscount; }
+    public void setHasDiscount(boolean hasDiscount) { this.hasDiscount = hasDiscount; }
+
+    public boolean isHasFreeEntry() { return hasFreeEntry; }
+    public void setHasFreeEntry(boolean hasFreeEntry) { this.hasFreeEntry = hasFreeEntry; }
 }

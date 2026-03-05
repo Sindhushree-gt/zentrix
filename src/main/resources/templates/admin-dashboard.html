@@ -259,7 +259,86 @@
             </div>
         </div>
 
-        <!-- Recent Users -->
+        <!-- Zentrix Coin Reward System Settings -->
+        <h2 style="margin-bottom: 20px; display:flex; align-items:center; gap:12px; margin-top:40px;">
+            <i class="fas fa-coins" style="color:#ffd700;"></i>
+            Reward Coin System Configuration
+        </h2>
+        <div
+            style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:24px; padding:30px; margin-bottom: 40px;">
+            <div th:if="${param.success == 'rewards_updated'}" class="status-badge status-active"
+                style="margin-bottom:20px; display:inline-block;">
+                <i class="fas fa-check-circle"></i> Reward settings updated successfully!
+            </div>
+
+            <form th:action="@{/admin/rewards/update}" method="POST"
+                style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:25px;">
+                <div class="field-grp">
+                    <label
+                        style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Daily
+                        Login</label>
+                    <input type="number" name="dailyLogin" th:value="${rewardConfig.dailyLogin}" class="form-input"
+                        style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
+                </div>
+                <div class="field-grp">
+                    <label
+                        style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Vote
+                        in Event</label>
+                    <input type="number" name="voteInEvent" th:value="${rewardConfig.voteInEvent}" class="form-input"
+                        style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
+                </div>
+                <div class="field-grp">
+                    <label
+                        style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Register
+                        for Event</label>
+                    <input type="number" name="registerForEvent" th:value="${rewardConfig.registerForEvent}"
+                        class="form-input"
+                        style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
+                </div>
+                <div class="field-grp">
+                    <label
+                        style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Attend
+                        Event</label>
+                    <input type="number" name="attendEvent" th:value="${rewardConfig.attendEvent}" class="form-input"
+                        style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
+                </div>
+                <div class="field-grp">
+                    <label
+                        style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Winner
+                        Prize</label>
+                    <input type="number" name="winner" th:value="${rewardConfig.winner}" class="form-input"
+                        style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
+                </div>
+                <div class="field-grp">
+                    <label
+                        style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Runner
+                        Prize</label>
+                    <input type="number" name="runner" th:value="${rewardConfig.runner}" class="form-input"
+                        style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
+                </div>
+                <div class="field-grp">
+                    <label
+                        style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Refer
+                        Friend</label>
+                    <input type="number" name="referFriend" th:value="${rewardConfig.referFriend}" class="form-input"
+                        style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
+                </div>
+                <div class="field-grp">
+                    <label
+                        style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Talent
+                        Post</label>
+                    <input type="number" name="talentPost" th:value="${rewardConfig.talentPost}" class="form-input"
+                        style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
+                </div>
+
+                <div style="grid-column: 1 / -1; display:flex; justify-content:flex-end;">
+                    <button type="submit" class="nav-btn"
+                        style="padding:14px 40px; font-size:15px; background:#ffd700; color:#000; border:none; box-shadow:0 10px 20px rgba(255,215,0,0.2);">
+                        <i class="fas fa-save"></i> Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
         <h2 style="margin-bottom: 20px;">Recent Registrations</h2>
         <table class="data-table">
             <thead>

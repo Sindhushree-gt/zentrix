@@ -648,10 +648,18 @@
                     </button>
                 </form>
                 <!-- Complete Event (ONGOING → COMPLETED) -->
-                <button th:if="${event.status == 'ONGOING'}" type="button" class="btn btn-success"
-                    onclick="openResultsModal()">
+                <button th:if="${event.status == 'ONGOING' and !event.finalVotingEnabled}" type="button"
+                    class="btn btn-success" onclick="openResultsModal()">
                     <i class="fas fa-flag-checkered"></i> Mark Results &amp; Complete
                 </button>
+
+                <!-- Finalist Voting Action Button -->
+                <button th:if="${event.status == 'ONGOING' and event.finalVotingEnabled}" type="button"
+                    class="btn btn-success" onclick="openFinalistModal()"
+                    style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);">
+                    <i class="fas fa-trophy"></i> Nominate Top 3 Finalists
+                </button>
+
                 <!-- Mark All Present -->
                 <form th:if="${event.status == 'ONGOING'}"
                     th:action="@{'/events/admin/' + ${event.id} + '/attendance/mark-all'}" method="post"
@@ -885,6 +893,97 @@
         </div>
     </div>
 
+    <!-- ── Finalist Selection Modal ── -->
+    <div class="modal-overlay" id="finalistModal">
+        <div class="modal-box" style="max-width: 600px;">
+            <h2><i class="fas fa-star" style="color:#10b981; margin-right:10px;"></i> Nominate Top 3 Finalists</h2>
+            <p style="font-size:13px; color:rgba(255,255,255,0.5); margin-bottom: 20px;">
+                Select up to 3 candidates who will enter the Final Voting Phase. The event status will switch to
+                <b>VOTING</b> where users can cast their votes.
+            </p>
+            <form th:action="@{'/events/admin/' + ${event.id} + '/nominate-finalists'}" method="post">
+                <p th:if="${#lists.isEmpty(registrations.?[attendanceMarked])}"
+                    style="color:#f84464; font-size:13px; margin-bottom: 20px;">
+                    <i class="fas fa-exclamation-circle"></i> You must mark attendance for at least 1 person before
+                    selecting finalists.
+                </p>
+
+                <div th:unless="${#lists.isEmpty(registrations.?[attendanceMarked])}">
+                    <!-- Finalist 1 -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                        <label style="font-weight: 700; color:#34d399; display:block; margin-bottom:8px;">Finalist
+                            1</label>
+                        <select name="finalist1_id"
+                            style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px;">
+                            <option value="">-- Select Participant --</option>
+                            <option th:each="reg : ${registrations}" th:if="${reg.attendanceMarked}"
+                                th:value="${reg.id}"
+                                th:text="${reg.fullName != null ? reg.fullName : reg.user.username} + ' (' + ${reg.ticketId} + ')'">
+                            </option>
+                        </select>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <input type="text" name="finalist1_media" placeholder="Photo/Video URL"
+                                style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+                            <input type="text" name="finalist1_desc" placeholder="Participant Description"
+                                style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+                        </div>
+                    </div>
+
+                    <!-- Finalist 2 -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                        <label style="font-weight: 700; color:#34d399; display:block; margin-bottom:8px;">Finalist
+                            2</label>
+                        <select name="finalist2_id"
+                            style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px;">
+                            <option value="">-- Select Participant --</option>
+                            <option th:each="reg : ${registrations}" th:if="${reg.attendanceMarked}"
+                                th:value="${reg.id}"
+                                th:text="${reg.fullName != null ? reg.fullName : reg.user.username} + ' (' + ${reg.ticketId} + ')'">
+                            </option>
+                        </select>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <input type="text" name="finalist2_media" placeholder="Photo/Video URL"
+                                style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+                            <input type="text" name="finalist2_desc" placeholder="Participant Description"
+                                style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+                        </div>
+                    </div>
+
+                    <!-- Finalist 3 -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                        <label style="font-weight: 700; color:#34d399; display:block; margin-bottom:8px;">Finalist
+                            3</label>
+                        <select name="finalist3_id"
+                            style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px;">
+                            <option value="">-- Select Participant (Optional) --</option>
+                            <option th:each="reg : ${registrations}" th:if="${reg.attendanceMarked}"
+                                th:value="${reg.id}"
+                                th:text="${reg.fullName != null ? reg.fullName : reg.user.username} + ' (' + ${reg.ticketId} + ')'">
+                            </option>
+                        </select>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <input type="text" name="finalist3_media" placeholder="Photo/Video URL"
+                                style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+                            <input type="text" name="finalist3_desc" placeholder="Participant Description"
+                                style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeFinalistModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success"
+                        th:disabled="${#lists.isEmpty(registrations.?[attendanceMarked])}">
+                        <i class="fas fa-users"></i> Nominate &amp; Open Voting
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Auto-focus the ticket input and auto-uppercase
         const ti = document.getElementById('ticketInput');
@@ -898,6 +997,13 @@
         }
         function closeResultsModal() {
             document.getElementById('resultsModal').classList.remove('open');
+        }
+
+        function openFinalistModal() {
+            document.getElementById('finalistModal').classList.add('open');
+        }
+        function closeFinalistModal() {
+            document.getElementById('finalistModal').classList.remove('open');
         }
 
         // Check if declare modal should be open on load
