@@ -31,6 +31,8 @@ public class Post {
     private String mediaUrl;
     private String mediaType; // "IMAGE" or "VIDEO"
     private String hashtags;
+    private String postType; // "POST", "REEL", "STORY"
+    private String category; // e.g. "Food", "Dance", "Vlog" etc.
 
     public Post() {
         this.createdAt = LocalDateTime.now();
@@ -42,6 +44,19 @@ public class Post {
         this.mediaUrl = mediaUrl;
         this.mediaType = mediaType;
         this.hashtags = hashtags;
+        this.postType = "POST";
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public Post(String content, User user, String mediaUrl, String mediaType, String hashtags, String postType,
+            String category) {
+        this.content = content;
+        this.user = user;
+        this.mediaUrl = mediaUrl;
+        this.mediaType = mediaType;
+        this.hashtags = hashtags;
+        this.postType = postType != null ? postType : "POST";
+        this.category = category;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -105,6 +120,22 @@ public class Post {
 
     public void setHashtags(String hashtags) {
         this.hashtags = hashtags;
+    }
+
+    public String getPostType() {
+        return postType;
+    }
+
+    public void setPostType(String postType) {
+        this.postType = postType;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public java.util.List<PostCollaboration> getCollaborations() {
