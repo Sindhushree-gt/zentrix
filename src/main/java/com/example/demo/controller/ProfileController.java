@@ -85,19 +85,21 @@ public class ProfileController {
         // Calculate Talent Score Stats
         long eventsJoined = eventRegistrationRepository.countByUser(targetUser);
         long eventsWon = eventRegistrationRepository.countByUserAndPosition(targetUser, "Winner");
-        
-        // Calculate Rank (simplistic query-based approach: all users with XP > targetUser's XP + 1)
+
+        // Calculate Rank (simplistic query-based approach: all users with XP >
+        // targetUser's XP + 1)
         long higherXpCount = userRepository.findAll().stream()
-                .filter(u -> (u.getXp() != null ? u.getXp() : 0) > (targetUser.getXp() != null ? targetUser.getXp() : 0))
+                .filter(u -> (u.getXp() != null ? u.getXp() : 0) > (targetUser.getXp() != null ? targetUser.getXp()
+                        : 0))
                 .count();
         long rank = higherXpCount + 1;
-        
+
         String badge = targetUser.getLevel() != null ? targetUser.getLevel() : "Novice";
 
         boolean isOwnProfile = currentUser.getId().equals(targetUser.getId());
         model.addAttribute("user", targetUser);
         model.addAttribute("isOwnProfile", isOwnProfile);
-        
+
         // Add Talent Score to model
         model.addAttribute("eventsJoined", eventsJoined);
         model.addAttribute("eventsWon", eventsWon);
@@ -203,6 +205,8 @@ public class ProfileController {
             @RequestParam(required = false) org.springframework.web.multipart.MultipartFile file,
             @RequestParam(required = false) String hashtags,
             @RequestParam(required = false) String collaborators,
+            @RequestParam(required = false, defaultValue = "POST") String postType,
+            @RequestParam(required = false) String category,
             HttpSession session) {
         Object sessionUser = session.getAttribute("user");
         if (!(sessionUser instanceof User)) {
@@ -251,7 +255,7 @@ public class ProfileController {
             user = userRepository.findById(user.getId()).orElse(user);
         }
 
-        Post post = new Post(content, user, mediaUrl, mediaType, hashtags);
+        Post post = new Post(content, user, mediaUrl, mediaType, hashtags, postType, category);
         postRepository.save(post);
 
         // Handle collaborators (both mentions and explicit tags)

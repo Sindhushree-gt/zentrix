@@ -63,17 +63,13 @@ public class ChatRestController {
     public ResponseEntity<List<Conversation>> getConversations(HttpSession session) {
         User user = getUserFromSession(session);
         if (user == null) {
-            System.err.println("[ERROR] No valid user found in session for getConversations.");
+            // Not logged in — return 401 silently (no error log needed)
             return ResponseEntity.status(401).build();
         }
-        System.out.println("[DEBUG] getConversations called for user: " + user.getUsername());
         try {
             List<Conversation> convs = chatService.getUserConversations(user);
-            System.out.println("[DEBUG] Found " + convs.size() + " conversations");
             return ResponseEntity.ok(convs);
         } catch (Exception e) {
-            System.err.println("[ERROR] Failed to fetch conversations: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
     }
