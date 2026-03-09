@@ -34,6 +34,9 @@ public class Post {
     private String postType; // "POST", "REEL", "STORY"
     private String category; // e.g. "Food", "Dance", "Vlog" etc.
 
+    @Column(name = "comments_disabled", nullable = false)
+    private boolean commentsDisabled = false;
+
     public Post() {
         this.createdAt = LocalDateTime.now();
     }
@@ -138,7 +141,16 @@ public class Post {
         this.category = category;
     }
 
+    public boolean isCommentsDisabled() {
+        return commentsDisabled;
+    }
+
+    public void setCommentsDisabled(boolean commentsDisabled) {
+        this.commentsDisabled = commentsDisabled;
+    }
+
     public java.util.List<PostCollaboration> getCollaborations() {
+
         return collaborations;
     }
 
