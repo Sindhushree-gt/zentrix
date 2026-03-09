@@ -557,8 +557,8 @@ public class ProfileController {
                     userRepository.save(sender);
 
                     followRequestRepository.delete(fr);
-                    notif.setRead(true);
-                    notificationRepository.save(notif);
+                    notificationRepository.delete(notif);
+
                     notificationRepository.save(new Notification(sender, receiver,
                             "@" + receiver.getUsername() + " accepted your follow request!", "FOLLOW_ACCEPT"));
 
@@ -567,6 +567,11 @@ public class ProfileController {
                     return org.springframework.http.ResponseEntity.ok(java.util.Map.of(
                             "status", "ACCEPTED", "needsFollowBack", !followsBack,
                             "senderId", sender.getId(), "senderUsername", sender.getUsername()));
+                } else {
+                    // Orphaned notification handling: gracefully delete and fake success
+                    notificationRepository.delete(notif);
+                    return org.springframework.http.ResponseEntity.ok(java.util.Map.of(
+                            "status", "ALREADY_PROCESSED"));
                 }
             }
         }
@@ -582,6 +587,8 @@ public class ProfileController {
             userRepository.save(sender);
 
             followRequestRepository.delete(fr);
+            notificationRepository.deleteByActorAndUserAndType(sender, receiver, "FOLLOW_REQUEST");
+
             notificationRepository.save(new Notification(sender, receiver,
                     "@" + receiver.getUsername() + " accepted your follow request!", "FOLLOW_ACCEPT"));
 

@@ -242,11 +242,43 @@ public class MainController {
     // ── Stub routes: sidebar links that don't have full pages yet ──
 
     @GetMapping("/explore")
-    public String explore(HttpSession session) {
+    public String explore(Model model, HttpSession session) {
         if (!isLoggedIn(session))
             return "redirect:/login";
-        // Explore currently shows the events page as a browse experience
-        return "redirect:/events";
+
+        User currentUser = getUserFromSession(session);
+        if (currentUser == null)
+            return "redirect:/login";
+        final User finalUser = userRepository.findById(currentUser.getId()).orElse(currentUser);
+
+        // All users except self
+        List<User> allUsers = userRepository.findAll().stream()
+                .filter(u -> !u.getId().equals(finalUser.getId()))
+                .collect(Collectors.toList());
+
+        Set<Long> followingUserIds = finalUser.getFollowing().stream()
+                .map(User::getId).collect(Collectors.toSet());
+
+        final Long currentUserId = finalUser.getId();
+        Set<Long> requestedUserIds = followRequestRepository.findAll().stream()
+                .filter(r -> r.getSender().getId().equals(currentUserId))
+                .map(r -> r.getReceiver().getId())
+                .collect(Collectors.toSet());
+
+        // Follower counts map: userId -> count
+        java.util.Map<Long, Integer> followersCount = new java.util.HashMap<>();
+        for (User u : allUsers) {
+            followersCount.put(u.getId(), u.getFollowers().size());
+        }
+
+        model.addAttribute("user", finalUser);
+        model.addAttribute("allUsers", allUsers);
+        model.addAttribute("followingUserIds", followingUserIds);
+        model.addAttribute("requestedUserIds", requestedUserIds);
+        model.addAttribute("followersCount", followersCount);
+        model.addAttribute("totalPeopleCount", allUsers.size());
+
+        return "explore";
     }
 
     @GetMapping("/achievements")
