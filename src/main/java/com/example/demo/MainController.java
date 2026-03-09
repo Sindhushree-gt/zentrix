@@ -56,6 +56,9 @@ public class MainController {
     @Autowired
     private com.example.demo.repository.EventRegistrationRepository eventRegistrationRepository;
 
+    @Autowired
+    private FollowRequestRepository followRequestRepository;
+
     @GetMapping("/")
     public String root() {
         return "home";
@@ -142,7 +145,8 @@ public class MainController {
     public String dashboard(Model model, HttpSession session) {
         Object sessionUser = session.getAttribute("user");
         // Admin should land on admin dashboard, not student dashboard
-        if ("admin".equals(sessionUser)) return "redirect:/admin";
+        if ("admin".equals(sessionUser))
+            return "redirect:/admin";
 
         User user = getUserFromSession(session);
         if (user == null) {
@@ -157,7 +161,7 @@ public class MainController {
                 .findByUserAndStatus(user, CollaborationStatus.PENDING);
         model.addAttribute("pendingCount", pendingRequests.size());
 
-        model.addAttribute("posts", postRepository.findAllByOrderByCreatedAtDesc());
+        model.addAttribute("posts", postRepository.findByPostTypeNotOrderByCreatedAtDesc("STORY"));
 
         List<User> allUsers = userRepository.findAll();
         final User finalUser = user;
@@ -169,8 +173,38 @@ public class MainController {
                 .collect(Collectors.toList());
         model.addAttribute("suggestions", suggestions);
 
+        Set<Long> requestedUserIds = followRequestRepository.findAll().stream()
+                .filter(r -> r.getSender().getId().equals(finalUser.getId()))
+                .map(r -> r.getReceiver().getId())
+                .collect(Collectors.toSet());
+        model.addAttribute("requestedUserIds", requestedUserIds);
+
+        Set<Long> followingUserIds = user.getFollowing().stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
+        model.addAttribute("followingUserIds", followingUserIds);
+
         model.addAttribute("notifications", notificationRepository.findByUserOrderByCreatedAtDesc(user));
         model.addAttribute("unreadNotifCount", notificationRepository.countByUserAndIsRead(user, false));
+
+        // Check if current user has a story
+        boolean hasStory = !postRepository.findByUserAndPostTypeAndCreatedAtAfterOrderByCreatedAtAsc(
+                user, "STORY", java.time.LocalDateTime.now().minusHours(24)).isEmpty();
+        model.addAttribute("hasStory", hasStory);
+
+        // Find all users (except self) with active stories
+        java.time.LocalDateTime cutoff = java.time.LocalDateTime.now().minusHours(24);
+        List<User> storyUsers = new java.util.ArrayList<>();
+        for (User otherUser : allUsers) {
+            if (otherUser.getId().equals(user.getId()))
+                continue; // skip self
+            boolean fHasStory = !postRepository.findByUserAndPostTypeAndCreatedAtAfterOrderByCreatedAtAsc(
+                    otherUser, "STORY", cutoff).isEmpty();
+            if (fHasStory) {
+                storyUsers.add(otherUser);
+            }
+        }
+        model.addAttribute("storyUsers", storyUsers);
 
         return "dashboard";
     }
@@ -178,7 +212,8 @@ public class MainController {
     @GetMapping("/admin")
     public String admin(Model model, HttpSession session) {
         // Only let admin session through
-        if (!"admin".equals(session.getAttribute("user"))) return "redirect:/login";
+        if (!"admin".equals(session.getAttribute("user")))
+            return "redirect:/login";
         model.addAttribute("users", userRepository.findAll());
         model.addAttribute("events", eventRepository.findAll());
         model.addAttribute("totalEvents", eventRepository.count());
@@ -193,25 +228,29 @@ public class MainController {
 
     @GetMapping("/explore")
     public String explore(HttpSession session) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session))
+            return "redirect:/login";
         // Explore currently shows the events page as a browse experience
         return "redirect:/events";
     }
 
     @GetMapping("/achievements")
     public String achievements(Model model, HttpSession session) {
-        if (!isLoggedIn(session)) return "redirect:/login";
-        
+        if (!isLoggedIn(session))
+            return "redirect:/login";
+
         Object sessionUser = session.getAttribute("user");
         if (sessionUser instanceof User) {
             User u = (User) sessionUser;
             User dbUser = userRepository.findById(u.getId()).orElse(u);
             model.addAttribute("user", dbUser);
             model.addAttribute("isAdmin", false);
-            model.addAttribute("attendedCount", eventRegistrationRepository.countByUserAndAttendanceMarked(dbUser, true));
+            model.addAttribute("attendedCount",
+                    eventRegistrationRepository.countByUserAndAttendanceMarked(dbUser, true));
             // Fetch all COMPLETED event registrations with a position
             List<EventRegistration> userAchievements = eventRegistrationRepository.findByUser(dbUser).stream()
-                    .filter(r -> r.getPosition() != null && !"Participant".equals(r.getPosition()) && !"Absent".equals(r.getPosition()))
+                    .filter(r -> r.getPosition() != null && !"Participant".equals(r.getPosition())
+                            && !"Absent".equals(r.getPosition()))
                     .collect(Collectors.toList());
             model.addAttribute("achievements", userAchievements);
         } else {
@@ -222,15 +261,14 @@ public class MainController {
 
         List<User> leaderboard = userRepository.findAllByOrderByXpDesc();
         model.addAttribute("leaderboard", leaderboard);
-        
+
         return "achievements";
     }
 
-
-
     @GetMapping("/notifications")
     public String notifications(HttpSession session) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session))
+            return "redirect:/login";
         return "redirect:/dashboard";
     }
 

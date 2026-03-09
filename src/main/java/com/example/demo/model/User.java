@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -18,7 +19,9 @@ public class User implements Serializable {
 
     @Column(unique = true)
     private String username;
+    @JsonIgnore
     private String email;
+    @JsonIgnore
     private String password;
     private LocalDate dob;
     private String gender;
@@ -37,12 +40,14 @@ public class User implements Serializable {
     private Integer xp = 0;
     private String level = "Novice"; // Novice, Bronze, Silver, Gold, Platinum
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(name = "user_followers", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "follower_id"))
-    private transient Set<User> followers = new HashSet<>();
+    private Set<User> followers = new HashSet<>();
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "followers")
-    private transient Set<User> following = new HashSet<>();
+    private Set<User> following = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_voted_events", joinColumns = @JoinColumn(name = "user_id"))
@@ -77,6 +82,7 @@ public class User implements Serializable {
         this.username = username;
     }
 
+    @JsonIgnore
     public String getEmail() {
         return email;
     }
@@ -85,6 +91,7 @@ public class User implements Serializable {
         this.email = email;
     }
 
+    @JsonIgnore
     public String getPassword() {
         return password;
     }
@@ -157,6 +164,7 @@ public class User implements Serializable {
         this.skills = skills;
     }
 
+    @JsonIgnore
     public Set<User> getFollowers() {
         return followers;
     }
@@ -165,6 +173,7 @@ public class User implements Serializable {
         this.followers = followers;
     }
 
+    @JsonIgnore
     public Set<User> getFollowing() {
         return following;
     }
@@ -173,11 +182,21 @@ public class User implements Serializable {
         this.following = following;
     }
 
-    public Integer getXp() { return xp; }
-    public void setXp(Integer xp) { this.xp = xp; }
+    public Integer getXp() {
+        return xp;
+    }
 
-    public String getLevel() { return level; }
-    public void setLevel(String level) { this.level = level; }
+    public void setXp(Integer xp) {
+        this.xp = xp;
+    }
+
+    public String getLevel() {
+        return level;
+    }
+
+    public void setLevel(String level) {
+        this.level = level;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -186,12 +205,12 @@ public class User implements Serializable {
         if (!(o instanceof User))
             return false;
         User user = (User) o;
-        return id != null && id.equals(user.id);
+        return this.getId() != null && this.getId().equals(user.getId());
     }
 
     @Override
     public int hashCode() {
-        return 31;
+        return getId() != null ? getId().hashCode() : 31;
     }
 
     public Set<Long> getVotedEvents() {

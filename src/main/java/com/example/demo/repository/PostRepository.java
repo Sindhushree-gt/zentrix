@@ -28,4 +28,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     /** Posts created after a given time — used for trending window */
     List<Post> findByCreatedAtAfter(LocalDateTime since);
+
+    // Filter out STORY from main feed
+    List<Post> findByPostTypeNotOrderByCreatedAtDesc(String postType);
+
+    List<Post> findByUserAndPostTypeNotOrderByCreatedAtDesc(User user, String postType);
+
+    // Find active stories (last 24 hours) for a user
+    List<Post> findByUserAndPostTypeAndCreatedAtAfterOrderByCreatedAtAsc(User user, String postType,
+            LocalDateTime since);
 }

@@ -438,7 +438,7 @@
             animation: fadeIn 0.2s ease;
             word-wrap: break-word;
             word-break: break-word;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
         }
 
         @keyframes fadeIn {
@@ -458,7 +458,7 @@
             background: var(--sent-bubble);
             color: var(--text-on-sent, var(--text-on-accent));
             border-top-right-radius: 0;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
         }
 
         .msg-bubble.received {
@@ -466,7 +466,7 @@
             background: var(--msg-received-bg);
             color: var(--msg-received-text);
             border-top-left-radius: 0;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
         }
 
         .msg-bubble img,
@@ -477,7 +477,7 @@
             object-fit: cover;
             display: block;
             margin: 0;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .msg-bubble.media-only {
@@ -1421,7 +1421,7 @@
             --sent-bubble: #fed7d7;
             --text-on-sent: #742a2a;
         }
-        
+
         body[data-theme="lavender"] {
             --bg-color: #f5f3ff;
             --sidebar-bg: #ffffff;
@@ -1429,7 +1429,7 @@
             --sent-bubble: #e9d5ff;
             --text-on-sent: #4c1d95;
         }
-        
+
         body[data-theme="ocean"] {
             --bg-color: #f0f9ff;
             --sidebar-bg: #ffffff;
@@ -1437,7 +1437,7 @@
             --sent-bubble: #bae6fd;
             --text-on-sent: #0c4a6e;
         }
-        
+
         body[data-theme="forest"] {
             --bg-color: #f0fdf4;
             --sidebar-bg: #ffffff;
@@ -1512,7 +1512,7 @@
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 9999;
         }
 
         .modal-content {
@@ -1906,7 +1906,11 @@
 
     <script th:inline="javascript">
         window.Zentrix = {
-            currentUser: /*[[${currentUser}]]*/ null,
+            currentUser: {
+                id: /*[[${currentUser.id}]]*/ 0,
+                username: /*[[${currentUser.username}]]*/ 'Unknown',
+                profilePicture: /*[[${currentUser.profilePicture}]]*/ null
+            },
             paths: {
                 conversations: /*[[@{/api/chat/conversations}]]*/ '/api/chat/conversations',
                 history: /*[[@{/api/chat/history/}]]*/ '/api/chat/history/',
@@ -2022,6 +2026,33 @@
                 connectWebSocket();
                 await loadConversations();
                 console.log('[DEBUG] initialize() completed successfully');
+
+                // Deep-link check: ?u=username
+                const params = new URLSearchParams(window.location.search);
+                const targetU = params.get('u');
+                if (targetU) {
+                    console.log('[DEBUG] Deep link for user:', targetU);
+                    // Find user in existing conversations first
+                    const existing = conversationsData.find(c =>
+                        c.type !== 'GROUP' && c.participants.some(p => p.username === targetU)
+                    );
+                    if (existing) {
+                        const partner = existing.participants.find(p => p.username === targetU);
+                        selectConversation(existing, partner);
+                    } else {
+                        // Search for user to start new chat
+                        try {
+                            const res = await fetch(window.Zentrix.paths.searchUsers + '?query=' + encodeURIComponent(targetU));
+                            const users = await res.json();
+                            const user = users.find(u => u.username === targetU);
+                            if (user) {
+                                selectUserForChat(user);
+                            }
+                        } catch (e) {
+                            console.error('Failed to find deep-link user:', e);
+                        }
+                    }
+                }
             } catch (err) {
                 console.error('[ERROR] initialize() failed:', err);
                 alert('Failed to initialize chat system. Check console for details.');
@@ -2456,7 +2487,7 @@
 
             const file = input.files[0];
             console.log('[DEBUG] Selected file:', file.name, 'Size:', file.size, 'Type:', file.type);
-            
+
             const formData = new FormData();
             formData.append('file', file);
 
@@ -2466,16 +2497,16 @@
                     method: 'POST',
                     body: formData
                 });
-                
+
                 console.log('[DEBUG] Upload response status:', res.status, res.statusText);
-                
+
                 if (!res.ok) {
                     const text = await res.text();
                     console.error('[ERROR] Upload failed with status:', res.status, 'Body:', text);
                     alert('Upload failed: ' + res.status);
                     throw new Error('Upload failed with status ' + res.status);
                 }
-                
+
                 const data = await res.json();
                 console.log('[DEBUG] Upload response data:', data);
 
@@ -2496,7 +2527,7 @@
                 } else {
                     console.error('[ERROR] Upload succeeded but no URL returned:', data);
                 }
-            } catch (e) { 
+            } catch (e) {
                 console.error('[ERROR] Exception during upload:', e);
                 alert('An error occurred during upload. Check console for details.');
             } finally {
@@ -2694,11 +2725,23 @@
         }
 
         function showNewChatModal() {
-            if (!forwardingMessageId) document.getElementById('modalTitle').innerText = 'New Message';
-            document.getElementById('newChatModal').style.display = 'flex';
-            document.getElementById('newChatSearch').value = '';
-            document.getElementById('searchResults').innerHTML = '<div style="padding:10px; color:var(--secondary-text); font-size:14px;">Try searching for a user...</div>';
-            document.getElementById('newChatSearch').focus();
+            console.log('[DEBUG] showNewChatModal() called', { forwardingMessageId });
+            const modal = document.getElementById('newChatModal');
+            const title = document.getElementById('modalTitle');
+            const search = document.getElementById('newChatSearch');
+
+            if (modal) {
+                if (title && !forwardingMessageId) title.innerText = 'New Message';
+                modal.style.display = 'flex';
+                if (search) {
+                    search.value = '';
+                    setTimeout(() => search.focus(), 10);
+                }
+                const results = document.getElementById('searchResults');
+                if (results) results.innerHTML = '<div style="padding:10px; color:var(--secondary-text); font-size:14px;">Try searching for a user...</div>';
+            } else {
+                console.error('[ERROR] newChatModal element not found');
+            }
         }
 
         function closeNewChatModal() {
@@ -2710,7 +2753,10 @@
 
         let searchTimeout = null;
         async function handleNewChatSearch() {
-            const query = document.getElementById('newChatSearch').value.trim();
+            const searchInput = document.getElementById('newChatSearch');
+            if (!searchInput) return;
+            const query = searchInput.value.trim();
+
             if (query.length < 2) {
                 document.getElementById('searchResults').innerHTML = '';
                 return;
@@ -2719,11 +2765,18 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 try {
-                    const res = await fetch(window.Zentrix.paths.searchUsers + '?query=' + encodeURIComponent(query));
+                    const url = window.Zentrix.paths.searchUsers + '?query=' + encodeURIComponent(query);
+                    console.log('[DEBUG] Searching users at:', url);
+                    const res = await fetch(url);
+                    if (!res.ok) {
+                        console.error('[ERROR] Search API failed with status:', res.status);
+                        return;
+                    }
                     const users = await res.json();
+                    console.log('[DEBUG] Search results:', users);
                     renderSearchResults(users);
                 } catch (e) {
-                    console.error('Search failed', e);
+                    console.error('[ERROR] Search failed:', e);
                 }
             }, 300);
         }
