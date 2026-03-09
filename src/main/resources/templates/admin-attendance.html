@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${event.title} + ' · Attendance | Zentrix Admin'">Attendance</title>
@@ -583,9 +587,9 @@
     <nav class="navbar">
         <div class="logo">Zentrix <span>Admin · Attendance</span></div>
         <div class="nav-links">
-            <a href="/events/admin/manage"><i class="fas fa-arrow-left"></i> Manage Events</a>
-            <a href="/admin">Dashboard</a>
-            <a href="/logout">Logout</a>
+            <a th:href="@{/events/admin/manage}"><i class="fas fa-arrow-left"></i> Manage Events</a>
+            <a th:href="@{/admin}">Dashboard</a>
+            <a th:href="@{/logout}">Logout</a>
         </div>
     </nav>
 

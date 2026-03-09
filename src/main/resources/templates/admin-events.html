@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Events | Zentrix Admin</title>
@@ -594,8 +598,8 @@
     <nav class="admin-navbar">
         <div class="brand">⚡ Zentrix Admin</div>
         <div class="nav-actions">
-            <a href="/admin" class="btn-nav secondary"><i class="fas fa-home"></i> Dashboard</a>
-            <a href="/events/admin/create" class="btn-nav primary"><i class="fas fa-plus"></i> Create Event</a>
+            <a th:href="@{/admin}" class="btn-nav secondary"><i class="fas fa-home"></i> Dashboard</a>
+            <a th:href="@{/events/admin/create}" class="btn-nav primary"><i class="fas fa-plus"></i> Create Event</a>
         </div>
     </nav>
 
@@ -674,7 +678,7 @@
                     <option value="Cultural">Cultural</option>
                 </select>
             </div>
-            <a href="/events/admin/create" class="btn-nav primary">
+            <a th:href="@{/events/admin/create}" class="btn-nav primary">
                 <i class="fas fa-plus"></i> New Event
             </a>
         </div>
@@ -765,7 +769,7 @@
                 <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
                 <h2>No Events Found</h2>
                 <p>You haven't created any events yet. Get started by publishing your first event!</p>
-                <a href="/events/admin/create" class="btn-nav primary" style="margin: 0 auto; width:fit-content;">
+                <a th:href="@{/events/admin/create}" class="btn-nav primary" style="margin: 0 auto; width:fit-content;">
                     <i class="fas fa-plus"></i> Create First Event
                 </a>
             </div>

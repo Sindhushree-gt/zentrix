@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Mario – Realistic | Zentrix</title>
@@ -419,7 +423,7 @@
                 <div class="press-start">PRESS SPACE OR CLICK TO START</div>
                 <button class="play-btn" id="start-btn">▶ START GAME</button>
                 <div style="margin-top: 10px;">
-                    <a href="/games" class="exit-btn">Exit Game</a>
+                    <a th:href="@{/games}" class="exit-btn">Exit Game</a>
                 </div>
             </div>
 
@@ -428,7 +432,7 @@
                 <div class="go-score">SCORE: <span id="final-score">0</span></div>
                 <button class="play-btn" id="restart-btn">▶ TRY AGAIN</button>
                 <div style="margin-top: 10px;">
-                    <a href="/games" class="exit-btn">Exit Game</a>
+                    <a th:href="@{/games}" class="exit-btn">Exit Game</a>
                 </div>
             </div>
         </div>

@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | Zentrix</title>
@@ -130,7 +134,7 @@
         <button type="submit" class="btn-register">Register</button>
     </form>
     <div class="login-link">
-        Already have an account? <a href="/login">Sign In</a>
+        Already have an account? <a th:href="@{/login}">Sign In</a>
     </div>
 </div>
 

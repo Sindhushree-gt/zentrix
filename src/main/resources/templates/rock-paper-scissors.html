@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RPS Battle | Zentrix</title>
@@ -189,13 +193,13 @@
     <nav class="navbar">
         <div class="logo">Zentrix</div>
         <div class="nav-links">
-            <a href="/home">Home</a>
-            <a href="/events">Events</a>
-            <a href="/games" class="active">Games</a>
-            <a href="/about">About Us</a>
-            <a href="/support">Contact</a>
+            <a th:href="@{/home}">Home</a>
+            <a th:href="@{/events}">Events</a>
+            <a th:href="@{/games}" class="active">Games</a>
+            <a th:href="@{/about}">About Us</a>
+            <a th:href="@{/support}">Contact</a>
         </div>
-        <a href="/dashboard" class="nav-btn">Dashboard</a>
+        <a th:href="@{/dashboard}" class="nav-btn">Dashboard</a>
     </nav>
 
     <div class="container" style="padding-top: 0;">
@@ -248,7 +252,7 @@
                 <button class="btn-action" onclick="nextRound()">Next Round</button>
             </div>
 
-            <a href="/games" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Games</a>
+            <a th:href="@{/games}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Games</a>
         </div>
     </div>
 

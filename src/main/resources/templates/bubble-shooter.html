@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bubble Shot – Realistic | Zentrix</title>
@@ -384,7 +388,7 @@
                     <div class="ov-score" id="ov-score" style="display:none"></div>
                     <button id="play-btn">INSERT COIN</button>
                     <div style="margin-top: 20px;">
-                        <a href="/games" class="exit-btn">Exit Game</a>
+                        <a th:href="@{/games}" class="exit-btn">Exit Game</a>
                     </div>
                 </div>
             </div>

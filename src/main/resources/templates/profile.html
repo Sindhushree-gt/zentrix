@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+        var contextPath = /*[[@{/}]]*/ '';
+        if (contextPath === '/') contextPath = '';
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${user.username + ' • Zentrix'}">Profile</title>
@@ -453,19 +457,20 @@
                 style="background: var(--card-bg); border-radius: 20px; padding: 8px 15px;">
         </div>
         <div class="nav-links">
-            <a href="/dashboard"><i class="fas fa-home"></i></a>
-            <a href="/messages" style="position: relative;">
+            <a th:href="@{/dashboard}"><i class="fas fa-home"></i></a>
+            <a th:href="@{/messages}" style="position: relative;">
                 <i class="fas fa-comment-dots"></i>
                 <span th:if="${unreadMessageCount != null && unreadMessageCount > 0}" id="msg-badge"
                     style="position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 5px; font-size: 10px; font-weight: bold;"
                     th:text="${unreadMessageCount}"></span>
             </a>
+
             <a href="#" onclick="openM('notifModal')" style="position: relative;">
                 <i class="fas fa-bell"></i>
                 <span th:if="${unreadNotifCount != null && unreadNotifCount > 0}" id="notif-badge" class="badge"
                     th:text="${unreadNotifCount}"></span>
             </a>
-            <a href="/profile" class="active">
+            <a th:href="@{/profile}" class="active">
                 <img th:src="${session.user.profilePhotoUrl != null and !session.user.profilePhotoUrl.isEmpty()} ? ${session.user.profilePhotoUrl} : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop'"
                     class="user-avatar" style="width: 32px; height: 32px; border: none;">
             </a>
@@ -476,16 +481,16 @@
 
         <!-- Left Sidebar -->
         <aside class="sidebar">
-            <a href="/dashboard" class="sidebar-link"><i class="fas fa-home"></i> Home</a>
-            <a href="/explore" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
-            <a href="/events" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Events</a>
-            <a href="/achievements" class="sidebar-link"><i class="fas fa-trophy"></i> Achievements</a>
-            <a href="/messages" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
-            <a href="/profile" class="sidebar-link active"><i class="fas fa-user"></i> Profile</a>
-            <a href="/games" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
+            <a th:href="@{/dashboard}" class="sidebar-link"><i class="fas fa-home"></i> Home</a>
+            <a th:href="@{/explore}" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
+            <a th:href="@{/events}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Events</a>
+            <a th:href="@{/achievements}" class="sidebar-link"><i class="fas fa-trophy"></i> Achievements</a>
+            <a th:href="@{/messages}" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
+            <a th:href="@{/profile}" class="sidebar-link active"><i class="fas fa-user"></i> Profile</a>
+            <a th:href="@{/games}" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
             <a href="#" class="sidebar-link" onclick="openM('createPostModal')"><i class="fas fa-plus-circle"
                     style="color: var(--accent);"></i> Create Post</a>
-            <a href="/logout" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
+            <a th:href="@{/logout}" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
                 Logout</a>
         </aside>
 
@@ -520,7 +525,7 @@
                         </span>
 
                         <!-- Coin Balance -->
-                        <a href="/shop" class="coin-nav"
+                        <a th:href="@{/shop}" class="coin-nav"
                             style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px; padding: 5px 12px; height: auto; display: flex; align-items: center; gap: 8px; text-decoration: none; color: #ffd700; font-weight: 800; font-size: 13px; margin-left: 10px;">
                             <i class="fas fa-coins" style="font-size: 14px;"></i>
                             <span th:text="${user.coins}">0</span>
@@ -1075,10 +1080,10 @@
                 const statusLabel = type === 'following' ? '<span style="font-size: 11px; color: var(--text-secondary); margin-left: 8px;">Following</span>' : '';
                 div.innerHTML = `<img src="${i.dataset.p || FB}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
                                  <div style="flex:1;">
-                                     <a href="/profile/${i.dataset.u}" style="font-weight:600; font-size:14px; color:inherit;">@${i.dataset.u}</a>
+                                     <a href="${contextPath}/profile/${i.dataset.u}" style="font-weight:600; font-size:14px; color:inherit;">@${i.dataset.u}</a>
                                      ${statusLabel}
                                  </div>
-                                 <a href="/messages?u=${i.dataset.u}" class="btn-edit" style="padding: 4px 10px; font-size: 11px; text-decoration: none;">
+                                 <a href="${contextPath}/messages?u=${i.dataset.u}" class="btn-edit" style="padding: 4px 10px; font-size: 11px; text-decoration: none;">
                                      <i class="fas fa-comment"></i> Message
                                  </a>`;
                 body.appendChild(div);
@@ -1159,7 +1164,7 @@
 
         /* Mention/Collab Autocomplete logic */
         function fetchU(q, drop, onSel) {
-            fetch('/profile/api/users/search?q=' + encodeURIComponent(q))
+            fetch(contextPath + ('/' === contextPath ? '' : '/') + 'profile/api/users/search?q=' + encodeURIComponent(q))
                 .then(r => r.json()).then(us => {
                     drop.innerHTML = '';
                     if (!us.length) { drop.classList.remove('open'); return; }

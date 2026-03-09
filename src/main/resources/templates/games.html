@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+        var contextPath = /*[[@{/}]]*/ '';
+        if (contextPath === '/') contextPath = '';
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Games & Sports | Zentrix</title>
@@ -73,13 +77,13 @@
     <nav class="navbar">
         <div class="logo">Zentrix</div>
         <div class="nav-links">
-            <a href="/home">Home</a>
-            <a href="/events">Events</a>
-            <a href="/games" class="active">Games</a>
-            <a href="/about">About Us</a>
-            <a href="/support">Contact</a>
+            <a th:href="@{/dashboard}">Dashboard</a>
+            <a th:href="@{/events}">Events</a>
+            <a th:href="@{/games}" class="active">Games</a>
+            <a th:href="@{/achievements}">Achievements</a>
+            <a th:href="@{/profile}">Profile</a>
         </div>
-        <a href="#" class="nav-btn">Sign In</a>
+        <a th:href="@{/logout}" class="nav-btn">Sign Out</a>
     </nav>
 
     <div class="about-hero">
@@ -92,13 +96,13 @@
 
             <!-- Rock Paper Scissors -->
             <div class="game-card">
-                <img src="/images/rps.jpg" class="game-img" alt="Rock Paper Scissors">
+                <img th:src="@{/images/rps.jpg}" class="game-img" alt="Rock Paper Scissors">
                 <div class="game-content">
                     <h3>Rock Paper Scissors</h3>
                     <p>The classic game of strategy and luck. Battle your friends in this local 2-player showdown.</p>
                     <div class="game-footer">
                         <span style="color: var(--accent); font-weight: 600;">2-Player Battle</span>
-                        <a href="/games/rock-paper-scissors" class="nav-btn"
+                        <a th:href="@{/games/rock-paper-scissors}" class="nav-btn"
                             style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
                             Now</a>
                     </div>
@@ -107,171 +111,144 @@
 
             <!-- Snake & Ladder -->
             <div class="game-card">
-                <img src="/images/snake.jpg" class="game-img" alt="Snake and Ladder">
+                <img th:src="@{/images/snake.jpg}" class="game-img" alt="Snake and Ladder">
                 <div class="game-content">
-
-                    <h3 style="margin-bottom: 10px;">Snake & Ladder Legends</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Experience the classic board game with
-                        a
-                        modern neon twist. Roll the dice and reach the top!</p>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Snake & Ladder Legends</h3>
+                    <p>Experience the classic board game with a modern neon twist. Roll the dice and reach the top!</p>
+                    <div class="game-footer">
                         <span style="color: var(--accent); font-weight: 600;">Modern Twist</span>
-                        <a href="/games/snake-and-ladder" class="nav-btn"
-                            style="padding: 6px 15px; font-size: 12px; background: var(--accent); border: 1px solid var(--accent);">Play
-                            <h3>Snake & Ladder Legends</h3>
-                            <p>Experience the classic board game with a modern neon twist. Roll the dice and reach the
-                                top!</p>
-                            <div class="game-footer">
-                                <span style="color: var(--accent); font-weight: 600;">Modern Twist</span>
-                                <a href="/games/snake-and-ladder" class="nav-btn"
-                                    style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
-                                    Now</a>
-                            </div>
+                        <a th:href="@{/games/snake-and-ladder}" class="nav-btn"
+                            style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
+                            Now</a>
                     </div>
                 </div>
+            </div>
 
-                <!-- Chess -->
-                <div class="game-card">
-                    <img src="https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=2071&auto=format&fit=crop"
-                        class="game-img" alt="Chess">
-                    <div class="game-content">
-
-                        <h3 style="margin-bottom: 10px;">Chess Royale</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 20px;">Master the game of kings. Play
-                            against
-                            the
-                            AI or challenge a friend locally.</p>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: var(--accent); font-weight: 600;">Free Viewing</span>
-                            <h3>Chess Grandmaster</h3>
-                            <p>The ultimate game of skill and patience. Challenge your mind in this strategic battle.
-                            </p>
-                            <div class="game-footer">
-                                <span style="color: var(--accent); font-weight: 600;">Strategy Classic</span>
-
-                                <a href="/play-chess" class="nav-btn"
-                                    style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
-                                    Now</a>
-                            </div>
-                        </div>
+            <!-- Chess Royale -->
+            <div class="game-card">
+                <img src="https://images.unsplash.com/photo-1529699211952-734e80c4d42b?q=80&w=2071&auto=format&fit=crop"
+                    class="game-img" alt="Chess">
+                <div class="game-content">
+                    <h3>Chess Royale</h3>
+                    <p>Master the game of kings. Challenge your mind in this strategic battle.</p>
+                    <div class="game-footer">
+                        <span style="color: var(--accent); font-weight: 600;">Strategy Classic</span>
+                        <a th:href="@{/play-chess}" class="nav-btn"
+                            style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
+                            Now</a>
                     </div>
-
-                    <!-- Uno -->
-                    <div class="game-card">
-                        <img src="/images/uno.jpg" class="game-img" alt="Uno">
-                        <div class="game-content">
-                            <h3>Uno Realistic</h3>
-                            <p>The ultimate card showdown. Play against the AI in this high-stakes realistic version.
-                            </p>
-                            <div class="game-footer">
-                                <span style="color: var(--accent); font-weight: 600;">Card Battle</span>
-                                <a href="/play-uno" class="nav-btn"
-                                    style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
-                                    Now</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Ludo -->
-                    <div class="game-card">
-                        <img src="/images/ludo.png" class="game-img" alt="Ludo">
-                        <div class="game-content">
-                            <h3>Ludo King</h3>
-                            <p>The king of board games is here. Challenge your friends to a game of Ludo.</p>
-                            <div class="game-footer">
-                                <span style="color: var(--accent); font-weight: 600;">Board Classic</span>
-                                <a href="/play-ludo" class="nav-btn"
-                                    style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
-                                    Now</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Super Mario -->
-                    <div class="game-card">
-                        <img src="https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?q=80&w=2070&auto=format&fit=crop"
-                            class="game-img" alt="Super Mario">
-                        <div class="game-content">
-                            <h3>Super Mario</h3>
-                            <p>Relive the platforming legend. Journey through World 1-1 and defeat Goombas.</p>
-                            <div class="game-footer">
-                                <span style="color: var(--accent); font-weight: 600;">Retro Adventure</span>
-                                <a href="/play-mario" class="nav-btn"
-                                    style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
-                                    Now</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bubble Shooter -->
-                    <div class="game-card">
-                        <img src="/images/bubble.png" class="game-img" alt="Bubble Shooter">
-                        <div class="game-content">
-                            <h3>Bubble Shooter</h3>
-                            <p>Arcade-style bubble popping. Aim carefully and clear the grid to win.</p>
-                            <div class="game-footer">
-                                <span style="color: var(--accent); font-weight: 600;">Arcade Fun</span>
-                                <a href="/play-bubble-shooter" class="nav-btn"
-                                    style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
-                                    Now</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Candy Crush -->
-                    <div class="game-card">
-                        <img src="/images/candy.jpg" class="game-img" alt="Candy Crush">
-                        <div class="game-content">
-                            <h3>Candy Crush</h3>
-                            <p>Sweet matching puzzle fun. Swap candies and clear levels in this classic game.</p>
-                            <div class="game-footer">
-                                <span style="color: var(--accent); font-weight: 600;">Sugar Rush</span>
-                                <a href="/play-candy-crush" class="nav-btn"
-                                    style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
-                                    Now</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Zentrix Runner -->
-                    <div class="game-card">
-                        <img src="/images/runner.jpg" class="game-img" alt="Zentrix Runner">
-                        <div class="game-content">
-                            <h3>Zentrix Runner</h3>
-                            <p>3D Endless Adventure. Dodge obstacles, jump barriers, and run forever in this 3D
-                                challenge.</p>
-                            <div class="game-footer">
-                                <span style="color: var(--accent); font-weight: 600;">Speed Run</span>
-                                <a href="/play-runner" class="nav-btn"
-                                    style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
-                                    Now</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Zentrix Racing -->
-                    <div class="game-card">
-                        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop"
-                            class="game-img" alt="Zentrix Racing">
-                        <div class="game-content">
-                            <h3>Zentrix Racing</h3>
-                            <p>High-Octane 3D Racing. Experience high-speed adrenaline and precision driving in our new
-                                3D
-                                engine.</p>
-                            <div class="game-footer">
-                                <span style="color: var(--accent); font-weight: 600;">Turbo Drive</span>
-                                <a href="/play-car-game" class="nav-btn"
-                                    style="padding: 6px 15px; font-size: 12px; background: var(--accent); color: white; border: 1px solid var(--accent);">Play
-                                    style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px
-                                    solid var(--accent);">Play
-
-                                    Now</a>
-                                Now</a>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
+            </div>
+
+            <!-- Uno -->
+            <div class="game-card">
+                <img th:src="@{/images/uno.jpg}" class="game-img" alt="Uno">
+                <div class="game-content">
+                    <h3>Uno Realistic</h3>
+                    <p>The ultimate card showdown. Play against the AI in this high-stakes realistic version.</p>
+                    <div class="game-footer">
+                        <span style="color: var(--accent); font-weight: 600;">Card Battle</span>
+                        <a th:href="@{/play-uno}" class="nav-btn"
+                            style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
+                            Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ludo -->
+            <div class="game-card">
+                <img th:src="@{/images/ludo.png}" class="game-img" alt="Ludo">
+                <div class="game-content">
+                    <h3>Ludo King</h3>
+                    <p>The king of board games is here. Challenge your friends to a game of Ludo.</p>
+                    <div class="game-footer">
+                        <span style="color: var(--accent); font-weight: 600;">Board Classic</span>
+                        <a th:href="@{/play-ludo}" class="nav-btn"
+                            style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
+                            Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Super Mario -->
+            <div class="game-card">
+                <img src="https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?q=80&w=2070&auto=format&fit=crop"
+                    class="game-img" alt="Super Mario">
+                <div class="game-content">
+                    <h3>Super Mario</h3>
+                    <p>Relive the platforming legend. Journey through World 1-1 and defeat Goombas.</p>
+                    <div class="game-footer">
+                        <span style="color: var(--accent); font-weight: 600;">Retro Adventure</span>
+                        <a th:href="@{/play-mario}" class="nav-btn"
+                            style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
+                            Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bubble Shooter -->
+            <div class="game-card">
+                <img th:src="@{/images/bubble.png}" class="game-img" alt="Bubble Shooter">
+                <div class="game-content">
+                    <h3>Bubble Shooter</h3>
+                    <p>Arcade-style bubble popping. Aim carefully and clear the grid to win.</p>
+                    <div class="game-footer">
+                        <span style="color: var(--accent); font-weight: 600;">Arcade Fun</span>
+                        <a th:href="@{/play-bubble-shooter}" class="nav-btn"
+                            style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
+                            Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Candy Crush -->
+            <div class="game-card">
+                <img th:src="@{/images/candy.jpg}" class="game-img" alt="Candy Crush">
+                <div class="game-content">
+                    <h3>Candy Crush</h3>
+                    <p>Sweet matching puzzle fun. Swap candies and clear levels in this classic game.</p>
+                    <div class="game-footer">
+                        <span style="color: var(--accent); font-weight: 600;">Sugar Rush</span>
+                        <a th:href="@{/play-candy-crush}" class="nav-btn"
+                            style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
+                            Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zentrix Runner -->
+            <div class="game-card">
+                <img th:src="@{/images/runner.jpg}" class="game-img" alt="Zentrix Runner">
+                <div class="game-content">
+                    <h3>Zentrix Runner</h3>
+                    <p>3D Endless Adventure. Dodge obstacles, jump barriers, and run forever in this 3D challenge.</p>
+                    <div class="game-footer">
+                        <span style="color: var(--accent); font-weight: 600;">Speed Run</span>
+                        <a th:href="@{/play-runner}" class="nav-btn"
+                            style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
+                            Now</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zentrix Racing -->
+            <div class="game-card">
+                <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=2070&auto=format&fit=crop"
+                    class="game-img" alt="Zentrix Racing">
+                <div class="game-content">
+                    <h3>Zentrix Racing</h3>
+                    <p>High-Octane 3D Racing. Experience high-speed adrenaline and precision driving in our new 3D
+                        engine.</p>
+                    <div class="game-footer">
+                        <span style="color: var(--accent); font-weight: 600;">Turbo Drive</span>
+                        <a th:href="@{/play-car-game}" class="nav-btn"
+                            style="padding: 4px 10px; font-size: 11px; background: var(--accent); border: 1px solid var(--accent);">Play
+                            Now</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </section>
 
     <!-- Footer -->
@@ -279,19 +256,18 @@
         <div class="footer-content">
             <div class="footer-col">
                 <h3>BookMyTicket</h3>
-                <a href="/about">About Us</a>
-                <a href="/features">Features</a>
-                <a href="/support">Support</a>
+                <a th:href="@{/about}">About Us</a>
+                <a th:href="@{/features}">Features</a>
+                <a th:href="@{/support}">Support</a>
                 <a href="#">Careers</a>
             </div>
             <div class="footer-col">
                 <h3>Help</h3>
-                <a href="/support">Contact Us</a>
+                <a th:href="@{/support}">Contact Us</a>
                 <a href="#">FAQs</a>
                 <a href="#">Terms of Service</a>
                 <a href="#">Privacy Policy</a>
             </div>
-
         </div>
     </footer>
 

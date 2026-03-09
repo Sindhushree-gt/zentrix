@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${event.id != null} ? 'Edit Event | Zentrix Admin' : 'Create Event | Zentrix Admin'">Create Event |
@@ -585,10 +589,10 @@
     <nav class="admin-navbar">
         <div class="brand">⚡ Zentrix Admin</div>
         <div class="nav-right">
-            <a href="/events/admin/manage" class="btn-back">
+            <a th:href="@{/events/admin/manage}" class="btn-back">
                 <i class="fas fa-arrow-left"></i> Manage Events
             </a>
-            <a href="/admin" class="btn-back">
+            <a th:href="@{/admin}" class="btn-back">
                 <i class="fas fa-home"></i> Dashboard
             </a>
         </div>
@@ -948,7 +952,7 @@
 
                 <!-- Submit Bar -->
                 <div class="submit-bar">
-                    <a href="/events/admin/manage" class="btn-cancel">
+                    <a th:href="@{/events/admin/manage}" class="btn-cancel">
                         <i class="fas fa-times"></i> Cancel
                     </a>
                     <button type="submit" class="btn-publish" id="publishBtn">

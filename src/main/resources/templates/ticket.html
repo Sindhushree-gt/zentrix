@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registration Confirmed | Zentrix</title>
@@ -441,8 +445,8 @@
     <div class="topbar">
         <div class="brand">⚡ Zentrix</div>
         <div class="nav-links">
-            <a href="/events">Browse Events</a>
-            <a href="/dashboard">Dashboard</a>
+            <a th:href="@{/events}">Browse Events</a>
+            <a th:href="@{/dashboard}">Dashboard</a>
         </div>
     </div>
 
@@ -563,10 +567,10 @@
             <button class="btn-action btn-secondary" onclick="printTicket()">
                 <i class="fas fa-print"></i> Print Ticket
             </button>
-            <a href="/events" class="btn-action btn-primary">
+            <a th:href="@{/events}" class="btn-action btn-primary">
                 <i class="fas fa-calendar-alt"></i> Browse More Events
             </a>
-            <a href="/dashboard" class="btn-action btn-secondary">
+            <a th:href="@{/dashboard}" class="btn-action btn-secondary">
                 <i class="fas fa-home"></i> Dashboard
             </a>
         </div>

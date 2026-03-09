@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zentrix Snake & Ladder | Multiplayer</title>
@@ -473,7 +477,7 @@
                 if (!playerName.trim()) { setErr("Enter your name"); return; }
                 setLoading(true);
                 try {
-                    const res = await fetch('/api/snake/create', {
+                    const res = await fetch(contextPath + ('/' === contextPath ? '' : '/') + 'api/snake/create', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ playerName: playerName.trim() })
                     });
@@ -489,7 +493,7 @@
                 if (!code) { setErr("Enter room code"); return; }
                 setLoading(true);
                 try {
-                    const res = await fetch('/api/snake/join', {
+                    const res = await fetch(contextPath + ('/' === contextPath ? '' : '/') + 'api/snake/join', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ roomId: code, playerName: playerName.trim() })
                     });
@@ -527,7 +531,7 @@
                         </div>
                         {err && <div style={{ color: "#ff6666", fontSize: 12, textAlign: "center", marginTop: 8 }}>⚠ {err}</div>}
                     </div>
-                    <a href="/games" style={{ color: "#888", fontSize: 13, marginTop: 24, textDecoration: "none", fontWeight: 700 }}><i className="fas fa-arrow-left"></i> BACK TO LIBRARY</a>
+                    <a th:href="@{/games}" style={{ color: "#888", fontSize: 13, marginTop: 24, textDecoration: "none", fontWeight: 700 }}><i className="fas fa-arrow-left"></i> BACK TO LIBRARY</a>
                 </div>
             );
         }
@@ -788,7 +792,7 @@
                             </h1>
                             <p style={{ letterSpacing: "10px", color: "#aaa", marginBottom: "40px" }}>SUPREME CHAMPION</p>
                             <button className="btn" style={{ maxWidth: "250px" }} onClick={() => window.location.reload()}>New Match</button>
-                            <a href="/games" style={{ marginTop: "20px", color: "#666", textDecoration: "none" }}>Exit to Library</a>
+                            <a th:href="@{/games}" style={{ marginTop: "20px", color: "#666", textDecoration: "none" }}>Exit to Library</a>
                         </div>
                     )}
                 </div>

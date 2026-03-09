@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subway Surfers | Zentrix Edition</title>
@@ -226,7 +230,7 @@
             <div class="controls-hint">
                 <b>A / D</b>: Move &nbsp; | &nbsp; <b>SPACE</b>: Jump
             </div>
-            <a href="/games" class="exit-link">QUIT GAME</a>
+            <a th:href="@{/games}" class="exit-link">QUIT GAME</a>
         </div>
 
         <div class="menu-card" id="game-over">
@@ -236,7 +240,7 @@
                 <h2 id="final-score" style="font-family: 'Fredoka One'; color: #0ea5e9; font-size: 2.5rem;">0</h2>
             </div>
             <button class="btn" id="restart-btn">PLAY AGAIN</button>
-            <a href="/games" class="exit-link">EXIT TO MENU</a>
+            <a th:href="@{/games}" class="exit-link">EXIT TO MENU</a>
         </div>
     </div>
 

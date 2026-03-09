@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${event.title} + ' | Zentrix Events'">Event Details | Zentrix</title>
@@ -995,9 +999,9 @@
         <div class="logo">Zentrix</div>
         <div class="nav-links">
             <a th:href="${isAdmin} ? '/admin' : '/dashboard'"><i class="fas fa-home"></i></a>
-            <a href="/events" class="active" style="color:var(--accent);">Events</a>
-            <a th:if="${isAdmin}" href="/events/admin/manage"><i class="fas fa-cog"></i></a>
-            <a th:if="${!isAdmin}" href="/profile"><i class="fas fa-user"></i></a>
+            <a th:href="@{/events}" class="active" style="color:var(--accent);">Events</a>
+            <a th:if="${isAdmin}" th:href="@{/events/admin/manage}"><i class="fas fa-cog"></i></a>
+            <a th:if="${!isAdmin}" th:href="@{/profile}"><i class="fas fa-user"></i></a>
         </div>
     </nav>
 
@@ -1008,7 +1012,7 @@
         <div class="hero-overlay"></div>
 
         <div class="hero-nav">
-            <a href="/events" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Events</a>
+            <a th:href="@{/events}" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Events</a>
         </div>
 
         <div class="hero-content">
@@ -1327,7 +1331,7 @@
                         style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:linear-gradient(135deg,#f84464,#ff6b9d);border-radius:12px;color:#fff;font-weight:800;font-size:14px;text-decoration:none;box-shadow:0 4px 16px rgba(248,68,100,0.4);">
                         <i class="fas fa-edit"></i> Edit This Event
                     </a>
-                    <a href="/events/admin/manage"
+                    <a th:href="@{/events/admin/manage}"
                         style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:rgba(255,255,255,0.6);font-weight:700;font-size:14px;text-decoration:none;margin-top:10px;">
                         <i class="fas fa-arrow-left"></i> Back to Manage
                     </a>

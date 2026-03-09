@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+    var contextPath = /*[[@{/}]]*/ '';
+    if(contextPath === '/') contextPath = '';
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support | Zentrix</title>
@@ -15,11 +19,11 @@
     <nav class="navbar">
         <div class="logo">Zentrix</div>
         <div class="nav-links">
-            <a href="/home">Home</a>
-            <a href="/events">Events</a>
-            <a href="/games">Games</a>
-            <a href="/about">About Us</a>
-            <a href="/support" class="active">Contact</a>
+            <a th:href="@{/home}">Home</a>
+            <a th:href="@{/events}">Events</a>
+            <a th:href="@{/games}">Games</a>
+            <a th:href="@{/about}">About Us</a>
+            <a th:href="@{/support}" class="active">Contact</a>
         </div>
         <a href="#" class="nav-btn">Sign In</a>
     </nav>
@@ -98,14 +102,14 @@
         <div class="footer-content">
             <div class="footer-col">
                 <h3>BookMyTicket</h3>
-                <a href="/about">About Us</a>
-                <a href="/features">Features</a>
-                <a href="/support">Support</a>
+                <a th:href="@{/about}">About Us</a>
+                <a th:href="@{/features}">Features</a>
+                <a th:href="@{/support}">Support</a>
                 <a href="#">Careers</a>
             </div>
             <div class="footer-col">
                 <h3>Help</h3>
-                <a href="/support">Contact Us</a>
+                <a th:href="@{/support}">Contact Us</a>
                 <a href="#">FAQs</a>
                 <a href="#">Terms of Service</a>
                 <a href="#">Privacy Policy</a>

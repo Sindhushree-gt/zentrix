@@ -2,6 +2,10 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <script th:inline="javascript">
+        var contextPath = /*[[@{/}]]*/ '';
+        if (contextPath === '/') contextPath = '';
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Zentrix</title>
@@ -84,15 +88,15 @@
         </div>
         <div class="nav-links">
             <!-- Zen Coin System -->
-            <a href="/shop" class="coin-nav"
+            <a th:href="@{/shop}" class="coin-nav"
                 style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px; padding: 5px 12px; height: auto; display: flex; align-items: center; gap: 8px; text-decoration: none; color: #ffd700; font-weight: 800; font-size: 13px;">
                 <i class="fas fa-coins" style="font-size: 14px;"></i>
                 <span th:text="${user.coins}">0</span>
             </a>
-            <a href="/shop" title="Reward Shop"><i class="fas fa-shopping-bag"></i></a>
+            <a th:href="@{/shop}" title="Reward Shop"><i class="fas fa-shopping-bag"></i></a>
 
-            <a href="/dashboard" class="active"><i class="fas fa-home"></i></a>
-            <a href="/messages" style="position: relative;">
+            <a th:href="@{/dashboard}" class="active"><i class="fas fa-home"></i></a>
+            <a th:href="@{/messages}" style="position: relative;">
                 <i class="fas fa-comment-dots"></i>
                 <span th:if="${unreadMessageCount != null && unreadMessageCount > 0}" id="msg-badge"
                     style="position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; padding: 2px 5px; font-size: 10px; font-weight: bold;"
@@ -105,7 +109,7 @@
                     th:text="${unreadNotifCount}"></span>
             </a>
             <div class="profile-dropdown">
-                <a href="/profile" style="position: relative;">
+                <a th:href="@{/profile}" style="position: relative;">
                     <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
                         class="user-avatar" style="width: 32px; height: 32px; border: none;">
                     <span th:if="${pendingCount != null && pendingCount > 0}"
@@ -113,14 +117,14 @@
                         th:text="${pendingCount}"></span>
                 </a>
                 <div class="dropdown-menu">
-                    <a href="/profile" class="dropdown-item">
+                    <a th:href="@{/profile}" class="dropdown-item">
                         <i class="fas fa-user-circle"></i> View Profile
                     </a>
-                    <a href="/settings" class="dropdown-item">
+                    <a th:href="@{/settings}" class="dropdown-item">
                         <i class="fas fa-cog"></i> Settings
                     </a>
                     <div class="dropdown-divider"></div>
-                    <a href="/logout" class="dropdown-item" style="color: #ff4444;">
+                    <a th:href="@{/logout}" class="dropdown-item" style="color: #ff4444;">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
                 </div>
@@ -132,16 +136,16 @@
 
         <!-- Left Sidebar -->
         <aside class="sidebar">
-            <a href="/dashboard" class="sidebar-link active"><i class="fas fa-home"></i> Home</a>
-            <a href="/explore" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
-            <a href="/events" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Events</a>
-            <a href="/achievements" class="sidebar-link"><i class="fas fa-trophy"></i> Achievements</a>
-            <a href="/messages" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
-            <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
-            <a href="/games" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
+            <a th:href="@{/dashboard}" class="sidebar-link active"><i class="fas fa-home"></i> Home</a>
+            <a th:href="@{/explore}" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
+            <a th:href="@{/events}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Events</a>
+            <a th:href="@{/achievements}" class="sidebar-link"><i class="fas fa-trophy"></i> Achievements</a>
+            <a th:href="@{/messages}" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
+            <a th:href="@{/profile}" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
+            <a th:href="@{/games}" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
             <a href="#" class="sidebar-link" onclick="openCreateModal()"><i class="fas fa-plus-circle"
                     style="color: var(--accent);"></i> Create Post</a>
-            <a href="/logout" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
+            <a th:href="@{/logout}" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
                 Logout</a>
         </aside>
 
@@ -281,7 +285,7 @@
             <div class="widget-card">
                 <div class="widget-header">
                     <h3>Trending Events</h3>
-                    <a href="/events" class="see-all">See All</a>
+                    <a th:href="@{/events}" class="see-all">See All</a>
                 </div>
                 <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                     <img src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?q=80&w=1974&auto=format&fit=crop"
@@ -427,7 +431,7 @@
             document.getElementById('overlay').style.display = 'block';
 
             // Load conversations
-            const res = await fetch('/api/chat/conversations');
+            const res = await fetch(contextPath + ('/' === contextPath ? '' : '/') + 'api/chat/conversations');
             const convs = await res.json();
             const container = document.getElementById('shareConvList');
             container.innerHTML = convs.map(c => {
@@ -447,7 +451,7 @@
             document.getElementById('overlay').style.display = 'none';
         }
         async function shareToConv(convId) {
-            const res = await fetch('/api/chat/share-post', {
+            const res = await fetch(contextPath + ('/' === contextPath ? '' : '/') + 'api/chat/share-post', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ postId: currentSharePostId, conversationId: convId })
@@ -478,7 +482,7 @@
         }
 
         function markAllRead() {
-            fetch('/profile/notifications/mark-all-read', { method: 'POST' })
+            fetch(contextPath + ('/' === contextPath ? '' : '/') + 'profile/notifications/mark-all-read', { method: 'POST' })
                 .then(r => {
                     if (r.ok) {
                         location.reload();
