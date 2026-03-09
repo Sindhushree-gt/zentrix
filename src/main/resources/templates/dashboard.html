@@ -257,10 +257,52 @@
                 </div>
 
                 <div class="post-actions">
-                    <button class="action-btn"><i class="far fa-heart"></i></button>
-                    <button class="action-btn"><i class="far fa-comment"></i></button>
-                    <button class="action-btn" th:onclick="'openShareModal(' + ${post.id} + ')'"><i
-                            class="far fa-paper-plane"></i></button>
+                    <!-- Like Button -->
+                    <button class="action-btn" th:id="'like-btn-' + ${post.id}"
+                        th:onclick="'toggleLike(' + ${post.id} + ')'"
+                        th:style="${currentUser != null and post.likes != null and post.likes.stream().anyMatch(l -> l.user != null && l.user.id == currentUser.id)} ? 'color: #f84464;' : ''"
+                        title="Like">
+                        <i
+                            th:class="${currentUser != null and post.likes != null and post.likes.stream().anyMatch(l -> l.user != null && l.user.id == currentUser.id)} ? 'fas fa-heart' : 'far fa-heart'"></i>
+                        <span th:id="'like-count-' + ${post.id}" th:text="${post.likes != null ? post.likes.size() : 0}"
+                            style="font-size:13px; margin-left:3px;"></span>
+                    </button>
+                    <!-- Comment Button -->
+                    <button class="action-btn" th:onclick="'toggleComments(' + ${post.id} + ')'" title="Comment">
+                        <i class="far fa-comment"></i>
+                        <span style="font-size:13px; margin-left:3px;"
+                            th:text="${post.comments != null ? post.comments.size() : 0}"></span>
+                    </button>
+                    <!-- Share Button -->
+                    <button class="action-btn" th:onclick="'openShareModal(' + ${post.id} + ')'" title="Share">
+                        <i class="far fa-paper-plane"></i>
+                    </button>
+                </div>
+                <!-- Comment Panel (hidden by default) -->
+                <div th:id="'comments-panel-' + ${post.id}"
+                    style="display:none; margin-top:10px; border-top:1px solid var(--glass-border); padding-top:10px;">
+                    <div th:id="'comments-list-' + ${post.id}"
+                        style="max-height:200px; overflow-y:auto; margin-bottom:10px;">
+                        <div th:each="c : ${post.comments}"
+                            style="display:flex; gap:8px; align-items:flex-start; margin-bottom:8px;">
+                            <img th:src="'https://ui-avatars.com/api/?name=' + ${c.user != null ? c.user.username : 'U'} + '&background=F84464&color=fff&size=40'"
+                                style="width:28px; height:28px; border-radius:50%; flex-shrink:0;">
+                            <div style="background:var(--glass-border); border-radius:10px; padding:6px 10px; flex:1;">
+                                <strong style="font-size:12px;"
+                                    th:text="${c.user != null ? c.user.username : 'Unknown'}"></strong>
+                                <p style="font-size:13px; margin:0;" th:text="${c.content}"></p>
+                            </div>
+                        </div>
+                        <div th:if="${post.comments == null or post.comments.isEmpty()}" id='no-comments-msg'
+                            style="font-size:13px; color:var(--text-secondary); text-align:center; padding:10px;">No
+                            comments yet.</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" th:id="'comment-input-' + ${post.id}" placeholder="Write a comment..."
+                            style="flex:1; padding:8px 12px; border-radius:20px; background:var(--card-bg); border:1px solid var(--glass-border); color:var(--text-primary); font-size:13px; outline:none;">
+                        <button th:onclick="'postComment(' + ${post.id} + ')'"
+                            style="background:var(--accent); color:white; border:none; border-radius:20px; padding:8px 16px; font-size:13px; cursor:pointer; font-weight:600;">Post</button>
+                    </div>
                 </div>
                 <div class="post-content">
                     <p th:text="${post.content}"
@@ -402,6 +444,52 @@
         </div>
     </div>
     <!-- Create Post Modal -->
+    <div class="modal" id="createPostModal" style="display:none; max-width:520px; z-index:1200;">
+        <div class="modal-header">
+            <h3>Create Post</h3>
+            <i class="fas fa-times close-modal" onclick="closeCreateModal()"></i>
+        </div>
+        <div style="padding:20px;">
+            <form id="createPostForm" th:action="@{/profile/post}" method="POST" enctype="multipart/form-data">
+                <textarea name="content" placeholder="What's on your mind?" required
+                    style="width:100%; min-height:110px; background:var(--card-bg); border:1px solid var(--glass-border); border-radius:12px; padding:12px; color:var(--text-primary); font-size:14px; resize:vertical; outline:none; font-family:inherit; box-sizing:border-box;"></textarea>
+                <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                    <input name="hashtags" placeholder="#hashtags"
+                        style="flex:1; min-width:120px; padding:9px 12px; border-radius:10px; background:var(--card-bg); border:1px solid var(--glass-border); color:var(--text-primary); font-size:13px; outline:none;">
+                    <select name="category"
+                        style="flex:1; min-width:120px; padding:9px 12px; border-radius:10px; background:var(--card-bg); border:1px solid var(--glass-border); color:var(--text-primary); font-size:13px; outline:none;">
+                        <option value="">Category (optional)</option>
+                        <option value="GAMING">Gaming</option>
+                        <option value="FITNESS">Fitness</option>
+                        <option value="LIFESTYLE">Lifestyle</option>
+                        <option value="MUSIC">Music</option>
+                        <option value="ART">Art</option>
+                        <option value="FOOD">Food</option>
+                        <option value="TRAVEL">Travel</option>
+                        <option value="TECH">Tech</option>
+                        <option value="SPORTS">Sports</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+                <div style="margin-top:12px;">
+                    <label
+                        style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-secondary); background:var(--card-bg); border:1px dashed var(--glass-border); border-radius:10px; padding:10px 14px;">
+                        <i class="fas fa-image" style="color:var(--accent);"></i>
+                        <span>Add Photo / Video</span>
+                        <input type="file" name="media" accept="image/*,video/*" style="display:none;"
+                            onchange="showFileName(this)">
+                    </label>
+                    <span id="selectedFileName"
+                        style="font-size:12px; color:var(--text-secondary); margin-top:6px; display:block;"></span>
+                </div>
+                <input type="hidden" name="postType" value="POST">
+                <button type="submit"
+                    style="margin-top:16px; width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer;">
+                    <i class="fas fa-paper-plane"></i> Post
+                </button>
+            </form>
+        </div>
+    </div>
     <div class="overlay" id="overlay"></div>
     <!-- Share Modal -->
     <div class="modal" id="shareModal" style="display:none; z-index:1100;">
@@ -420,6 +508,93 @@
 
     <script>
         let currentSharePostId = null;
+
+        // ── Create Post Modal ──────────────────────────────
+        function openCreateModal() {
+            document.getElementById('createPostModal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+        function closeCreateModal() {
+            document.getElementById('createPostModal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+        function openM(id) {
+            document.getElementById(id).style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+        function showFileName(input) {
+            const span = document.getElementById('selectedFileName');
+            span.textContent = input.files.length > 0 ? '📎 ' + input.files[0].name : '';
+        }
+        document.getElementById('overlay').addEventListener('click', function () {
+            closeCreateModal();
+            closeShareModal && closeShareModal();
+        });
+
+        // ── Like Toggle ─────────────────────────────────────
+        async function toggleLike(postId) {
+            const btn = document.getElementById('like-btn-' + postId);
+            const icon = btn ? btn.querySelector('i') : null;
+            const countEl = document.getElementById('like-count-' + postId);
+            try {
+                const res = await fetch('/api/posts/' + postId + '/like', { method: 'POST' });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                if (icon) {
+                    if (data.liked) {
+                        icon.className = 'fas fa-heart';
+                        btn.style.color = '#f84464';
+                    } else {
+                        icon.className = 'far fa-heart';
+                        btn.style.color = '';
+                    }
+                }
+                if (countEl) countEl.textContent = data.likeCount;
+            } catch (e) {
+                console.error('Like failed', e);
+            }
+        }
+
+        // ── Comments Toggle ──────────────────────────────────
+        function toggleComments(postId) {
+            const panel = document.getElementById('comments-panel-' + postId);
+            if (!panel) return;
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // ── Post Comment ─────────────────────────────────────
+        async function postComment(postId) {
+            const input = document.getElementById('comment-input-' + postId);
+            if (!input || !input.value.trim()) return;
+            const content = input.value.trim();
+            try {
+                const res = await fetch('/api/posts/' + postId + '/comment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'content=' + encodeURIComponent(content)
+                });
+                if (!res.ok) throw new Error();
+                const c = await res.json();
+                const list = document.getElementById('comments-list-' + postId);
+                if (list) {
+                    const noMsg = list.querySelector('#no-comments-msg');
+                    if (noMsg) noMsg.remove();
+                    const div = document.createElement('div');
+                    div.style.cssText = 'display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;';
+                    div.innerHTML = `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(c.username || 'U')}&background=F84464&color=fff&size=40"
+                        style="width:28px;height:28px;border-radius:50%;flex-shrink:0;">
+                        <div style="background:var(--glass-border);border-radius:10px;padding:6px 10px;flex:1;">
+                            <strong style="font-size:12px;">${c.username || 'You'}</strong>
+                            <p style="font-size:13px;margin:0;">${content}</p>
+                        </div>`;
+                    list.appendChild(div);
+                }
+                input.value = '';
+            } catch (e) {
+                console.error('Comment failed', e);
+            }
+        }
+
 
         async function openShareModal(postId) {
             currentSharePostId = postId;
