@@ -85,8 +85,9 @@ public class ChatService {
             ChatMessage parent = chatMessageRepository.findById(parentId).orElse(null);
             message.setParentMessage(parent);
         }
-        
-        System.out.println("[DEBUG] ChatService.sendMessage: Saving message: content=" + content + ", mediaUrl=" + mediaUrl + ", type=" + message.getMessageType());
+
+        System.out.println("[DEBUG] ChatService.sendMessage: Saving message: content=" + content + ", mediaUrl="
+                + mediaUrl + ", type=" + message.getMessageType());
         ChatMessage saved = chatMessageRepository.save(message);
         System.out.println("[DEBUG] ChatService.sendMessage: Message saved with ID: " + saved.getId());
 
@@ -231,6 +232,46 @@ public class ChatService {
         msg.setStatus(MessageStatus.SENT);
 
         return chatMessageRepository.save(msg);
+    }
+
+    @Transactional
+    public ChatMessage sharePostToUser(Long postId, Long recipientId, User sender) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        User recipient = userRepository.findById(recipientId)
+                .orElseThrow(() -> new RuntimeException("Recipient not found"));
+
+        Conversation conv = conversationRepository.findDirectConversationBetweenUsers(sender, recipient)
+                .orElseGet(() -> {
+                    Conversation newConv = new Conversation();
+                    newConv.setType(Conversation.ConversationType.DIRECT);
+                    List<User> participants = new ArrayList<>();
+                    participants.add(sender);
+                    participants.add(recipient);
+                    newConv.setParticipants(participants);
+                    newConv.setCreator(sender);
+                    newConv.setStatus(Conversation.ConversationStatus.PENDING);
+                    newConv.setLastMessage("Post shared");
+                    newConv.setLastMessageTime(LocalDateTime.now());
+                    return conversationRepository.save(newConv);
+                });
+
+        ChatMessage msg = new ChatMessage();
+        msg.setConversation(conv);
+        msg.setSender(sender);
+        msg.setContent("Forwarded a post: " + (post.getContent() != null ? post.getContent() : "Post"));
+        msg.setMediaUrl(post.getMediaUrl());
+        msg.setTimestamp(LocalDateTime.now());
+        msg.setStatus(MessageStatus.SENT);
+        msg.setMessageType(MessageType.MEDIA);
+
+        ChatMessage saved = chatMessageRepository.save(msg);
+
+        conv.setLastMessage(msg.getContent());
+        conv.setLastMessageTime(msg.getTimestamp());
+        conversationRepository.save(conv);
+
+        return saved;
     }
 
     @Transactional

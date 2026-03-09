@@ -141,6 +141,7 @@
             <a href="/games" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
             <a href="#" class="sidebar-link" onclick="openCreateModal()"><i class="fas fa-plus-circle"
                     style="color: var(--accent);"></i> Create Post</a>
+
             <a href="/logout" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i>
                 Logout</a>
         </aside>
@@ -260,10 +261,9 @@
                     <!-- Like Button -->
                     <button class="action-btn" th:id="'like-btn-' + ${post.id}"
                         th:onclick="'toggleLike(' + ${post.id} + ')'"
-                        th:style="${currentUser != null and post.likes != null and post.likes.stream().anyMatch(l -> l.user != null && l.user.id == currentUser.id)} ? 'color: #f84464;' : ''"
-                        title="Like">
+                        th:style="${user != null and post.isLikedByUser(user)} ? 'color: #f84464;' : ''" title="Like">
                         <i
-                            th:class="${currentUser != null and post.likes != null and post.likes.stream().anyMatch(l -> l.user != null && l.user.id == currentUser.id)} ? 'fas fa-heart' : 'far fa-heart'"></i>
+                            th:class="${user != null and post.isLikedByUser(user)} ? 'fas fa-heart' : 'far fa-heart'"></i>
                         <span th:id="'like-count-' + ${post.id}" th:text="${post.likes != null ? post.likes.size() : 0}"
                             style="font-size:13px; margin-left:3px;"></span>
                     </button>
@@ -444,7 +444,7 @@
         </div>
     </div>
     <!-- Create Post Modal -->
-    <div class="modal" id="createPostModal" style="display:none; max-width:520px; z-index:1200;">
+    <div class="modal" id="createPostModal" style="display:none; max-width:520px; z-index:2200;">
         <div class="modal-header">
             <h3>Create Post</h3>
             <i class="fas fa-times close-modal" onclick="closeCreateModal()"></i>
@@ -492,16 +492,20 @@
     </div>
     <div class="overlay" id="overlay"></div>
     <!-- Share Modal -->
-    <div class="modal" id="shareModal" style="display:none; z-index:1100;">
+    <div class="modal" id="shareModal" style="display:none; z-index:2100;">
         <div class="modal-header">
             <h3>Share to Chat</h3>
             <i class="fas fa-times close-modal" onclick="closeShareModal()"></i>
         </div>
         <div style="padding: 15px;">
-            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 10px;">Select a conversation to
-                share this post:</p>
-            <div id="shareConvList" style="max-height: 300px; overflow-y: auto;">
-                <!-- Conversations will be loaded here via JS -->
+            <div style="margin-bottom: 12px;">
+                <input type="text" id="shareSearchInput" placeholder="Search followers..." onkeyup="filterShareList()"
+                    style="width:100%; padding:10px 14px; border-radius:12px; background:var(--card-bg); border:1px solid var(--glass-border); color:white; outline:none; font-size:14px;">
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">Select to share this post:
+            </p>
+            <div id="shareConvList" style="max-height: 350px; overflow-y: auto;">
+                <!-- Followers will be loaded here via JS -->
             </div>
         </div>
     </div>
@@ -596,40 +600,59 @@
         }
 
 
+        let allFollowers = [];
         async function openShareModal(postId) {
             currentSharePostId = postId;
             document.getElementById('shareModal').style.display = 'block';
             document.getElementById('overlay').style.display = 'block';
+            document.getElementById('shareSearchInput').value = '';
 
-            // Load conversations
-            const res = await fetch('/api/chat/conversations');
-            const convs = await res.json();
+            try {
+                const res = await fetch('/api/chat/followers');
+                allFollowers = await res.json();
+                renderShareList(allFollowers);
+            } catch (e) {
+                console.error('Failed to load followers', e);
+            }
+        }
+        function renderShareList(list) {
             const container = document.getElementById('shareConvList');
-            container.innerHTML = convs.map(c => {
-                const isGroup = c.type === 'GROUP';
-                const name = isGroup ? c.name : (c.participants.find(p => p.username !== '[[${currentUser != null ? currentUser.username : ""}]]')?.username || 'One-to-One');
-                return `
-                    <div style="padding: 10px; border-bottom: 1px solid #eee; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="shareToConv(${c.id})">
-                        <span>${name}</span>
-                        <i class="fas fa-chevron-right" style="color:#ccc;"></i>
+            if (!list || list.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:10px; color:var(--text-secondary); font-size:13px;">No followers found.</p>';
+                return;
+            }
+            container.innerHTML = list.map(u => `
+                <div style="padding: 8px 10px; border-bottom: 1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition: background 0.2s;" 
+                     onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="${u.profilePhotoUrl || 'https://ui-avatars.com/api/?name=' + u.username + '&background=F84464&color=fff&size=80'}" 
+                             style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                        <span style="font-size:14px; font-weight:600;">${u.username}</span>
                     </div>
-                `;
-            }).join('');
+                    <button class="nav-btn" onclick="shareToUser(${u.id})" style="padding:6px 16px; font-size:12px; border-radius:8px;">Send</button>
+                </div>
+            `).join('');
+        }
+        function filterShareList() {
+            const q = document.getElementById('shareSearchInput').value.toLowerCase();
+            const filtered = allFollowers.filter(u => u.username.toLowerCase().includes(q));
+            renderShareList(filtered);
         }
 
         function closeShareModal() {
             document.getElementById('shareModal').style.display = 'none';
             document.getElementById('overlay').style.display = 'none';
         }
-        async function shareToConv(convId) {
-            const res = await fetch('/api/chat/share-post', {
+        async function shareToUser(userId) {
+            const res = await fetch('/api/chat/share-post-to-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ postId: currentSharePostId, conversationId: convId })
+                body: JSON.stringify({ postId: currentSharePostId, recipientId: userId })
             });
             if (res.ok) {
-                alert('Post shared successfully!');
                 closeShareModal();
+                // Show a brief toast or notification instead of alert if possible, but alert is fine for now
+                alert('Shared!');
             } else {
                 alert('Failed to share post.');
             }

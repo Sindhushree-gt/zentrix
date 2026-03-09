@@ -262,7 +262,11 @@ public class ProfileController {
         }
 
         if (user != null) {
-            user = userRepository.findById(user.getId()).orElse(user);
+            user = userRepository.findById(user.getId()).orElse(null);
+        }
+
+        if (user == null) {
+            return "redirect:/login";
         }
 
         Post post = new Post(content, user, mediaUrl, mediaType, hashtags, postType, category);

@@ -173,4 +173,11 @@ public class Post {
     public void setComments(java.util.List<PostComment> comments) {
         this.comments = comments;
     }
+
+    public boolean isLikedByUser(User user) {
+        if (user == null || likes == null) {
+            return false;
+        }
+        return likes.stream().anyMatch(l -> l.getUser() != null && l.getUser().getId().equals(user.getId()));
+    }
 }

@@ -167,8 +167,24 @@ public class ChatRestController {
 
         // Notify participants via WebSocket
         messagingTemplate.convertAndSendToUser(user.getId().toString(), "/queue/messages", shared);
-        // We'd ideally notify others too, but for simplicity we rely on their polling
-        // or general broadcast
+
+        return ResponseEntity.ok(shared);
+    }
+
+    @PostMapping("/share-post-to-user")
+    public ResponseEntity<ChatMessage> sharePostToUser(@RequestBody Map<String, Object> payload, HttpSession session) {
+        User user = getUserFromSession(session);
+        if (user == null)
+            return ResponseEntity.status(401).build();
+
+        Long postId = Long.valueOf(payload.get("postId").toString());
+        Long recipientId = Long.valueOf(payload.get("recipientId").toString());
+
+        ChatMessage shared = chatService.sharePostToUser(postId, recipientId, user);
+
+        // Notify recipient via WebSocket
+        messagingTemplate.convertAndSendToUser(recipientId.toString(), "/queue/messages", shared);
+        messagingTemplate.convertAndSendToUser(user.getId().toString(), "/queue/messages", shared);
 
         return ResponseEntity.ok(shared);
     }
@@ -197,6 +213,16 @@ public class ChatRestController {
             users.removeIf(u -> u.getId().equals(currentUser.getId()));
         }
         return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/followers")
+    public ResponseEntity<List<User>> getFollowers(HttpSession session) {
+        User user = getUserFromSession(session);
+        if (user == null)
+            return ResponseEntity.status(401).build();
+        // Refresh to get collections if needed
+        user = userRepository.findById(user.getId()).orElse(user);
+        return ResponseEntity.ok(List.copyOf(user.getFollowers()));
     }
 
     @GetMapping("/search-users")

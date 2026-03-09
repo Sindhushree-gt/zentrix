@@ -510,102 +510,102 @@
                         <i class="fas fa-plus"></i>
                     </div>
                 </div>
+            </div>
 
-                <div class="profile-info">
-                    <div class="profile-top">
-                        <span class="profile-username">
-                            <span th:text="${user.username}">username</span>
-                            <i th:if="${user.premium}" class="fas fa-crown"
-                                style="color:#fbbf24; font-size:18px; margin-left:5px;" title="Premium Member"></i>
-                        </span>
+            <div class="profile-info">
+                <div class="profile-top">
+                    <span class="profile-username">
+                        <span th:text="${user.username}">username</span>
+                        <i th:if="${user.premium}" class="fas fa-crown"
+                            style="color:#fbbf24; font-size:18px; margin-left:5px;" title="Premium Member"></i>
+                    </span>
 
-                        <!-- Coin Balance -->
-                        <a href="/shop" class="coin-nav"
-                            style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px; padding: 5px 12px; height: auto; display: flex; align-items: center; gap: 8px; text-decoration: none; color: #ffd700; font-weight: 800; font-size: 13px; margin-left: 10px;">
-                            <i class="fas fa-coins" style="font-size: 14px;"></i>
-                            <span th:text="${user.coins}">0</span>
-                        </a>
+                    <!-- Coin Balance -->
+                    <a href="/shop" class="coin-nav"
+                        style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px; padding: 5px 12px; height: auto; display: flex; align-items: center; gap: 8px; text-decoration: none; color: #ffd700; font-weight: 800; font-size: 13px; margin-left: 10px;">
+                        <i class="fas fa-coins" style="font-size: 14px;"></i>
+                        <span th:text="${user.coins}">0</span>
+                    </a>
 
-                        <button class="btn-edit" th:if="${isOwnProfile}" onclick="openM('editModal')">
-                            <i class="fas fa-pen" style="font-size:11px;"></i> Edit Profile
+                    <button class="btn-edit" th:if="${isOwnProfile}" onclick="openM('editModal')">
+                        <i class="fas fa-pen" style="font-size:11px;"></i> Edit Profile
+                    </button>
+                    <div th:if="${!isOwnProfile}" th:id="'follow-wrapper-' + ${user.id}">
+                        <!-- Already Following -->
+                        <button th:if="${isFollowing}" class="btn-edit"
+                            th:onclick="'followUserAjax(' + ${user.id} + ', this)'">
+                            <i class="fas fa-user-check"></i> Following
                         </button>
-                        <div th:if="${!isOwnProfile}" th:id="'follow-wrapper-' + ${user.id}">
-                            <!-- Already Following -->
-                            <button th:if="${isFollowing}" class="btn-edit"
-                                th:onclick="'followUserAjax(' + ${user.id} + ', this)'">
-                                <i class="fas fa-user-check"></i> Following
-                            </button>
-                            <!-- Request Sent -->
-                            <button
-                                th:if="${!isFollowing and followRequests != null and #lists.contains(followRequests.![sender.id], session.user.id)}"
-                                class="btn-edit"
-                                th:onclick="'followUserAjax(' + ${user.id} + ', this)'">Requested</button>
-                            <!-- Not Following & No Request -->
-                            <button
-                                th:if="${!isFollowing and (followRequests == null or !#lists.contains(followRequests.![sender.id], session.user.id))}"
-                                th:onclick="'followUserAjax(' + ${user.id} + ', this)'" class="btn-follow">
-                                <i class="fas fa-user-plus"></i> Follow
-                            </button>
-                        </div>
+                        <!-- Request Sent -->
+                        <button
+                            th:if="${!isFollowing and followRequests != null and #lists.contains(followRequests.![sender.id], session.user.id)}"
+                            class="btn-edit" th:onclick="'followUserAjax(' + ${user.id} + ', this)'">Requested</button>
+                        <!-- Not Following & No Request -->
+                        <button
+                            th:if="${!isFollowing and (followRequests == null or !#lists.contains(followRequests.![sender.id], session.user.id))}"
+                            th:onclick="'followUserAjax(' + ${user.id} + ', this)'" class="btn-follow">
+                            <i class="fas fa-user-plus"></i> Follow
+                        </button>
                     </div>
+                </div>
 
-                    <div class="stats-row">
-                        <div class="stat" style="cursor:pointer;"
-                            onclick="switchTab('grid', document.querySelector('.tab-btn'))">
-                            <span class="stat-num" th:text="${#lists.size(posts)}">0</span>
-                            <span class="stat-label">Posts</span>
-                        </div>
-                        <div class="stat" style="cursor:pointer;" onclick="openFollowList('followers')">
-                            <span class="stat-num" th:text="${followersCount}">0</span>
-                            <span class="stat-label">Followers</span>
-                        </div>
-                        <div class="stat" style="cursor:pointer;" onclick="openFollowList('following')">
-                            <span class="stat-num" th:text="${followingCount}">0</span>
-                            <span class="stat-label">Following</span>
-                        </div>
+                <div class="stats-row">
+                    <div class="stat" style="cursor:pointer;"
+                        onclick="switchTab('grid', document.querySelector('.tab-btn'))">
+                        <span class="stat-num" th:text="${#lists.size(posts)}">0</span>
+                        <span class="stat-label">Posts</span>
                     </div>
-
-                    <p class="bio-text" style="color:var(--text-primary); font-weight:500;" th:text="${user.email}">
-                        email</p>
-                    <p class="bio-text"
-                        th:text="${user.aboutMe != null and !user.aboutMe.isEmpty()} ? ${user.aboutMe} : 'No bio yet. Click Edit Profile to add one!'">
-                        bio</p>
-                    <div class="skills-row" th:if="${user.skills != null and !user.skills.isEmpty()}">
-                        <span class="skill-pill" th:each="s : ${#strings.arraySplit(user.skills,',')}"
-                            th:text="${#strings.trim(s)}">skill</span>
+                    <div class="stat" style="cursor:pointer;" onclick="openFollowList('followers')">
+                        <span class="stat-num" th:text="${followersCount}">0</span>
+                        <span class="stat-label">Followers</span>
                     </div>
+                    <div class="stat" style="cursor:pointer;" onclick="openFollowList('following')">
+                        <span class="stat-num" th:text="${followingCount}">0</span>
+                        <span class="stat-label">Following</span>
+                    </div>
+                </div>
 
-                    <!-- Talent Score Box -->
-                    <div class="talent-score-card">
-                        <h4><i class="fas fa-crown" style="color:#fbbf24;"></i> Public Profile Talent Score</h4>
-                        <div class="ts-grid">
-                            <div class="ts-item"><span class="ts-v" th:text="${eventsJoined}">0</span><span
-                                    class="ts-l">Joined</span></div>
-                            <div class="ts-item"><span class="ts-v" th:text="${eventsWon}">0</span><span
-                                    class="ts-l">Wins</span></div>
-                            <div class="ts-item"><span class="ts-v" th:text="${'#' + userRank}">#1</span><span
-                                    class="ts-l">Rank</span></div>
-                            <div class="ts-item"><span class="ts-v" style="color:#f84464; font-size:14px;"
-                                    th:text="${user.premium ? '👑 Premium' : userBadge}">Novice</span><span
-                                    class="ts-l">Badge</span></div>
-                        </div>
+                <p class="bio-text" style="color:var(--text-primary); font-weight:500;" th:text="${user.email}">
+                    email</p>
+                <p class="bio-text"
+                    th:text="${user.aboutMe != null and !user.aboutMe.isEmpty()} ? ${user.aboutMe} : 'No bio yet. Click Edit Profile to add one!'">
+                    bio</p>
+                <div class="skills-row" th:if="${user.skills != null and !user.skills.isEmpty()}">
+                    <span class="skill-pill" th:each="s : ${#strings.arraySplit(user.skills,',')}"
+                        th:text="${#strings.trim(s)}">skill</span>
+                </div>
+
+                <!-- Talent Score Box -->
+                <div class="talent-score-card">
+                    <h4><i class="fas fa-crown" style="color:#fbbf24;"></i> Public Profile Talent Score</h4>
+                    <div class="ts-grid">
+                        <div class="ts-item"><span class="ts-v" th:text="${eventsJoined}">0</span><span
+                                class="ts-l">Joined</span></div>
+                        <div class="ts-item"><span class="ts-v" th:text="${eventsWon}">0</span><span
+                                class="ts-l">Wins</span></div>
+                        <div class="ts-item"><span class="ts-v" th:text="${'#' + userRank}">#1</span><span
+                                class="ts-l">Rank</span></div>
+                        <div class="ts-item"><span class="ts-v" style="color:#f84464; font-size:14px;"
+                                th:text="${user.premium ? '👑 Premium' : userBadge}">Novice</span><span
+                                class="ts-l">Badge</span></div>
                     </div>
                 </div>
             </div>
+    </div>
 
-            <!-- Tabs -->
-            <div class="tabs">
-                <button class="tab-btn active" onclick="switchTab('grid',this)"><i class="fas fa-th"></i> Posts</button>
-                <button class="tab-btn" onclick="switchTab('reels',this)"><i class="fas fa-film"></i> Reels</button>
-                <button class="tab-btn" th:if="${isOwnProfile}" onclick="switchTab('settings',this)"><i
-                        class="fas fa-cog"></i> Settings</button>
-            </div>
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('grid',this)"><i class="fas fa-th"></i> Posts</button>
+        <button class="tab-btn" onclick="switchTab('reels',this)"><i class="fas fa-film"></i> Reels</button>
+        <button class="tab-btn" th:if="${isOwnProfile}" onclick="switchTab('settings',this)"><i class="fas fa-cog"></i>
+            Settings</button>
+    </div>
 
-            <!-- Grid -->
-            <div class="tab-panel active" id="tab-grid">
-                <div class="posts-grid" th:if="${not #lists.isEmpty(posts)}">
-                    <div th:each="post : ${posts}" class="grid-item"
-                        th:attr="data-id=${post.id},
+    <!-- Grid -->
+    <div class="tab-panel active" id="tab-grid">
+        <div class="posts-grid" th:if="${not #lists.isEmpty(posts)}">
+            <div th:each="post : ${posts}" class="grid-item"
+                th:attr="data-id=${post.id},
                                data-content=${post.content},
                                data-hashtags=${post.hashtags != null ? post.hashtags : ''},
                                data-mediaurl=${post.mediaUrl != null ? post.mediaUrl : ''},
@@ -614,42 +614,41 @@
                                data-avatar=${post.user.profilePhotoUrl != null ? post.user.profilePhotoUrl : ''},
                                data-date=${#temporals.format(post.createdAt,'dd MMM yyyy')},
                                data-collabs=${#strings.listJoin(post.collaborations.?[status.name() == 'ACCEPTED'].![user.username], ', ')}"
-                        onclick="openPostDetail(this)">
+                onclick="openPostDetail(this)">
 
-                        <img th:if="${post.mediaUrl != null and post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}"
-                            alt="post">
-                        <video th:if="${post.mediaUrl != null and post.mediaType == 'VIDEO'}"
-                            th:src="@{${post.mediaUrl}}" muted></video>
-                        <div th:if="${post.mediaUrl == null}"
-                            style="display:flex; align-items:center; justify-content:center; height:100%; padding:20px; background:var(--card-bg);">
-                            <p style="font-size:12px; text-align:center; color:var(--text-secondary);"
-                                th:text="${#strings.abbreviate(post.content,90)}">text</p>
-                        </div>
-
-                        <div th:if="${not #lists.isEmpty(post.collaborations.?[status.name() == 'ACCEPTED'])}"
-                            style="position:absolute; top:8px; right:8px; background:var(--accent); color:white; border-radius:4px; padding:2px 6px; font-size:10px;">
-                            <i class="fas fa-users"></i>
-                        </div>
-
-                        <div class="grid-overlay">
-                            <span><i class="fas fa-heart"></i> <span class="lc">—</span></span>
-                            <span><i class="fas fa-comment"></i> <span class="cc">—</span></span>
-                        </div>
-                    </div>
+                <img th:if="${post.mediaUrl != null and post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}"
+                    alt="post">
+                <video th:if="${post.mediaUrl != null and post.mediaType == 'VIDEO'}" th:src="@{${post.mediaUrl}}"
+                    muted></video>
+                <div th:if="${post.mediaUrl == null}"
+                    style="display:flex; align-items:center; justify-content:center; height:100%; padding:20px; background:var(--card-bg);">
+                    <p style="font-size:12px; text-align:center; color:var(--text-secondary);"
+                        th:text="${#strings.abbreviate(post.content,90)}">text</p>
                 </div>
-                <div th:if="${#lists.isEmpty(posts)}"
-                    style="text-align:center; padding:60px 20px; color:var(--text-secondary);">
-                    <i class="fas fa-camera"
-                        style="font-size:48px; opacity:0.3; margin-bottom:15px; display:block;"></i>
-                    <p style="font-weight:600;">No Posts Yet</p>
+
+                <div th:if="${not #lists.isEmpty(post.collaborations.?[status.name() == 'ACCEPTED'])}"
+                    style="position:absolute; top:8px; right:8px; background:var(--accent); color:white; border-radius:4px; padding:2px 6px; font-size:10px;">
+                    <i class="fas fa-users"></i>
+                </div>
+
+                <div class="grid-overlay">
+                    <span><i class="fas fa-heart"></i> <span class="lc">—</span></span>
+                    <span><i class="fas fa-comment"></i> <span class="cc">—</span></span>
                 </div>
             </div>
+        </div>
+        <div th:if="${#lists.isEmpty(posts)}"
+            style="text-align:center; padding:60px 20px; color:var(--text-secondary);">
+            <i class="fas fa-camera" style="font-size:48px; opacity:0.3; margin-bottom:15px; display:block;"></i>
+            <p style="font-weight:600;">No Posts Yet</p>
+        </div>
+    </div>
 
-            <!-- Reels -->
-            <div class="tab-panel" id="tab-reels">
-                <div class="posts-grid" th:if="${not #lists.isEmpty(posts.?[postType == 'REEL'])}">
-                    <div th:each="post : ${posts}" th:if="${post.postType == 'REEL'}" class="grid-item"
-                        th:attr="data-id=${post.id},
+    <!-- Reels -->
+    <div class="tab-panel" id="tab-reels">
+        <div class="posts-grid" th:if="${not #lists.isEmpty(posts.?[postType == 'REEL'])}">
+            <div th:each="post : ${posts}" th:if="${post.postType == 'REEL'}" class="grid-item"
+                th:attr="data-id=${post.id},
                                data-content=${post.content},
                                data-hashtags=${post.hashtags != null ? post.hashtags : ''},
                                data-mediaurl=${post.mediaUrl != null ? post.mediaUrl : ''},
@@ -659,40 +658,38 @@
                                data-date=${#temporals.format(post.createdAt,'dd MMM yyyy')},
                                data-collabs=${#strings.listJoin(post.collaborations.?[status.name() == 'ACCEPTED'].![user.username], ', ')}" onclick="openPostDetail(this)">
 
-                        <img th:if="${post.mediaUrl != null and post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}"
-                            alt="reel">
-                        <video th:if="${post.mediaUrl != null and post.mediaType == 'VIDEO'}"
-                            th:src="@{${post.mediaUrl}}" muted></video>
+                <img th:if="${post.mediaUrl != null and post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}"
+                    alt="reel">
+                <video th:if="${post.mediaUrl != null and post.mediaType == 'VIDEO'}" th:src="@{${post.mediaUrl}}"
+                    muted></video>
 
-                        <div class="grid-overlay">
-                            <span><i class="fas fa-play"></i></span>
-                        </div>
-                    </div>
-                </div>
-                <div th:if="${#lists.isEmpty(posts.?[postType == 'REEL'])}"
-                    style="text-align:center; padding:60px 20px; color:var(--text-secondary);">
-                    <i class="fas fa-video-slash"
-                        style="font-size:48px; opacity:0.3; margin-bottom:15px; display:block;"></i>
-                    <p style="font-weight:600;">No Reels Yet</p>
+                <div class="grid-overlay">
+                    <span><i class="fas fa-play"></i></span>
                 </div>
             </div>
+        </div>
+        <div th:if="${#lists.isEmpty(posts.?[postType == 'REEL'])}"
+            style="text-align:center; padding:60px 20px; color:var(--text-secondary);">
+            <i class="fas fa-video-slash" style="font-size:48px; opacity:0.3; margin-bottom:15px; display:block;"></i>
+            <p style="font-weight:600;">No Reels Yet</p>
+        </div>
+    </div>
 
-            <!-- Settings -->
-            <div class="tab-panel" id="tab-settings" th:if="${isOwnProfile}">
-                <div style="max-width:500px; margin:0 auto;">
-                    <div class="feature-card" style="margin-bottom:20px;">
-                        <h3 style="margin-bottom:15px;"><i class="fas fa-lock" style="color:var(--accent);"></i> Reset
-                            Password</h3>
-                        <form th:action="@{/profile/reset-password}" method="post" style="display:flex; gap:10px;">
-                            <input type="password" name="newPassword" class="form-input" placeholder="New password"
-                                required>
-                            <button type="submit" class="cta-btn" style="padding:10px 20px;">Reset</button>
-                        </form>
-                    </div>
-                </div>
+    <!-- Settings -->
+    <div class="tab-panel" id="tab-settings" th:if="${isOwnProfile}">
+        <div style="max-width:500px; margin:0 auto;">
+            <div class="feature-card" style="margin-bottom:20px;">
+                <h3 style="margin-bottom:15px;"><i class="fas fa-lock" style="color:var(--accent);"></i> Reset
+                    Password</h3>
+                <form th:action="@{/profile/reset-password}" method="post" style="display:flex; gap:10px;">
+                    <input type="password" name="newPassword" class="form-input" placeholder="New password" required>
+                    <button type="submit" class="cta-btn" style="padding:10px 20px;">Reset</button>
+                </form>
             </div>
+        </div>
+    </div>
 
-        </main>
+    </main>
     </div>
 
     <!-- Modals -->
@@ -933,6 +930,10 @@
                             style="background:none; border:none; color:var(--text-secondary); display:flex; align-items:center; gap:5px;">
                             <i class="fas fa-comment"></i> <span id="cmtCount">0</span>
                         </button>
+                        <button class="nav-btn" onclick="openShareModal(currentId)"
+                            style="background:none; border:none; color:var(--text-secondary); display:flex; align-items:center; gap:5px;">
+                            <i class="fas fa-share"></i>
+                        </button>
                         <button class="nav-btn" id="deleteBtn" onclick="deletePost()"
                             style="display:none; background:none; border:none; color:var(--accent); margin-left:auto;">
                             <i class="fas fa-trash-alt"></i>
@@ -1012,6 +1013,30 @@
                     style="background:none; border:none; color:var(--text-secondary); font-size:20px;">&times;</button>
             </div>
             <div id="followBody" style="padding:15px;"></div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="overlay" id="shareModal" style="z-index: 2200;">
+        <div class="modal" style="max-width:400px;">
+            <div
+                style="padding:15px; border-bottom:1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center;">
+                <h3>Share to Chat</h3>
+                <i class="fas fa-times close-modal" onclick="closeM('shareModal')"
+                    style="cursor:pointer; opacity:0.6;"></i>
+            </div>
+            <div style="padding: 15px;">
+                <div style="margin-bottom: 12px;">
+                    <input type="text" id="shareSearchInput" placeholder="Search followers..."
+                        onkeyup="filterShareList()"
+                        style="width:100%; padding:10px 14px; border-radius:12px; background:var(--card-bg); border:1px solid var(--glass-border); color:white; outline:none; font-size:14px;">
+                </div>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">Select to share this
+                    post:</p>
+                <div id="shareConvList" style="max-height: 350px; overflow-y: auto;">
+                    <!-- Followers will be loaded here via JS -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1383,6 +1408,57 @@
         let currentStories = [];
         let storyTimer = null;
         const CURRENT_USER_ID = /*[[${session.user.id}]]*/ null;
+
+        let allFollowers = [];
+        async function openShareModal(postId) {
+            currentSharePostId = postId;
+            openM('shareModal');
+            document.getElementById('shareSearchInput').value = '';
+
+            try {
+                const res = await fetch('/api/chat/followers');
+                allFollowers = await res.json();
+                renderShareList(allFollowers);
+            } catch (e) {
+                console.error('Failed to load followers', e);
+            }
+        }
+        function renderShareList(list) {
+            const container = document.getElementById('shareConvList');
+            if (!list || list.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:10px; color:var(--text-secondary); font-size:13px;">No followers found.</p>';
+                return;
+            }
+            container.innerHTML = list.map(u => `
+                <div style="padding: 8px 10px; border-bottom: 1px solid var(--glass-border); display:flex; justify-content:space-between; align-items:center; cursor:pointer; transition: background 0.2s;" 
+                     onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="${u.profilePhotoUrl || 'https://ui-avatars.com/api/?name=' + u.username + '&background=F84464&color=fff&size=80'}" 
+                             style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                        <span style="font-size:14px; font-weight:600;">${u.username}</span>
+                    </div>
+                    <button class="nav-btn" onclick="shareToUser(${u.id})" style="padding:6px 16px; font-size:12px; border-radius:8px;">Send</button>
+                </div>
+            `).join('');
+        }
+        function filterShareList() {
+            const q = document.getElementById('shareSearchInput').value.toLowerCase();
+            const filtered = allFollowers.filter(u => u.username.toLowerCase().includes(q));
+            renderShareList(filtered);
+        }
+        async function shareToUser(userId) {
+            const res = await fetch('/api/chat/share-post-to-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ postId: currentSharePostId, recipientId: userId })
+            });
+            if (res.ok) {
+                closeM('shareModal');
+                toast('Shared!');
+            } else {
+                alert('Failed to share post.');
+            }
+        }
 
         async function openStoryViewer(userId) {
             try {
