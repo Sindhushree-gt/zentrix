@@ -532,6 +532,12 @@
                     <label>Amount Paid</label>
                     <div class="val" th:text="${event.price != null ? event.price : 'Free'}">Free</div>
                 </div>
+                <div th:if="${not #lists.isEmpty(bookedSeats)}" class="ticket-field"
+                    style="grid-column: span 3; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);">
+                    <label>Selected Seats</label>
+                    <div class="val" style="font-size: 1.2rem; color: #fbbf24;"
+                        th:text="${#strings.listJoin(bookedSeats.![seatIdentifier], ', ')}">A1, A2</div>
+                </div>
             </div>
 
             <!-- Footer: Ticket ID + Mini QR -->

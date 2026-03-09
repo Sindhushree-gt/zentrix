@@ -513,7 +513,19 @@
 
                 <div class="profile-info">
                     <div class="profile-top">
-                        <span class="profile-username" th:text="${user.username}">username</span>
+                        <span class="profile-username">
+                            <span th:text="${user.username}">username</span>
+                            <i th:if="${user.premium}" class="fas fa-crown"
+                                style="color:#fbbf24; font-size:18px; margin-left:5px;" title="Premium Member"></i>
+                        </span>
+
+                        <!-- Coin Balance -->
+                        <a href="/shop" class="coin-nav"
+                            style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px; padding: 5px 12px; height: auto; display: flex; align-items: center; gap: 8px; text-decoration: none; color: #ffd700; font-weight: 800; font-size: 13px; margin-left: 10px;">
+                            <i class="fas fa-coins" style="font-size: 14px;"></i>
+                            <span th:text="${user.coins}">0</span>
+                        </a>
+
                         <button class="btn-edit" th:if="${isOwnProfile}" onclick="openM('editModal')">
                             <i class="fas fa-pen" style="font-size:11px;"></i> Edit Profile
                         </button>
@@ -574,7 +586,8 @@
                             <div class="ts-item"><span class="ts-v" th:text="${'#' + userRank}">#1</span><span
                                     class="ts-l">Rank</span></div>
                             <div class="ts-item"><span class="ts-v" style="color:#f84464; font-size:14px;"
-                                    th:text="${userBadge}">Novice</span><span class="ts-l">Badge</span></div>
+                                    th:text="${user.premium ? '👑 Premium' : userBadge}">Novice</span><span
+                                    class="ts-l">Badge</span></div>
                         </div>
                     </div>
                 </div>

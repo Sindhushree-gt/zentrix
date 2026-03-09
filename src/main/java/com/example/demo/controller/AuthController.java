@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.RewardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +15,9 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private RewardService rewardService;
 
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
@@ -45,6 +49,7 @@ public class AuthController {
         }
         User user = userRepository.findByUsername(username);
         if (user != null && user.getPassword().equals(password)) {
+            rewardService.awardDailyLogin(user); // Zen Coins Awarded here
             session.setAttribute("user", user);
             session.setAttribute("userId", user.getId());
             return "redirect:/dashboard";
