@@ -40,15 +40,19 @@ public class ChatWebSocketController {
         if (sender == null)
             return;
 
-        ChatMessage message = chatService.sendMessage(
-            sender, 
-            destinationId, 
-            content, 
-            mediaUrl, 
-            parentId, 
-            isGroup, 
-            isForwarded
-        );
+        ChatMessage message;
+        try {
+            message = chatService.sendMessage(
+                    sender,
+                    destinationId,
+                    content,
+                    mediaUrl,
+                    parentId,
+                    isGroup,
+                    isForwarded);
+        } catch (RuntimeException ex) {
+            return;
+        }
         Conversation conv = message.getConversation();
 
         // Broadcast to participants
@@ -69,7 +73,12 @@ public class ChatWebSocketController {
         User reactor = new User();
         reactor.setId(senderId);
 
-        ChatMessage message = chatService.reactToMessage(messageId, reaction, reactor);
+        ChatMessage message;
+        try {
+            message = chatService.reactToMessage(messageId, reaction, reactor);
+        } catch (RuntimeException ex) {
+            return;
+        }
 
         for (User p : message.getConversation().getParticipants()) {
             messagingTemplate.convertAndSendToUser(p.getId().toString(), "/queue/reaction", message);
@@ -92,7 +101,11 @@ public class ChatWebSocketController {
             return;
 
         Conversation conv = message.getConversation();
-        chatService.deleteMessage(messageId, sender);
+        try {
+            chatService.deleteMessage(messageId, sender);
+        } catch (RuntimeException ex) {
+            return;
+        }
 
         Map<String, Object> response = new java.util.HashMap<>();
         response.put("messageId", messageId);
@@ -119,12 +132,20 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat.vanish")
     public void sendVanishStatus(@Payload Map<String, Object> payload) {
-        if (payload.get("conversationId") == null || payload.get("enabled") == null)
+        if (payload.get("conversationId") == null || payload.get("enabled") == null || payload.get("senderId") == null)
             return;
         Long conversationId = Long.valueOf(payload.get("conversationId").toString());
         boolean enabled = (boolean) payload.get("enabled");
+        Long senderId = Long.valueOf(payload.get("senderId").toString());
+        User actor = userRepository.findById(senderId).orElse(null);
+        if (actor == null) return;
 
-        Conversation conv = chatService.toggleVanishMode(conversationId, enabled);
+        Conversation conv;
+        try {
+            conv = chatService.toggleVanishMode(conversationId, enabled, actor);
+        } catch (RuntimeException ex) {
+            return;
+        }
 
         for (User p : conv.getParticipants()) {
             messagingTemplate.convertAndSendToUser(p.getId().toString(), "/queue/vanish", payload);
@@ -133,12 +154,20 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat.theme")
     public void sendThemeStatus(@Payload Map<String, Object> payload) {
-        if (payload.get("conversationId") == null || payload.get("theme") == null)
+        if (payload.get("conversationId") == null || payload.get("theme") == null || payload.get("senderId") == null)
             return;
         Long conversationId = Long.valueOf(payload.get("conversationId").toString());
         String theme = payload.get("theme").toString();
+        Long senderId = Long.valueOf(payload.get("senderId").toString());
+        User actor = userRepository.findById(senderId).orElse(null);
+        if (actor == null) return;
 
-        Conversation conv = chatService.updateTheme(conversationId, theme);
+        Conversation conv;
+        try {
+            conv = chatService.updateTheme(conversationId, theme, actor);
+        } catch (RuntimeException ex) {
+            return;
+        }
 
         for (User p : conv.getParticipants()) {
             messagingTemplate.convertAndSendToUser(p.getId().toString(), "/queue/theme", payload);

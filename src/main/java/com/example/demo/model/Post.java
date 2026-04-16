@@ -31,6 +31,11 @@ public class Post {
     private String mediaUrl;
     private String mediaType; // "IMAGE" or "VIDEO"
     private String hashtags;
+    private String postType; // "POST", "REEL", "STORY"
+    private String category; // e.g. "Food", "Dance", "Vlog" etc.
+
+    @Column(name = "comments_disabled", nullable = false)
+    private boolean commentsDisabled = false;
 
     public Post() {
         this.createdAt = LocalDateTime.now();
@@ -42,6 +47,19 @@ public class Post {
         this.mediaUrl = mediaUrl;
         this.mediaType = mediaType;
         this.hashtags = hashtags;
+        this.postType = "POST";
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public Post(String content, User user, String mediaUrl, String mediaType, String hashtags, String postType,
+            String category) {
+        this.content = content;
+        this.user = user;
+        this.mediaUrl = mediaUrl;
+        this.mediaType = mediaType;
+        this.hashtags = hashtags;
+        this.postType = postType != null ? postType : "POST";
+        this.category = category;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -107,11 +125,59 @@ public class Post {
         this.hashtags = hashtags;
     }
 
+    public String getPostType() {
+        return postType;
+    }
+
+    public void setPostType(String postType) {
+        this.postType = postType;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public boolean isCommentsDisabled() {
+        return commentsDisabled;
+    }
+
+    public void setCommentsDisabled(boolean commentsDisabled) {
+        this.commentsDisabled = commentsDisabled;
+    }
+
     public java.util.List<PostCollaboration> getCollaborations() {
+
         return collaborations;
     }
 
     public void setCollaborations(java.util.List<PostCollaboration> collaborations) {
         this.collaborations = collaborations;
+    }
+
+    public java.util.List<PostLike> getLikes() {
+        return likes;
+    }
+
+    public void setLikes(java.util.List<PostLike> likes) {
+        this.likes = likes;
+    }
+
+    public java.util.List<PostComment> getComments() {
+        return comments;
+    }
+
+    public void setComments(java.util.List<PostComment> comments) {
+        this.comments = comments;
+    }
+
+    public boolean isLikedByUser(User user) {
+        if (user == null || likes == null) {
+            return false;
+        }
+        return likes.stream().anyMatch(l -> l.getUser() != null && l.getUser().getId().equals(user.getId()));
     }
 }

@@ -438,7 +438,7 @@
             animation: fadeIn 0.2s ease;
             word-wrap: break-word;
             word-break: break-word;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
         }
 
         @keyframes fadeIn {
@@ -458,7 +458,7 @@
             background: var(--sent-bubble);
             color: var(--text-on-sent, var(--text-on-accent));
             border-top-right-radius: 0;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
         }
 
         .msg-bubble.received {
@@ -466,7 +466,7 @@
             background: var(--msg-received-bg);
             color: var(--msg-received-text);
             border-top-left-radius: 0;
-            box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+            box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
         }
 
         .msg-bubble img,
@@ -477,7 +477,7 @@
             object-fit: cover;
             display: block;
             margin: 0;
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .msg-bubble.media-only {
@@ -607,6 +607,79 @@
 
         .btn-send:active {
             transform: scale(0.95);
+        }
+
+        /* Emoji + Sticker pickers */
+        .picker-panel {
+            position: absolute;
+            bottom: 52px;
+            left: 8px;
+            width: min(340px, calc(100vw - 40px));
+            max-height: 260px;
+            overflow-y: auto;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+            display: none;
+            z-index: 50;
+        }
+
+        .picker-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+        }
+
+        .picker-item {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s ease;
+        }
+
+        .picker-item:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        body[data-theme="dark"] .picker-item:hover,
+        body[data-theme="midnight"] .picker-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .picker-emoji {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .picker-sticker img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .msg-bubble.sticker {
+            padding: 6px;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .msg-bubble.sticker.sent {
+            background: transparent;
+        }
+
+        .msg-bubble.sticker img {
+            width: 160px;
+            max-width: 50vw;
+            height: auto;
+            border-radius: 14px;
+            display: block;
         }
 
         /* Message Search Styles */
@@ -1486,7 +1559,7 @@
             --sent-bubble: #fed7d7;
             --text-on-sent: #742a2a;
         }
-        
+
         body[data-theme="lavender"] {
             --bg-color: #f5f3ff;
             --sidebar-bg: #ffffff;
@@ -1494,7 +1567,7 @@
             --sent-bubble: #e9d5ff;
             --text-on-sent: #4c1d95;
         }
-        
+
         body[data-theme="ocean"] {
             --bg-color: #f0f9ff;
             --sidebar-bg: #ffffff;
@@ -1502,7 +1575,7 @@
             --sent-bubble: #bae6fd;
             --text-on-sent: #0c4a6e;
         }
-        
+
         body[data-theme="forest"] {
             --bg-color: #f0fdf4;
             --sidebar-bg: #ffffff;
@@ -1577,7 +1650,7 @@
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 9999;
         }
 
         .modal-content {
@@ -1764,6 +1837,16 @@
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                             </svg>
                         </div>
+                        <div class="header-icon" id="manageGroupBtn" title="Group members"
+                            onclick="openManageGroupModal()" style="display:none;">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
                     </div>
                 </div>
 
@@ -1859,6 +1942,12 @@
                         </div>
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,video/*"
                             onchange="handleFileUpload(this)">
+                        <div class="header-icon" title="Emoji" onclick="toggleEmojiPicker()" style="margin: 0 4px;">
+                            <span style="font-size:20px; line-height:1;">😊</span>
+                        </div>
+                        <div class="header-icon" title="Stickers" onclick="toggleStickerPicker()" style="margin: 0 4px;">
+                            <span style="font-size:20px; line-height:1;">🧩</span>
+                        </div>
                         <input type="text" id="chatInput" placeholder="Message..." onkeypress="handleKeyStroke(event)">
                         <div class="header-icon" id="voiceBtn" title="Record voice message" onclick="startRecording()"
                             style="margin: 0 5px;">
@@ -1871,6 +1960,13 @@
                             </svg>
                         </div>
                         <div class="btn-send" onclick="sendChatMessage()">Send</div>
+
+                        <div class="picker-panel" id="emojiPicker">
+                            <div class="picker-grid" id="emojiGrid"></div>
+                        </div>
+                        <div class="picker-panel" id="stickerPicker">
+                            <div class="picker-grid" id="stickerGrid"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1970,9 +2066,39 @@
         </div>
     </div>
 
+    <!-- Manage Group Modal -->
+    <div class="modal-overlay" id="manageGroupModal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Manage Group</h3>
+                <svg onclick="closeManageGroupModal()" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" style="cursor:pointer;">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+            <div style="padding: 15px;">
+                <div id="manageGroupAdminOnly" class="search-box" style="margin-bottom:15px;">
+                    <input type="text" id="manageGroupUserSearch" placeholder="Search users to add..."
+                        onkeyup="searchUsersToAddToGroup()">
+                </div>
+                <div id="manageGroupAdminHint" style="display:none; margin-bottom:15px; opacity:0.75; font-size:13px;">
+                    Only the group admin can add/remove members.
+                </div>
+                <div id="manageGroupUserResults" style="max-height: 200px; overflow-y: auto;"></div>
+                <div style="margin-top: 15px; font-weight: 600;">Members</div>
+                <div id="manageGroupMembers" style="max-height: 260px; overflow-y: auto; margin-top: 10px;"></div>
+            </div>
+        </div>
+    </div>
+
     <script th:inline="javascript">
         window.Zentrix = {
-            currentUser: /*[[${currentUser}]]*/ null,
+            currentUser: {
+                id: /*[[${currentUser.id}]]*/ 0,
+                username: /*[[${currentUser.username}]]*/ 'Unknown',
+                profilePicture: /*[[${currentUser.profilePicture}]]*/ null
+            },
             paths: {
                 conversations: /*[[@{/api/chat/conversations}]]*/ '/api/chat/conversations',
                 history: /*[[@{/api/chat/history/}]]*/ '/api/chat/history/',
@@ -1982,7 +2108,8 @@
                 markSeen: /*[[@{/api/chat/mark-seen/}]]*/ '/api/chat/mark-seen/',
                 media: /*[[@{/api/chat/media/}]]*/ '/api/chat/media/',
                 ws: /*[[@{/ws-chat}]]*/ '/ws-chat',
-                cleanupVanish: /*[[@{/api/chat/cleanup-vanish/}]]*/ '/api/chat/cleanup-vanish/'
+                cleanupVanish: /*[[@{/api/chat/cleanup-vanish/}]]*/ '/api/chat/cleanup-vanish/',
+                groupBase: /*[[@{/api/chat/group/}]]*/ '/api/chat/group/'
             }
         };
     </script>
@@ -1997,6 +2124,71 @@
 
         // Group Management
         let selectedGroupUsers = [];
+        let manageGroupState = { creatorId: null, participants: [], isAdmin: false };
+
+        // Emoji + Sticker pickers
+        const EMOJIS = ['😀', '😁', '😂', '🤣', '😊', '😍', '😘', '😎', '🥳', '😇', '🤔', '😅', '😭', '😡', '👍', '👎', '🙏', '🔥', '🎉', '💯', '❤️', '✨', '🌟', '😴', '🤝', '🙌', '😮', '😬', '🤩', '😜', '🤗', '💡'];
+        const STICKERS = [
+            '/stickers/sticker-hello.svg',
+            '/stickers/sticker-lol.svg',
+            '/stickers/sticker-love.svg',
+            '/stickers/sticker-wow.svg',
+            '/stickers/sticker-thanks.svg',
+            '/stickers/sticker-cool.svg'
+        ];
+
+        function closePickers() {
+            const e = document.getElementById('emojiPicker');
+            const s = document.getElementById('stickerPicker');
+            if (e) e.style.display = 'none';
+            if (s) s.style.display = 'none';
+        }
+
+        function toggleEmojiPicker() {
+            const panel = document.getElementById('emojiPicker');
+            const other = document.getElementById('stickerPicker');
+            if (!panel) return;
+            if (other) other.style.display = 'none';
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function toggleStickerPicker() {
+            const panel = document.getElementById('stickerPicker');
+            const other = document.getElementById('emojiPicker');
+            if (!panel) return;
+            if (other) other.style.display = 'none';
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function insertEmoji(emoji) {
+            const input = document.getElementById('chatInput');
+            if (!input) return;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            input.value = input.value.slice(0, start) + emoji + input.value.slice(end);
+            const pos = start + emoji.length;
+            input.setSelectionRange(pos, pos);
+            input.focus();
+        }
+
+        function sendSticker(stickerUrl) {
+            if (!stompClient || !activeConversationId) return;
+            const conv = conversationsData.find(c => c.id == activeConversationId);
+            const isGroup = conv && conv.type === 'GROUP';
+            const payload = {
+                senderId: currentUser.id,
+                recipientId: isGroup ? activeConversationId : activeRecipientId,
+                conversationId: activeConversationId,
+                content: '',
+                mediaUrl: stickerUrl,
+                parentId: replyingToId,
+                isGroup: isGroup,
+                isForwarded: false
+            };
+            stompClient.send("/app/chat.send", {}, JSON.stringify(payload));
+            cancelReply();
+            closePickers();
+        }
 
         function openNewGroupModal() {
             document.getElementById('newGroupModal').style.display = 'flex';
@@ -2086,8 +2278,36 @@
             console.log('[DEBUG] initialize() started');
             try {
                 connectWebSocket();
+                initPickers();
                 await loadConversations();
                 console.log('[DEBUG] initialize() completed successfully');
+
+                // Deep-link check: ?u=username
+                const params = new URLSearchParams(window.location.search);
+                const targetU = params.get('u');
+                if (targetU) {
+                    console.log('[DEBUG] Deep link for user:', targetU);
+                    // Find user in existing conversations first
+                    const existing = conversationsData.find(c =>
+                        c.type !== 'GROUP' && c.participants.some(p => p.username === targetU)
+                    );
+                    if (existing) {
+                        const partner = existing.participants.find(p => p.username === targetU);
+                        selectConversation(existing, partner);
+                    } else {
+                        // Search for user to start new chat
+                        try {
+                            const res = await fetch(window.Zentrix.paths.searchUsers + '?query=' + encodeURIComponent(targetU));
+                            const users = await res.json();
+                            const user = users.find(u => u.username === targetU);
+                            if (user) {
+                                selectUserForChat(user);
+                            }
+                        } catch (e) {
+                            console.error('Failed to find deep-link user:', e);
+                        }
+                    }
+                }
             } catch (err) {
                 console.error('[ERROR] initialize() failed:', err);
                 alert('Failed to initialize chat system. Check console for details.');
@@ -2095,6 +2315,36 @@
 
             // Polling for updates if WebSocket drops (fallback)
             setInterval(loadConversations, 10000);
+        }
+
+        function initPickers() {
+            const emojiGrid = document.getElementById('emojiGrid');
+            if (emojiGrid && emojiGrid.children.length === 0) {
+                emojiGrid.innerHTML = EMOJIS.map(e => `
+                    <div class="picker-item picker-emoji" onclick="insertEmoji('${e}')">${e}</div>
+                `).join('');
+            }
+
+            const stickerGrid = document.getElementById('stickerGrid');
+            if (stickerGrid && stickerGrid.children.length === 0) {
+                stickerGrid.innerHTML = STICKERS.map(u => `
+                    <div class="picker-item picker-sticker" onclick="sendSticker('${u}')">
+                        <img src="${u}" alt="sticker">
+                    </div>
+                `).join('');
+            }
+
+            // Close pickers when clicking outside
+            if (!window.__pickersInit) {
+                window.__pickersInit = true;
+                document.addEventListener('click', (e) => {
+                    const emojiPanel = document.getElementById('emojiPicker');
+                    const stickerPanel = document.getElementById('stickerPicker');
+                    const manageBtn = e.target && (e.target.closest && e.target.closest('[onclick="toggleEmojiPicker()"],[onclick="toggleStickerPicker()"]'));
+                    const insidePanel = (emojiPanel && emojiPanel.contains(e.target)) || (stickerPanel && stickerPanel.contains(e.target));
+                    if (!insidePanel && !manageBtn) closePickers();
+                });
+            }
         }
 
         function connectWebSocket() {
@@ -2351,6 +2601,7 @@
 
             const convName = conv.type === 'GROUP' ? conv.name : (partner ? partner.username : 'Direct Chat');
             document.getElementById('activeUserName').innerText = convName;
+            updateManageGroupButton(conv);
 
             const avatarEl = document.getElementById('activeAvatar');
             if (conv.type === 'GROUP') {
@@ -2379,6 +2630,121 @@
 
             await loadMessages(conv.id);
             markAsSeen();
+        }
+
+        function updateManageGroupButton(conv) {
+            const btn = document.getElementById('manageGroupBtn');
+            if (!btn) return;
+            const isGroup = conv && conv.type === 'GROUP';
+            btn.style.display = isGroup ? 'flex' : 'none';
+        }
+
+        async function openManageGroupModal() {
+            if (!activeConversationId) return;
+            const conv = conversationsData.find(c => String(c.id) === String(activeConversationId));
+            if (!conv || conv.type !== 'GROUP') return;
+
+            const modal = document.getElementById('manageGroupModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            await refreshManageGroupParticipants();
+        }
+
+        function closeManageGroupModal() {
+            const modal = document.getElementById('manageGroupModal');
+            if (modal) modal.style.display = 'none';
+            const input = document.getElementById('manageGroupUserSearch');
+            if (input) input.value = '';
+            const res = document.getElementById('manageGroupUserResults');
+            if (res) res.innerHTML = '';
+        }
+
+        async function refreshManageGroupParticipants() {
+            const res = await fetch(window.Zentrix.paths.groupBase + activeConversationId + '/participants');
+            if (!res.ok) return;
+            const data = await res.json();
+            manageGroupState.creatorId = data.creatorId;
+            manageGroupState.participants = data.participants || [];
+            manageGroupState.isAdmin = String(data.creatorId) === String(currentUser.id);
+
+            const adminOnly = document.getElementById('manageGroupAdminOnly');
+            const hint = document.getElementById('manageGroupAdminHint');
+            const results = document.getElementById('manageGroupUserResults');
+            if (adminOnly) adminOnly.style.display = manageGroupState.isAdmin ? 'block' : 'none';
+            if (hint) hint.style.display = manageGroupState.isAdmin ? 'none' : 'block';
+            if (results && !manageGroupState.isAdmin) results.innerHTML = '';
+            renderManageGroupMembers();
+        }
+
+        function renderManageGroupMembers() {
+            const container = document.getElementById('manageGroupMembers');
+            if (!container) return;
+            const creatorId = manageGroupState.creatorId;
+            container.innerHTML = (manageGroupState.participants || []).map(u => {
+                const isCreator = String(u.id) === String(creatorId);
+                const canRemove = manageGroupState.isAdmin && !isCreator;
+                return `
+                    <div class="search-result-item" style="cursor:default;">
+                        <div class="result-avatar">${(u.username || 'U').charAt(0)}</div>
+                        <div style="display:flex; flex-direction:column;">
+                            <div>${u.username || 'User'}</div>
+                            <div style="font-size:12px; opacity:0.7;">${isCreator ? 'Admin' : 'Member'}</div>
+                        </div>
+                        <div style="margin-left:auto;">
+                            ${canRemove ? `<button class="btn-new-msg" style="padding:6px 10px; font-size:12px;" onclick="removeMemberFromGroup(${u.id})">Remove</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function searchUsersToAddToGroup() {
+            if (!manageGroupState.isAdmin) return;
+            const input = document.getElementById('manageGroupUserSearch');
+            if (!input) return;
+            const query = input.value.trim();
+            if (query.length < 2) return;
+            const res = await fetch(window.Zentrix.paths.searchUsers + '?query=' + encodeURIComponent(query));
+            if (!res.ok) return;
+            const users = await res.json();
+
+            const existingIds = new Set((manageGroupState.participants || []).map(p => String(p.id)));
+            const container = document.getElementById('manageGroupUserResults');
+            if (!container) return;
+            container.innerHTML = users
+                .filter(u => !existingIds.has(String(u.id)))
+                .map(u => `
+                    <div class="search-result-item" onclick="addMemberToGroup(${u.id})">
+                        <div class="result-avatar">${u.username.charAt(0)}</div>
+                        <div>${u.username}</div>
+                        <div style="margin-left:auto;">+</div>
+                    </div>
+                `).join('');
+        }
+
+        async function addMemberToGroup(userId) {
+            if (!activeConversationId) return;
+            if (!manageGroupState.isAdmin) return;
+            const res = await fetch(window.Zentrix.paths.groupBase + activeConversationId + '/add-participants', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ participantIds: [userId] })
+            });
+            if (!res.ok) return;
+            await loadConversations();
+            await refreshManageGroupParticipants();
+            await searchUsersToAddToGroup();
+        }
+
+        async function removeMemberFromGroup(userId) {
+            if (!activeConversationId) return;
+            if (!manageGroupState.isAdmin) return;
+            const res = await fetch(window.Zentrix.paths.groupBase + activeConversationId + '/remove-participant/' + userId, {
+                method: 'POST'
+            });
+            if (!res.ok) return;
+            await loadConversations();
+            await refreshManageGroupParticipants();
         }
 
         async function loadMessages(convId) {
@@ -2450,6 +2816,10 @@
                 if (msg.content && msg.content.trim() !== '') mediaDiv.style.marginTop = '8px';
                 const lowerUrl = msg.mediaUrl.toLowerCase();
 
+                if (lowerUrl.includes('/stickers/')) {
+                    bubble.classList.add('sticker');
+                    mediaDiv.innerHTML = `<img src="${msg.mediaUrl}" alt="sticker">`;
+                } else
                 if (lowerUrl.endsWith('.mp4') || lowerUrl.endsWith('.webm') && !lowerUrl.includes('voice-message')) {
                     // Standard Video
                     mediaDiv.innerHTML = `<video src="${msg.mediaUrl}" controls></video>`;
@@ -2526,7 +2896,7 @@
 
             const file = input.files[0];
             console.log('[DEBUG] Selected file:', file.name, 'Size:', file.size, 'Type:', file.type);
-            
+
             const formData = new FormData();
             formData.append('file', file);
 
@@ -2536,16 +2906,16 @@
                     method: 'POST',
                     body: formData
                 });
-                
+
                 console.log('[DEBUG] Upload response status:', res.status, res.statusText);
-                
+
                 if (!res.ok) {
                     const text = await res.text();
                     console.error('[ERROR] Upload failed with status:', res.status, 'Body:', text);
                     alert('Upload failed: ' + res.status);
                     throw new Error('Upload failed with status ' + res.status);
                 }
-                
+
                 const data = await res.json();
                 console.log('[DEBUG] Upload response data:', data);
 
@@ -2566,7 +2936,7 @@
                 } else {
                     console.error('[ERROR] Upload succeeded but no URL returned:', data);
                 }
-            } catch (e) { 
+            } catch (e) {
                 console.error('[ERROR] Exception during upload:', e);
                 alert('An error occurred during upload. Check console for details.');
             } finally {
@@ -2764,11 +3134,23 @@
         }
 
         function showNewChatModal() {
-            if (!forwardingMessageId) document.getElementById('modalTitle').innerText = 'New Message';
-            document.getElementById('newChatModal').style.display = 'flex';
-            document.getElementById('newChatSearch').value = '';
-            document.getElementById('searchResults').innerHTML = '<div style="padding:10px; color:var(--secondary-text); font-size:14px;">Try searching for a user...</div>';
-            document.getElementById('newChatSearch').focus();
+            console.log('[DEBUG] showNewChatModal() called', { forwardingMessageId });
+            const modal = document.getElementById('newChatModal');
+            const title = document.getElementById('modalTitle');
+            const search = document.getElementById('newChatSearch');
+
+            if (modal) {
+                if (title && !forwardingMessageId) title.innerText = 'New Message';
+                modal.style.display = 'flex';
+                if (search) {
+                    search.value = '';
+                    setTimeout(() => search.focus(), 10);
+                }
+                const results = document.getElementById('searchResults');
+                if (results) results.innerHTML = '<div style="padding:10px; color:var(--secondary-text); font-size:14px;">Try searching for a user...</div>';
+            } else {
+                console.error('[ERROR] newChatModal element not found');
+            }
         }
 
         function closeNewChatModal() {
@@ -2780,7 +3162,10 @@
 
         let searchTimeout = null;
         async function handleNewChatSearch() {
-            const query = document.getElementById('newChatSearch').value.trim();
+            const searchInput = document.getElementById('newChatSearch');
+            if (!searchInput) return;
+            const query = searchInput.value.trim();
+
             if (query.length < 2) {
                 document.getElementById('searchResults').innerHTML = '';
                 return;
@@ -2789,11 +3174,18 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 try {
-                    const res = await fetch(window.Zentrix.paths.searchUsers + '?query=' + encodeURIComponent(query));
+                    const url = window.Zentrix.paths.searchUsers + '?query=' + encodeURIComponent(query);
+                    console.log('[DEBUG] Searching users at:', url);
+                    const res = await fetch(url);
+                    if (!res.ok) {
+                        console.error('[ERROR] Search API failed with status:', res.status);
+                        return;
+                    }
                     const users = await res.json();
+                    console.log('[DEBUG] Search results:', users);
                     renderSearchResults(users);
                 } catch (e) {
-                    console.error('Search failed', e);
+                    console.error('[ERROR] Search failed:', e);
                 }
             }, 300);
         }
@@ -3261,7 +3653,8 @@
             const payload = {
                 conversationId: activeConversationId,
                 enabled: vanishActive,
-                recipientId: activeRecipientId
+                recipientId: activeRecipientId,
+                senderId: currentUser.id
             };
             stompClient.send("/app/chat.vanish", {}, JSON.stringify(payload));
             updateVanishUI();
@@ -3377,7 +3770,8 @@
             const payload = {
                 conversationId: activeConversationId,
                 theme: theme,
-                recipientId: activeRecipientId
+                recipientId: activeRecipientId,
+                senderId: currentUser.id
             };
             stompClient.send("/app/chat.theme", {}, JSON.stringify(payload));
         }
