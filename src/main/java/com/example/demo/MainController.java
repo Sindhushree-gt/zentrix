@@ -16,7 +16,17 @@ import java.util.stream.Collectors;
 @Controller
 public class MainController {
 
+    @Autowired
+    private jakarta.servlet.http.HttpServletRequest httpServletRequest;
+
     private User getUserFromSession(HttpSession session) {
+        // First check the request attribute (set by Interceptor)
+        Object authUser = httpServletRequest.getAttribute("authenticatedUser");
+        if (authUser instanceof User) {
+            return (User) authUser;
+        }
+
+        // Fallback to session (existing logic)
         Object sessionUser = session.getAttribute("user");
         if (sessionUser instanceof User) {
             return (User) sessionUser;
@@ -321,6 +331,9 @@ public class MainController {
 
     /** True if any valid session (student or admin) exists */
     private boolean isLoggedIn(HttpSession session) {
+        Object authUser = httpServletRequest.getAttribute("authenticatedUser");
+        if (authUser != null) return true;
+        
         Object u = session.getAttribute("user");
         return u instanceof User || "admin".equals(u);
     }
