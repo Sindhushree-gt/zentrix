@@ -1041,29 +1041,55 @@
 
         /* Vanish Mode Styles */
         .chat-area.vanish-active {
-            background-color: #121212;
+            background-color: #000000 !important;
             color: white;
+            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .chat-area.vanish-active .messages-area {
-            background-color: #121212;
+            background-color: #000000 !important;
+            background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            position: relative;
+        }
+
+        .chat-area.vanish-active .messages-area::before {
+            content: "🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-content: space-around;
+            font-size: 40px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+            padding: 20px;
+            line-height: 80px;
+            text-align: center;
         }
 
         .chat-area.vanish-active .msg-bubble.received {
             background: #262626;
             color: white;
             border: 1px solid #333;
+            box-shadow: none;
         }
 
         .chat-area.vanish-active .msg-bubble.sent {
             background: #373737;
             color: white;
             border: 1px solid #444;
+            box-shadow: none;
         }
 
         .chat-area.vanish-active .active-user-header {
-            background-color: #121212;
-            border-bottom: 1px solid #333;
+            background-color: #000000 !important;
+            border-bottom: 1px solid #1a1a1a;
         }
 
         .chat-area.vanish-active .header-info h2,
@@ -1073,40 +1099,69 @@
         }
 
         .chat-area.vanish-active .input-area {
-            background-color: #121212;
-            border-top: 1px solid #333;
-        }
-
-        .chat-area.vanish-active #chatInput {
-            background: #262626;
-            color: white;
-            border: 1px solid #333;
-        }
-
-        .chat-area.vanish-active .recording-overlay {
-            background: #121212;
-            color: white;
-        }
-
-        .chat-area.vanish-active .rec-timer {
-            color: #ffffff;
+            background-color: #000000 !important;
+            border-top: 1px solid #1a1a1a;
         }
 
         .chat-area.vanish-active .input-container {
-            border-color: #333;
-            background: #262626;
+            border-color: #262626;
+            background: #1a1a1a;
         }
 
         .chat-area.vanish-active #chatInput {
             color: #ffffff;
         }
 
-        .vanish-indicator {
-            padding: 10px;
-            text-align: center;
+        .vanish-hint {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 16px;
+            border-radius: 20px;
             font-size: 12px;
+            backdrop-filter: blur(5px);
+            display: none;
+            z-index: 100;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+
+        .chat-area.vanish-active .vanish-hint {
+            display: block;
+        }
+
+        .vanish-pull-indicator {
+            height: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary-text);
+            font-size: 12px;
+            transition: height 0.1s linear;
+            background: transparent;
+        }
+
+        .vanish-pull-indicator.active {
+            color: var(--primary-accent);
+        }
+
+        .vanish-indicator {
+            padding: 15px;
+            text-align: center;
+            font-size: 13px;
             color: #8e8e8e;
             display: none;
+            background: rgba(255, 255, 255, 0.03);
+            margin: 10px;
+            border-radius: 10px;
+        }
+
+        .chat-area.vanish-active .vanish-indicator {
+            display: block;
         }
 
         .chat-area.vanish-active .vanish-indicator {
@@ -1252,6 +1307,16 @@
 
         .action-delete:hover {
             color: #ff3b30;
+        }
+
+        .msg-bubble-wrapper.vanish-msg {
+            display: flex;
+        }
+
+        /* Essential: Hide vanish messages INSTANTLY when vanish mode is toggled off */
+        .chat-area:not(.vanish-active) .vanish-msg,
+        .chat-area:not(.vanish-active) .vanish-msg + .msg-meta {
+            display: none !important;
         }
 
         .reaction-badge {
@@ -1690,11 +1755,7 @@
                         </div>
                         <div class="header-icon" id="vanishToggle" title="Toggle Vanish Mode"
                             onclick="toggleVanishMode()">
-                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
+                            <span id="vanishHeaderIcon" style="font-size: 20px;">🤫</span>
                         </div>
                         <div class="header-icon" title="Search messages" onclick="toggleMessageSearch()">
                             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
@@ -1730,9 +1791,12 @@
                 </div>
 
                 <div class="messages-area" id="messagesArea">
-                    <div class="vanish-indicator">Vanish Mode is on. Seen messages disappear when you close the chat.
+                    <div class="vanish-indicator">
+                        🤫 Vanish Mode<br>
+                        Messages will disappear when you close the chat.
                     </div>
                     <!-- Messages will be injected here -->
+                    <div id="vanishPullIndicator" class="vanish-pull-indicator">Pull up to turn on vanish mode</div>
                 </div>
 
                 <div class="media-gallery-panel" id="mediaGallery">
@@ -1754,6 +1818,8 @@
                     <div class="dot"></div>
                     <div class="dot"></div>
                 </div>
+
+                <div id="vanishHint" class="vanish-hint">Release to turn on vanish mode</div>
 
                 <div class="seen-indicator" id="seenIndicator">Seen</div>
 
@@ -2229,10 +2295,6 @@
         }
 
         async function selectConversation(conv, partner) {
-            if (activeConversationId) {
-                await cleanupVanishMode();
-            }
-
             activeConversationId = conv.id;
             activeRecipientId = partner ? partner.id : null; // null for groups
             vanishActive = conv.vanishModeEnabled || false;
@@ -2246,6 +2308,13 @@
             }
 
             updateVanishUI();
+            
+            // Update header icon opacity based on vanish state
+            const headerIcon = document.getElementById('vanishHeaderIcon');
+            if (headerIcon) {
+                headerIcon.style.opacity = vanishActive ? '1' : '0.3';
+                headerIcon.style.filter = vanishActive ? 'grayscale(0%)' : 'grayscale(100%)';
+            }
 
             if (searchActive) toggleMessageSearch();
             if (galleryOpen) toggleMediaGallery();
@@ -2339,7 +2408,8 @@
             const isSent = msg.sender.id == currentUser.id;
 
             const wrapper = document.createElement('div');
-            wrapper.className = `msg-bubble-wrapper ${isSent ? 'sent-wrapper' : ''} ${msg.isVanish ? 'vanish-msg' : ''}`;
+            const isVanish = msg.isVanish || msg.vanish;
+            wrapper.className = `msg-bubble-wrapper ${isSent ? 'sent-wrapper' : ''} ${isVanish ? 'vanish-msg' : ''}`;
             wrapper.id = `msg-wrapper-${msg.id}`;
 
             const bubble = document.createElement('div');
@@ -3114,6 +3184,75 @@
 
         // Vanish Mode Logic
         let vanishActive = false;
+        let startY = 0;
+        let isPulling = false;
+        const PULL_THRESHOLD = 150;
+
+        function initVanishGestures() {
+            const area = document.getElementById('messagesArea');
+            if (!area) return;
+
+            const handleStart = (y) => {
+                // Only start pulling if scrolled to the bottom
+                if (area.scrollTop + area.clientHeight >= area.scrollHeight - 10) {
+                    startY = y;
+                    isPulling = true;
+                }
+            };
+
+            const handleMove = (y) => {
+                if (!isPulling) return;
+                const dist = startY - y;
+                if (dist > 0) { // Pulling up
+                    const pullIndicator = document.getElementById('vanishPullIndicator');
+                    const vanishHint = document.getElementById('vanishHint');
+                    
+                    const height = Math.min(dist, PULL_THRESHOLD + 50);
+                    pullIndicator.style.height = height + 'px';
+                    
+                    if (dist > PULL_THRESHOLD) {
+                        pullIndicator.classList.add('active');
+                        pullIndicator.innerText = vanishActive ? 'Release to turn off vanish mode' : 'Release to turn on vanish mode';
+                        vanishHint.style.display = 'block';
+                        vanishHint.style.opacity = Math.min((dist - PULL_THRESHOLD) / 50, 1);
+                    } else {
+                        pullIndicator.classList.remove('active');
+                        pullIndicator.innerText = vanishActive ? 'Pull up to turn off vanish mode' : 'Pull up to turn on vanish mode';
+                        vanishHint.style.display = 'none';
+                    }
+                }
+            };
+
+            const handleEnd = () => {
+                if (!isPulling) return;
+                const pullIndicator = document.getElementById('vanishPullIndicator');
+                const vanishHint = document.getElementById('vanishHint');
+                const dist = parseInt(pullIndicator.style.height || 0);
+
+                if (dist > PULL_THRESHOLD) {
+                    toggleVanishMode();
+                }
+
+                pullIndicator.style.height = '0';
+                pullIndicator.classList.remove('active');
+                vanishHint.style.display = 'none';
+                isPulling = false;
+            };
+
+            area.addEventListener('touchstart', e => handleStart(e.touches[0].pageY));
+            area.addEventListener('touchmove', e => {
+                if (isPulling) {
+                    handleMove(e.touches[0].pageY);
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            area.addEventListener('touchend', handleEnd);
+
+            // Mouse fallback
+            area.addEventListener('mousedown', e => handleStart(e.pageY));
+            window.addEventListener('mousemove', e => handleMove(e.pageY));
+            window.addEventListener('mouseup', handleEnd);
+        }
 
         function toggleVanishMode() {
             if (!activeConversationId) return;
@@ -3126,26 +3265,78 @@
             };
             stompClient.send("/app/chat.vanish", {}, JSON.stringify(payload));
             updateVanishUI();
+
+            // When turning OFF, sync with server after a short delay to ensure empty state
+            if (!vanishActive) {
+                setTimeout(() => loadMessages(activeConversationId), 800);
+            }
         }
 
         function updateVanishUI() {
-            const chatMain = document.querySelector('.chat-main');
+            const chatArea = document.querySelector('.chat-area');
+            const pullIndicator = document.getElementById('vanishPullIndicator');
+            const headerIcon = document.getElementById('vanishHeaderIcon');
+            const messagesArea = document.getElementById('messagesArea');
+            
             if (vanishActive) {
-                chatMain.classList.add('vanish-active');
+                chatArea.classList.add('vanish-active');
+                pullIndicator.innerText = 'Pull up to turn off vanish mode';
+                if (headerIcon) {
+                    headerIcon.style.opacity = '1';
+                    headerIcon.style.filter = 'grayscale(0%)';
+                }
+                createVanishPattern(messagesArea);
             } else {
-                chatMain.classList.remove('vanish-active');
+                chatArea.classList.remove('vanish-active');
+                pullIndicator.innerText = 'Pull up to turn on vanish mode';
+                if (headerIcon) {
+                    headerIcon.style.opacity = '0.3';
+                    headerIcon.style.filter = 'grayscale(100%)';
+                }
+                const pattern = messagesArea.querySelector('.vanish-pattern-wrapper');
+                if (pattern) pattern.remove();
+
+                // INSTANT CLEAR: Remove vanish messages from DOM immediately
+                const vanishMsgs = messagesArea.querySelectorAll('.vanish-msg');
+                vanishMsgs.forEach(m => {
+                    // Also remove the meta (time) div that follows the wrapper
+                    const meta = m.nextElementSibling;
+                    if (meta && meta.classList.contains('msg-meta')) meta.remove();
+                    m.remove();
+                });
             }
+        }
+
+        function createVanishPattern(container) {
+            if (container.querySelector('.vanish-pattern-wrapper')) return;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'vanish-pattern-wrapper';
+            wrapper.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-wrap:wrap; justify-content:space-around; align-content:space-around; font-size:40px; opacity:0.03; pointer-events:none; z-index:0; padding:20px; line-height:80px; overflow:hidden;';
+            
+            const emojis = ["🤫", "🤫", "🤫", "🤫", "🤫", "🤫", "🤫", "🤫"];
+            for (let i = 0; i < 50; i++) {
+                const span = document.createElement('span');
+                span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                wrapper.appendChild(span);
+            }
+            container.appendChild(wrapper);
         }
 
         async function cleanupVanishMode() {
             if (!activeConversationId) return;
             try {
                 await fetch(window.Zentrix.paths.cleanupVanish + activeConversationId, { method: 'POST' });
+                // Re-load messages to reflect disappearance
+                await loadMessages(activeConversationId);
             } catch (e) { }
         }
 
+        // Initialize vanish gestures when conversation is selected
+        // We'll call this in initialize() or selectConversation
+
         // Initialize
         initialize();
+        initVanishGestures();
 
         function subscribeToVanish() {
             stompClient.subscribe('/user/queue/vanish', function (msg) {
@@ -3153,6 +3344,9 @@
                 if (data.conversationId === activeConversationId) {
                     vanishActive = data.enabled;
                     updateVanishUI();
+                    if (!vanishActive) {
+                        setTimeout(() => loadMessages(activeConversationId), 800);
+                    }
                 }
             });
         }

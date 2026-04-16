@@ -26,13 +26,12 @@ public class ChatWebSocketController {
     @MessageMapping("/chat.send")
     public void sendMessage(@Payload Map<String, Object> payload) {
         Long senderId = (payload.get("senderId") != null) ? Long.valueOf(payload.get("senderId").toString()) : null;
-        Long destinationId = (payload.get("recipientId") != null) ? Long.valueOf(payload.get("recipientId").toString())
-                : null;
+        Long destinationId = (payload.get("recipientId") != null) ? Long.valueOf(payload.get("recipientId").toString()) : null;
         String content = (String) payload.get("content");
         String mediaUrl = (String) payload.get("mediaUrl");
         Long parentId = (payload.get("parentId") != null) ? Long.valueOf(payload.get("parentId").toString()) : null;
-        boolean isGroup = (payload.get("isGroup") != null) && (boolean) payload.get("isGroup");
-        boolean isForwarded = (payload.get("isForwarded") != null) && (boolean) payload.get("isForwarded");
+        boolean isGroup = Boolean.TRUE.equals(payload.get("isGroup"));
+        boolean isForwarded = Boolean.TRUE.equals(payload.get("isForwarded"));
 
         if (senderId == null || destinationId == null)
             return;
@@ -41,14 +40,20 @@ public class ChatWebSocketController {
         if (sender == null)
             return;
 
-        ChatMessage message = chatService.sendMessage(sender, destinationId, content, mediaUrl, parentId, isGroup, isForwarded);
+        ChatMessage message = chatService.sendMessage(
+            sender, 
+            destinationId, 
+            content, 
+            mediaUrl, 
+            parentId, 
+            isGroup, 
+            isForwarded
+        );
         Conversation conv = message.getConversation();
 
-        // Broadcast to all participants in the conversation
+        // Broadcast to participants
         for (User p : conv.getParticipants()) {
             messagingTemplate.convertAndSendToUser(p.getId().toString(), "/queue/messages", message);
-
-            // Also send a conversation-update to ensure UI refreshes (badge, sidebar)
             messagingTemplate.convertAndSendToUser(p.getId().toString(), "/queue/conversation-update", conv);
         }
     }
@@ -66,7 +71,6 @@ public class ChatWebSocketController {
 
         ChatMessage message = chatService.reactToMessage(messageId, reaction, reactor);
 
-        // Notify all participants in the conversation about the reaction
         for (User p : message.getConversation().getParticipants()) {
             messagingTemplate.convertAndSendToUser(p.getId().toString(), "/queue/reaction", message);
         }
@@ -83,7 +87,6 @@ public class ChatWebSocketController {
         if (sender == null)
             return;
 
-        // Fetch message BEFORE deleting to get conversation and participants
         ChatMessage message = chatService.getChatMessage(messageId);
         if (message == null)
             return;
@@ -95,7 +98,6 @@ public class ChatWebSocketController {
         response.put("messageId", messageId);
         response.put("conversationId", conv.getId());
 
-        // Notify all participants
         for (User p : conv.getParticipants()) {
             messagingTemplate.convertAndSendToUser(p.getId().toString(), "/queue/delete", response);
         }
@@ -106,14 +108,11 @@ public class ChatWebSocketController {
         if (payload.get("senderId") == null)
             return;
 
-        // Use conversationId if available (for groups), otherwise fallback to
-        // recipientId for 1-on-1
         if (payload.get("conversationId") != null) {
             String topic = "/topic/chat." + payload.get("conversationId") + ".typing";
             messagingTemplate.convertAndSend(topic, (Object) payload);
         } else if (payload.get("recipientId") != null) {
             String recipientId = payload.get("recipientId").toString();
-            // Also notify the recipient via their private queue
             messagingTemplate.convertAndSendToUser(recipientId, "/queue/typing", (Object) payload);
         }
     }

@@ -121,7 +121,14 @@ public class ChatService {
         Conversation conv = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
         conv.setVanishModeEnabled(enabled);
-        return conversationRepository.save(conv);
+        Conversation saved = conversationRepository.save(conv);
+        
+        if (!enabled) {
+            // Aggressive cleanup when toggling OFF
+            wipeVanishMessages(conversationId);
+        }
+        
+        return saved;
     }
 
     @Transactional
@@ -136,7 +143,22 @@ public class ChatService {
     public void cleanupVanishMessages(Long conversationId) {
         Conversation conv = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        System.out.println("[DEBUG] Cleaning up SEEN vanish messages for conversation: " + conversationId);
+        // Delete receipts and reactions first to satisfy foreign key constraints
+        readReceiptRepository.deleteByConversationAndIsVanishTrueAndStatus(conv, MessageStatus.SEEN);
+        chatMessageRepository.deleteReactionsByConversationAndIsVanishTrueAndStatus(conversationId, MessageStatus.SEEN.name());
         chatMessageRepository.deleteByConversationAndIsVanishTrueAndStatus(conv, MessageStatus.SEEN);
+    }
+
+    @Transactional
+    public void wipeVanishMessages(Long conversationId) {
+        Conversation conv = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        System.out.println("[DEBUG] Wiping ALL vanish messages for conversation: " + conversationId);
+        // Delete receipts and reactions first
+        readReceiptRepository.deleteByConversationAndIsVanishTrue(conv);
+        chatMessageRepository.deleteReactionsByConversationAndIsVanishTrue(conversationId);
+        chatMessageRepository.deleteByConversationAndIsVanishTrue(conv);
     }
 
     public List<ChatMessage> getChatHistory(Long conversationId) {
@@ -162,6 +184,9 @@ public class ChatService {
         for (ChatMessage msg : history) {
             if (!msg.getSender().getId().equals(user.getId())
                     && !readReceiptRepository.existsByMessageAndUser(msg, user)) {
+                msg.setStatus(MessageStatus.SEEN);
+                msg.setSeenAt(LocalDateTime.now());
+                chatMessageRepository.save(msg);
                 newReceipts.add(new MessageReadReceipt(msg, user));
             }
         }
