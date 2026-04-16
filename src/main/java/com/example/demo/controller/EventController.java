@@ -51,7 +51,15 @@ public class EventController {
     @Autowired
     private RewardService rewardService;
 
+    @Autowired
+    private HttpServletRequest httpServletRequest;
+
     private User getUserFromSession(HttpSession session) {
+        Object authUser = httpServletRequest.getAttribute("authenticatedUser");
+        if (authUser instanceof User) {
+            return (User) authUser;
+        }
+        
         Object sessionUser = session.getAttribute("user");
         if (sessionUser instanceof User) {
             return (User) sessionUser;
@@ -1183,6 +1191,8 @@ public class EventController {
 
 
     private boolean isAdmin(HttpSession session) {
+        Object authUser = httpServletRequest.getAttribute("authenticatedUser");
+        if ("admin".equals(authUser)) return true;
         return "admin".equals(session.getAttribute("user"));
     }
 
