@@ -406,6 +406,21 @@
             font-weight: 900;
             margin-bottom: 20px;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
     </style>
 </head>
 
@@ -428,7 +443,7 @@
 
             useEffect(() => {
                 if (!roomId) return;
-                const socket = new SockJS('/ws');
+                const socket = new SockJS('/ws-chat');
                 const stomp = Stomp.over(socket);
                 stomp.debug = () => { };
                 stompRef.current = stomp;
@@ -468,6 +483,7 @@
             const [joinCode, setJoinCode] = useState("");
             const [err, setErr] = useState("");
             const [loading, setLoading] = useState(false);
+            const [mode, setMode] = useState("create"); // "create" or "join"
 
             const handleCreate = async () => {
                 if (!playerName.trim()) { setErr("Enter your name"); return; }
@@ -505,45 +521,66 @@
                 padding: 20
             };
             const card = {
-                background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 40, width: "100%", maxWidth: 440,
-                boxShadow: "0 25px 50px rgba(0,0,0,0.5)", backdropFilter: "blur(20px)"
+                background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "40px", width: "100%", maxWidth: 480,
+                boxShadow: "0 25px 50px rgba(0,0,0,0.5)", backdropFilter: "blur(20px)", position: "relative", overflow: "hidden"
             };
-            const input = { width: "100%", padding: "12px 16px", background: "#1a1a1a", border: "1px solid #444", borderRadius: 8, color: "#fff", fontFamily: "inherit", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 24 };
+            const inputStyle = { 
+                width: "100%", padding: "16px", background: "rgba(255,255,255,0.05)", 
+                border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", 
+                fontFamily: "inherit", fontSize: 16, outline: "none", boxSizing: "border-box", 
+                marginBottom: 20, transition: "all 0.3s"
+            };
+            const tabBtn = (active) => ({
+                flex: 1, padding: "12px", background: active ? "rgba(255,255,255,0.1)" : "transparent",
+                border: "none", color: active ? "#fff" : "#888", fontWeight: 700, borderRadius: 12,
+                cursor: "pointer", fontSize: 13, textTransform: "uppercase", letterSpacing: 1, transition: "all 0.3s"
+            });
 
             return (
                 <div style={wrap}>
-                    <h1 style={{ fontSize: "3rem", fontWeight: 900, letterSpacing: "12px", textTransform: "uppercase", marginBottom: 0 }}>Zentrix</h1>
-                    <p style={{ color: "#666", letterSpacing: "5px", marginBottom: "30px", fontWeight: 700 }}>SNAKE & LADDER MULTIPLAYER</p>
+                    <h1 style={{ fontSize: "3.5rem", fontWeight: 900, letterSpacing: "15px", textTransform: "uppercase", marginBottom: 0, color: "#fff" }}>Zentrix</h1>
+                    <p style={{ color: "rgba(255,255,255,0.3)", letterSpacing: "6px", marginBottom: "40px", fontWeight: 700, fontSize: "0.9rem" }}>SNAKE & LADDER MULTIPLAYER</p>
+                    
                     <div style={card}>
-                        <label style={{ display: "block", marginBottom: 6, color: "#888" }}>Your Name</label>
-                        <input style={input} value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="Enter your name…" maxLength={20} />
-                        <button className="btn" style={{ marginBottom: 12 }} onClick={handleCreate} disabled={loading}>Create New Match</button>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0 24px", color: "#888", fontSize: 12 }}>
-                            <div style={{ flex: 1, height: 1, background: "#444" }} /><span>or join existing</span><div style={{ flex: 1, height: 1, background: "#444" }} />
+                        <div style={{ display: "flex", background: "rgba(0,0,0,0.2)", borderRadius: 16, padding: 6, marginBottom: 30 }}>
+                            <button style={tabBtn(mode === "create")} onClick={() => setMode("create")}>Create Room</button>
+                            <button style={tabBtn(mode === "join")} onClick={() => setMode("join")}>Join Room</button>
                         </div>
-                        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                            <input style={{ ...input, marginBottom: 0, textTransform: "uppercase", letterSpacing: 4 }} value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="ROOM CODE" maxLength={6} />
-                            <button className="btn" style={{ width: "auto", padding: "12px 20px" }} onClick={handleJoin} disabled={loading}>Join →</button>
-                        </div>
-                        {err && <div style={{ color: "#ff6666", fontSize: 12, textAlign: "center", marginTop: 8 }}>⚠ {err}</div>}
+
+                        <label style={{ display: "block", marginBottom: 8, color: "rgba(255,255,255,0.5)", fontSize: 14, fontWeight: 600 }}>Your Name</label>
+                        <input style={inputStyle} value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="What should we call you?" maxLength={20} />
+
+                        {mode === "create" ? (
+                            <div style={{ animation: "fadeIn 0.5s ease" }}>
+                                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 13, marginBottom: 20, lineHeight: "1.5" }}>
+                                    Generate a unique room code and share it with a friend to start a duel.
+                                </p>
+                                <button className="btn" onClick={handleCreate} disabled={loading} style={{ background: "#fff", color: "#000", height: 56 }}>
+                                    {loading ? "GENERATING..." : "CREATE ROOM CODE"}
+                                </button>
+                            </div>
+                        ) : (
+                            <div style={{ animation: "fadeIn 0.5s ease" }}>
+                                <label style={{ display: "block", marginBottom: 8, color: "rgba(255,255,255,0.5)", fontSize: 14, fontWeight: 600 }}>Room Code</label>
+                                <input style={{ ...inputStyle, textTransform: "uppercase", letterSpacing: 4, textAlign: "center", fontSize: 24, fontWeight: 700 }} 
+                                       value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="000000" maxLength={6} />
+                                <button className="btn" onClick={handleJoin} disabled={loading} style={{ background: "#fff", color: "#000", height: 56 }}>
+                                    {loading ? "JOINING..." : "JOIN MATCH"}
+                                </button>
+                            </div>
+                        )}
+
+                        {err && <div style={{ color: "#ff4d4d", fontSize: 13, textAlign: "center", marginTop: 20, padding: "10px", background: "rgba(255,77,77,0.1)", borderRadius: 8 }}>⚠ {err}</div>}
                     </div>
-                    <a href="/games" style={{ color: "#888", fontSize: 13, marginTop: 24, textDecoration: "none", fontWeight: 700 }}><i className="fas fa-arrow-left"></i> BACK TO LIBRARY</a>
+
+                    <a href="/games" style={{ color: "rgba(255,255,255,0.3)", fontSize: 13, marginTop: 30, textDecoration: "none", fontWeight: 700, letterSpacing: 2 }}>
+                        <i className="fas fa-arrow-left" style={{ marginRight: 10 }}></i> BACK TO LIBRARY
+                    </a>
                 </div>
             );
         }
 
-        function WaitingRoom({ roomId }) {
-            return (
-                <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: 48, textAlign: "center" }}>
-                        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: 3, marginBottom: 8 }}>Room Created!</div>
-                        <div style={{ color: "#a0825a", fontSize: 13, marginBottom: 24 }}>Share this code with your friend</div>
-                        <div style={{ fontSize: 52, fontWeight: 700, letterSpacing: 12, padding: "16px 32px", background: "#111", borderRadius: 12, marginBottom: 24, fontFamily: "monospace" }}>{roomId}</div>
-                        <div style={{ color: "#a0825a", fontSize: 13, marginBottom: 20 }}>Waiting for opponent…</div>
-                    </div>
-                </div>
-            );
-        }
+
 
         // ─── Game Board & Rendering ──────────────────────────────────────
         function getCoord(num, isMobile = false) {
@@ -662,7 +699,57 @@
 
             const { sendRoll, sendChat } = useSnakeSocket(roomId, onStateUpdate, onRollAnim, onChat);
 
-            if (!state) return <div style={{ marginTop: 100 }}>Connecting to match...</div>;
+            // If we are the host (player 1) and state hasn't loaded yet, 
+            // we should still show the room code so the user isn't stuck on a loading screen.
+            if (!state && playerNum === 1) {
+                return (
+                    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.5s ease" }}>
+                         <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: 60, textAlign: "center", maxWidth: 500, backdropFilter: "blur(20px)" }}>
+                            <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: 4, marginBottom: 12, textTransform: "uppercase" }}>Room Created!</div>
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, marginBottom: 40 }}>Share this code with your friend to play</div>
+                            
+                            <div style={{ fontSize: 64, fontWeight: 900, letterSpacing: 15, padding: "30px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, marginBottom: 40, fontFamily: "'Courier New', monospace", color: "#fff", textShadow: "0 0 20px rgba(255,255,255,0.2)" }}>
+                                {roomId}
+                            </div>
+                            
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 15 }}>
+                                <div style={{ width: 8, height: 8, background: "#f7b731", borderRadius: "50%", animation: "pulse 1.5s infinite" }}></div>
+                                <div style={{ color: "#f7b731", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>Initializing Connection…</div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (!state) return (
+                <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 40, height: 40, border: "3px solid rgba(255,255,255,0.1)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                    <p style={{ marginTop: 20, color: "rgba(255,255,255,0.5)", letterSpacing: 2 }}>ESTABLISHING CONNECTION...</p>
+                </div>
+            );
+
+            if (state.status === "waiting" && playerNum === 1) {
+                return (
+                    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", animation: "fadeIn 0.5s ease" }}>
+                         <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: 60, textAlign: "center", maxWidth: 500, backdropFilter: "blur(20px)" }}>
+                            <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: 4, marginBottom: 12, textTransform: "uppercase" }}>Room Created!</div>
+                            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, marginBottom: 40 }}>Share this code with your friend to play</div>
+                            
+                            <div style={{ fontSize: 64, fontWeight: 900, letterSpacing: 15, padding: "30px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 20, marginBottom: 40, fontFamily: "'Courier New', monospace", color: "#fff", textShadow: "0 0 20px rgba(255,255,255,0.2)" }}>
+                                {roomId}
+                            </div>
+                            
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 15 }}>
+                                <div style={{ width: 8, height: 8, background: "#4caf50", borderRadius: "50%", animation: "pulse 1.5s infinite" }}></div>
+                                <div style={{ color: "#4caf50", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase" }}>Waiting for opponent…</div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+
+
 
             const myTurn = state.turn === playerNum;
             const isGameOver = state.status === "finished";
@@ -720,7 +807,9 @@
                     <h1 style={{ fontSize: "3rem", fontWeight: 900, letterSpacing: "12px", textTransform: "uppercase", marginBottom: 0 }}>
                         Zentrix
                     </h1>
-                    <p style={{ color: "#666", letterSpacing: "5px", marginBottom: "30px", fontWeight: 700 }}>MULTIPLAYER MATCH</p>
+                    <p style={{ color: "#666", letterSpacing: "5px", marginBottom: "30px", fontWeight: 700 }}>
+                        MULTIPLAYER MATCH <span style={{ color: "#888", marginLeft: 15, fontWeight: 400, opacity: 0.6 }}>ROOM: {roomId}</span>
+                    </p>
 
                     <div className="game-wrapper">
                         <div className="board-outer">
@@ -801,19 +890,14 @@
             const [roomId, setRoomId] = useState(null);
             const [playerNum, setPlayerNum] = useState(null); // 1 or 2
             const [playerName, setPlayerName] = useState("");
-            const [isCreator, setIsCreator] = useState(false);
-            const [waitingRoomId, setWaitingRoomId] = useState(null);
 
             const handleEnterGame = (id, num, name, creator) => {
-                setRoomId(id); setPlayerNum(num); setIsCreator(creator);
-                if (creator) {
-                    setWaitingRoomId(id);
-                    setScreen("waiting");
-                    setTimeout(() => setScreen("game"), 500); // Advance to game view that handles connection and rendering
-                } else {
-                    setScreen("game");
-                }
+                setRoomId(id); 
+                setPlayerNum(num); 
+                setPlayerName(name); // Ensure the name is set from lobby
+                setScreen("game");
             };
+
 
             if (screen === "lobby") return <Lobby onEnterGame={handleEnterGame} playerName={playerName} setPlayerName={setPlayerName} />;
             if (screen === "waiting") return <WaitingRoom roomId={waitingRoomId} />;
