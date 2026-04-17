@@ -69,6 +69,132 @@
             background: #f84464;
             color: white;
         }
+
+        /* Feed Filter UI */
+        .feed-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin: 10px 0 18px;
+        }
+
+        .feed-filter {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: rgba(248, 68, 100, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .filter-chip {
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(248, 68, 100, 0.12);
+            border: 1px solid rgba(248, 68, 100, 0.25);
+            color: #f84464;
+            font-size: 12px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-chip a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-weight: 900;
+            opacity: 0.8;
+        }
+
+        .filter-chip a:hover {
+            opacity: 1;
+        }
+
+        .filter-menu {
+            position: absolute;
+            top: 44px;
+            left: 0;
+            min-width: 220px;
+            background: rgba(20, 20, 35, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 14px;
+            padding: 8px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+            display: none;
+            z-index: 30;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-menu a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 10px;
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .filter-menu a:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .filter-menu a.active {
+            background: rgba(248, 68, 100, 0.12);
+            border: 1px solid rgba(248, 68, 100, 0.25);
+        }
+
+        /* Double-tap like animation */
+        .post-media-wrap {
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .like-burst {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.12s ease, transform 0.12s ease;
+        }
+
+        .like-burst.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .like-burst i {
+            font-size: 90px;
+            color: rgba(248, 68, 100, 0.95);
+            text-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+        }
     </style>
     <script th:src="@{/js/tab-support.js}"></script>
 </head>
@@ -133,11 +259,12 @@
 
         <!-- Left Sidebar -->
         <aside class="sidebar">
-            <a href="/dashboard" class="sidebar-link active"><i class="fas fa-home"></i> Home</a>
+            <a href="/dashboard" class="sidebar-link" th:classappend="${isReelsPage} ? '' : ' active'"><i class="fas fa-home"></i> Home</a>
             <a href="/explore" class="sidebar-link"><i class="fas fa-compass"></i> Explore</a>
             <a href="/events" class="sidebar-link"><i class="fas fa-calendar-alt"></i> Events</a>
             <a href="/achievements" class="sidebar-link"><i class="fas fa-trophy"></i> Achievements</a>
             <a href="/messages" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
+            <a href="/reels" class="sidebar-link" th:classappend="${isReelsPage} ? ' active' : ''"><i class="fas fa-film"></i> Reels</a>
             <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
             <a href="/games" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
             <a href="/music" class="sidebar-link"><i class="fas fa-music"></i> Music</a>
@@ -214,8 +341,67 @@
                 </div>
             </div>
 
+            <!-- Feed toolbar (Filter) -->
+            <div class="feed-toolbar">
+                <div class="feed-filter">
+                    <button class="filter-btn" type="button" onclick="toggleFeedFilterMenu()">
+                        <i class="fas fa-filter"></i>
+                        Filter
+                        <i class="fas fa-chevron-down" style="opacity:0.7; font-size: 11px;"></i>
+                    </button>
+                    <div class="filter-menu" id="feedFilterMenu">
+                        <a href="/dashboard" th:classappend="${activeCategory == null} ? ' active' : ''">All</a>
+                        <a th:href="@{/dashboard(category='TRAVEL')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('TRAVEL')} ? ' active' : ''">
+                            Travel
+                        </a>
+                        <a th:href="@{/dashboard(category='FOOD')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('FOOD')} ? ' active' : ''">
+                            Food
+                        </a>
+                        <a th:href="@{/dashboard(category='FITNESS')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('FITNESS')} ? ' active' : ''">
+                            Fitness
+                        </a>
+                        <a th:href="@{/dashboard(category='GAMING')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('GAMING')} ? ' active' : ''">
+                            Gaming
+                        </a>
+                        <a th:href="@{/dashboard(category='TECH')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('TECH')} ? ' active' : ''">
+                            Tech
+                        </a>
+                        <a th:href="@{/dashboard(category='SPORTS')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('SPORTS')} ? ' active' : ''">
+                            Sports
+                        </a>
+                        <a th:href="@{/dashboard(category='LIFESTYLE')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('LIFESTYLE')} ? ' active' : ''">
+                            Lifestyle
+                        </a>
+                        <a th:href="@{/dashboard(category='MUSIC')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('MUSIC')} ? ' active' : ''">
+                            Music
+                        </a>
+                        <a th:href="@{/dashboard(category='ART')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('ART')} ? ' active' : ''">
+                            Art
+                        </a>
+                        <a th:href="@{/dashboard(category='OTHER')}"
+                            th:classappend="${activeCategory != null and activeCategory.equalsIgnoreCase('OTHER')} ? ' active' : ''">
+                            Other
+                        </a>
+                    </div>
+                </div>
+
+                <div th:if="${activeCategory != null}" class="filter-chip">
+                    <span th:text="${activeCategory}">TRAVEL</span>
+                    <a href="/dashboard" title="Clear filter">×</a>
+                </div>
+            </div>
+
             <!-- Posts -->
-            <div th:each="post : ${posts}" class="post-card">
+            <div th:each="post : ${posts}" class="post-card" th:attr="data-post-id=${post.id}">
                 <div class="post-header">
                     <!-- Clickable avatar opens profile/story popup -->
                     <img th:src="${post.user != null and post.user.profilePhotoUrl != null and !post.user.profilePhotoUrl.isEmpty()} ? ${post.user.profilePhotoUrl} : 'https://ui-avatars.com/api/?name=' + ${post.user != null ? post.user.username : 'U'} + '&background=F84464&color=fff&size=80'"
@@ -227,8 +413,12 @@
                             <span th:text="${post.user != null ? post.user.username : 'Unknown User'}">Username</span>
                             <span th:each="collab : ${post.collaborations}"
                                 th:if="${collab.status.name() == 'ACCEPTED'}">
+
+                            &amp; <span th:text="${collab.user.username}">CollabUser</span>
+
                                 &amp; <span
                                     th:text="${collab.user != null ? collab.user.username : 'Unknown User'}">CollabUser</span>
+
                             </span>
                         </h4>
                         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:3px;">
@@ -251,11 +441,14 @@
                     </div>
                 </div>
 
-                <!-- Media Display -->
-                <div th:if="${post.mediaUrl != null}" style="margin-top: 10px;">
-                    <img th:if="${post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}" class="post-image"
+                <!-- Media Display (double-tap to like) -->
+                <div th:if="${post.mediaUrl != null}" class="post-media-wrap" th:attr="data-post-id=${post.id}">
+                    <div class="like-burst" th:attr="id=${'like-burst-' + post.id}">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <img th:if="${post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}" class="post-image post-media"
                         alt="Post Image" style="width: 100%; border-radius: 8px;">
-                    <video th:if="${post.mediaType == 'VIDEO'}" th:src="@{${post.mediaUrl}}" controls class="post-image"
+                    <video th:if="${post.mediaType == 'VIDEO'}" th:src="@{${post.mediaUrl}}" controls class="post-image post-media"
                         style="width: 100%; border-radius: 8px;"></video>
                 </div>
 
@@ -268,6 +461,11 @@
                             th:class="${user != null and post.isLikedByUser(user)} ? 'fas fa-heart' : 'far fa-heart'"></i>
                         <span th:id="'like-count-' + ${post.id}" th:text="${post.likes != null ? post.likes.size() : 0}"
                             style="font-size:13px; margin-left:3px;"></span>
+                    </button>
+                    <!-- Save Button -->
+                    <button class="action-btn" th:id="'save-btn-' + ${post.id}" th:onclick="'toggleSave(' + ${post.id} + ')'"
+                        title="Save">
+                        <i class="far fa-bookmark"></i>
                     </button>
                     <!-- Comment Button -->
                     <button class="action-btn" th:onclick="'toggleComments(' + ${post.id} + ')'" title="Comment">
@@ -538,6 +736,20 @@
 
     <script>
         let currentSharePostId = null;
+        const FEED_USER_ID = /*[[${user != null ? user.id : 0}]]*/ 0;
+
+        // ── Feed Filter Dropdown ─────────────────────────────
+        function toggleFeedFilterMenu() {
+            const menu = document.getElementById('feedFilterMenu');
+            if (!menu) return;
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+        }
+        document.addEventListener('click', function (e) {
+            const menu = document.getElementById('feedFilterMenu');
+            if (!menu) return;
+            const within = e.target.closest && e.target.closest('.feed-filter');
+            if (!within) menu.style.display = 'none';
+        });
 
         // ── Create Post Modal ──────────────────────────────
         function openCreateModal() {
@@ -574,6 +786,7 @@
                     if (data.liked) {
                         icon.className = 'fas fa-heart';
                         btn.style.color = '#f84464';
+                        recordFeedActivity(postId, 'LIKE');
                     } else {
                         icon.className = 'far fa-heart';
                         btn.style.color = '';
@@ -583,6 +796,124 @@
             } catch (e) {
                 console.error('Like failed', e);
             }
+        }
+
+        async function toggleSave(postId) {
+            const btn = document.getElementById('save-btn-' + postId);
+            const icon = btn ? btn.querySelector('i') : null;
+            if (icon) {
+                const isSaved = icon.classList.contains('fas');
+                icon.className = isSaved ? 'far fa-bookmark' : 'fas fa-bookmark';
+                if (!isSaved) recordFeedActivity(postId, 'SAVE');
+            } else {
+                recordFeedActivity(postId, 'SAVE');
+            }
+        }
+
+        async function recordFeedActivity(postId, action, watchTimeSeconds = 0) {
+            if (!FEED_USER_ID || !postId) return;
+            try {
+                await fetch('/api/feed/activity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: FEED_USER_ID,
+                        postId: postId,
+                        action: action,
+                        watchTime: watchTimeSeconds
+                    })
+                });
+            } catch (e) {
+                // Keep silent; feed should work even if tracking fails
+            }
+        }
+
+        function initFeedViewTracking() {
+            const cards = document.querySelectorAll('.post-card[data-post-id]');
+            if (!cards || cards.length === 0) return;
+            const visibleSince = new Map();
+
+            const observer = new IntersectionObserver((entries) => {
+                const now = Date.now();
+                entries.forEach(entry => {
+                    const el = entry.target;
+                    const postId = Number(el.getAttribute('data-post-id'));
+                    if (!postId) return;
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+                        if (!visibleSince.has(postId)) visibleSince.set(postId, now);
+                    } else {
+                        const start = visibleSince.get(postId);
+                        if (start) {
+                            visibleSince.delete(postId);
+                            const secs = Math.round((now - start) / 1000);
+                            if (secs >= 2) recordFeedActivity(postId, 'VIEW', secs);
+                        }
+                    }
+                });
+            }, { threshold: [0.0, 0.6, 1.0] });
+
+            cards.forEach(c => observer.observe(c));
+
+            window.addEventListener('beforeunload', () => {
+                const now = Date.now();
+                visibleSince.forEach((start, postId) => {
+                    const secs = Math.round((now - start) / 1000);
+                    if (secs >= 2) recordFeedActivity(postId, 'VIEW', secs);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initFeedViewTracking();
+            initDoubleTapLike();
+        });
+
+        function showLikeBurst(postId) {
+            const el = document.getElementById('like-burst-' + postId);
+            if (!el) return;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 520);
+        }
+
+        function isPostLikedInUI(postId) {
+            const btn = document.getElementById('like-btn-' + postId);
+            const icon = btn ? btn.querySelector('i') : null;
+            return !!(icon && icon.classList.contains('fas'));
+        }
+
+        async function likePostIfNotLiked(postId) {
+            if (isPostLikedInUI(postId)) return;
+            // Trigger the same flow as the button (updates UI + records LIKE)
+            await toggleLike(postId);
+            showLikeBurst(postId);
+        }
+
+        function initDoubleTapLike() {
+            const wraps = document.querySelectorAll('.post-media-wrap[data-post-id]');
+            if (!wraps || wraps.length === 0) return;
+
+            wraps.forEach(wrap => {
+                const postId = Number(wrap.getAttribute('data-post-id'));
+                if (!postId) return;
+
+                // Desktop: dblclick
+                wrap.addEventListener('dblclick', (e) => {
+                    e.preventDefault();
+                    likePostIfNotLiked(postId);
+                });
+
+                // Mobile: double-tap (simple timing)
+                let lastTap = 0;
+                wrap.addEventListener('touchend', (e) => {
+                    const now = Date.now();
+                    const dt = now - lastTap;
+                    lastTap = now;
+                    if (dt > 0 && dt < 280) {
+                        e.preventDefault();
+                        likePostIfNotLiked(postId);
+                    }
+                }, { passive: false });
+            });
         }
 
         // ── Comments Toggle ──────────────────────────────────

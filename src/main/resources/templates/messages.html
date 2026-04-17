@@ -609,6 +609,79 @@
             transform: scale(0.95);
         }
 
+        /* Emoji + Sticker pickers */
+        .picker-panel {
+            position: absolute;
+            bottom: 52px;
+            left: 8px;
+            width: min(340px, calc(100vw - 40px));
+            max-height: 260px;
+            overflow-y: auto;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+            display: none;
+            z-index: 50;
+        }
+
+        .picker-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+        }
+
+        .picker-item {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s ease;
+        }
+
+        .picker-item:hover {
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        body[data-theme="dark"] .picker-item:hover,
+        body[data-theme="midnight"] .picker-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .picker-emoji {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .picker-sticker img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .msg-bubble.sticker {
+            padding: 6px;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .msg-bubble.sticker.sent {
+            background: transparent;
+        }
+
+        .msg-bubble.sticker img {
+            width: 160px;
+            max-width: 50vw;
+            height: auto;
+            border-radius: 14px;
+            display: block;
+        }
+
         /* Message Search Styles */
         .header-actions {
             margin-left: auto;
@@ -1041,29 +1114,55 @@
 
         /* Vanish Mode Styles */
         .chat-area.vanish-active {
-            background-color: #121212;
+            background-color: #000000 !important;
             color: white;
+            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .chat-area.vanish-active .messages-area {
-            background-color: #121212;
+            background-color: #000000 !important;
+            background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            position: relative;
+        }
+
+        .chat-area.vanish-active .messages-area::before {
+            content: "🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫 🤫";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-content: space-around;
+            font-size: 40px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+            padding: 20px;
+            line-height: 80px;
+            text-align: center;
         }
 
         .chat-area.vanish-active .msg-bubble.received {
             background: #262626;
             color: white;
             border: 1px solid #333;
+            box-shadow: none;
         }
 
         .chat-area.vanish-active .msg-bubble.sent {
             background: #373737;
             color: white;
             border: 1px solid #444;
+            box-shadow: none;
         }
 
         .chat-area.vanish-active .active-user-header {
-            background-color: #121212;
-            border-bottom: 1px solid #333;
+            background-color: #000000 !important;
+            border-bottom: 1px solid #1a1a1a;
         }
 
         .chat-area.vanish-active .header-info h2,
@@ -1073,40 +1172,69 @@
         }
 
         .chat-area.vanish-active .input-area {
-            background-color: #121212;
-            border-top: 1px solid #333;
-        }
-
-        .chat-area.vanish-active #chatInput {
-            background: #262626;
-            color: white;
-            border: 1px solid #333;
-        }
-
-        .chat-area.vanish-active .recording-overlay {
-            background: #121212;
-            color: white;
-        }
-
-        .chat-area.vanish-active .rec-timer {
-            color: #ffffff;
+            background-color: #000000 !important;
+            border-top: 1px solid #1a1a1a;
         }
 
         .chat-area.vanish-active .input-container {
-            border-color: #333;
-            background: #262626;
+            border-color: #262626;
+            background: #1a1a1a;
         }
 
         .chat-area.vanish-active #chatInput {
             color: #ffffff;
         }
 
-        .vanish-indicator {
-            padding: 10px;
-            text-align: center;
+        .vanish-hint {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 16px;
+            border-radius: 20px;
             font-size: 12px;
+            backdrop-filter: blur(5px);
+            display: none;
+            z-index: 100;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+
+        .chat-area.vanish-active .vanish-hint {
+            display: block;
+        }
+
+        .vanish-pull-indicator {
+            height: 0;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary-text);
+            font-size: 12px;
+            transition: height 0.1s linear;
+            background: transparent;
+        }
+
+        .vanish-pull-indicator.active {
+            color: var(--primary-accent);
+        }
+
+        .vanish-indicator {
+            padding: 15px;
+            text-align: center;
+            font-size: 13px;
             color: #8e8e8e;
             display: none;
+            background: rgba(255, 255, 255, 0.03);
+            margin: 10px;
+            border-radius: 10px;
+        }
+
+        .chat-area.vanish-active .vanish-indicator {
+            display: block;
         }
 
         .chat-area.vanish-active .vanish-indicator {
@@ -1252,6 +1380,16 @@
 
         .action-delete:hover {
             color: #ff3b30;
+        }
+
+        .msg-bubble-wrapper.vanish-msg {
+            display: flex;
+        }
+
+        /* Essential: Hide vanish messages INSTANTLY when vanish mode is toggled off */
+        .chat-area:not(.vanish-active) .vanish-msg,
+        .chat-area:not(.vanish-active) .vanish-msg + .msg-meta {
+            display: none !important;
         }
 
         .reaction-badge {
@@ -1690,17 +1828,23 @@
                         </div>
                         <div class="header-icon" id="vanishToggle" title="Toggle Vanish Mode"
                             onclick="toggleVanishMode()">
-                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
+                            <span id="vanishHeaderIcon" style="font-size: 20px;">🤫</span>
                         </div>
                         <div class="header-icon" title="Search messages" onclick="toggleMessageSearch()">
                             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
                                 stroke-width="2">
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </div>
+                        <div class="header-icon" id="manageGroupBtn" title="Group members"
+                            onclick="openManageGroupModal()" style="display:none;">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                             </svg>
                         </div>
                     </div>
@@ -1730,9 +1874,12 @@
                 </div>
 
                 <div class="messages-area" id="messagesArea">
-                    <div class="vanish-indicator">Vanish Mode is on. Seen messages disappear when you close the chat.
+                    <div class="vanish-indicator">
+                        🤫 Vanish Mode<br>
+                        Messages will disappear when you close the chat.
                     </div>
                     <!-- Messages will be injected here -->
+                    <div id="vanishPullIndicator" class="vanish-pull-indicator">Pull up to turn on vanish mode</div>
                 </div>
 
                 <div class="media-gallery-panel" id="mediaGallery">
@@ -1754,6 +1901,8 @@
                     <div class="dot"></div>
                     <div class="dot"></div>
                 </div>
+
+                <div id="vanishHint" class="vanish-hint">Release to turn on vanish mode</div>
 
                 <div class="seen-indicator" id="seenIndicator">Seen</div>
 
@@ -1793,6 +1942,12 @@
                         </div>
                         <input type="file" id="fileInput" style="display: none;" accept="image/*,video/*"
                             onchange="handleFileUpload(this)">
+                        <div class="header-icon" title="Emoji" onclick="toggleEmojiPicker()" style="margin: 0 4px;">
+                            <span style="font-size:20px; line-height:1;">😊</span>
+                        </div>
+                        <div class="header-icon" title="Stickers" onclick="toggleStickerPicker()" style="margin: 0 4px;">
+                            <span style="font-size:20px; line-height:1;">🧩</span>
+                        </div>
                         <input type="text" id="chatInput" placeholder="Message..." onkeypress="handleKeyStroke(event)">
                         <div class="header-icon" id="voiceBtn" title="Record voice message" onclick="startRecording()"
                             style="margin: 0 5px;">
@@ -1805,6 +1960,13 @@
                             </svg>
                         </div>
                         <div class="btn-send" onclick="sendChatMessage()">Send</div>
+
+                        <div class="picker-panel" id="emojiPicker">
+                            <div class="picker-grid" id="emojiGrid"></div>
+                        </div>
+                        <div class="picker-panel" id="stickerPicker">
+                            <div class="picker-grid" id="stickerGrid"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1904,6 +2066,32 @@
         </div>
     </div>
 
+    <!-- Manage Group Modal -->
+    <div class="modal-overlay" id="manageGroupModal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Manage Group</h3>
+                <svg onclick="closeManageGroupModal()" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" style="cursor:pointer;">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+            <div style="padding: 15px;">
+                <div id="manageGroupAdminOnly" class="search-box" style="margin-bottom:15px;">
+                    <input type="text" id="manageGroupUserSearch" placeholder="Search users to add..."
+                        onkeyup="searchUsersToAddToGroup()">
+                </div>
+                <div id="manageGroupAdminHint" style="display:none; margin-bottom:15px; opacity:0.75; font-size:13px;">
+                    Only the group admin can add/remove members.
+                </div>
+                <div id="manageGroupUserResults" style="max-height: 200px; overflow-y: auto;"></div>
+                <div style="margin-top: 15px; font-weight: 600;">Members</div>
+                <div id="manageGroupMembers" style="max-height: 260px; overflow-y: auto; margin-top: 10px;"></div>
+            </div>
+        </div>
+    </div>
+
     <script th:inline="javascript">
         window.Zentrix = {
             currentUser: {
@@ -1920,7 +2108,8 @@
                 markSeen: /*[[@{/api/chat/mark-seen/}]]*/ '/api/chat/mark-seen/',
                 media: /*[[@{/api/chat/media/}]]*/ '/api/chat/media/',
                 ws: /*[[@{/ws-chat}]]*/ '/ws-chat',
-                cleanupVanish: /*[[@{/api/chat/cleanup-vanish/}]]*/ '/api/chat/cleanup-vanish/'
+                cleanupVanish: /*[[@{/api/chat/cleanup-vanish/}]]*/ '/api/chat/cleanup-vanish/',
+                groupBase: /*[[@{/api/chat/group/}]]*/ '/api/chat/group/'
             }
         };
     </script>
@@ -1935,6 +2124,71 @@
 
         // Group Management
         let selectedGroupUsers = [];
+        let manageGroupState = { creatorId: null, participants: [], isAdmin: false };
+
+        // Emoji + Sticker pickers
+        const EMOJIS = ['😀', '😁', '😂', '🤣', '😊', '😍', '😘', '😎', '🥳', '😇', '🤔', '😅', '😭', '😡', '👍', '👎', '🙏', '🔥', '🎉', '💯', '❤️', '✨', '🌟', '😴', '🤝', '🙌', '😮', '😬', '🤩', '😜', '🤗', '💡'];
+        const STICKERS = [
+            '/stickers/sticker-hello.svg',
+            '/stickers/sticker-lol.svg',
+            '/stickers/sticker-love.svg',
+            '/stickers/sticker-wow.svg',
+            '/stickers/sticker-thanks.svg',
+            '/stickers/sticker-cool.svg'
+        ];
+
+        function closePickers() {
+            const e = document.getElementById('emojiPicker');
+            const s = document.getElementById('stickerPicker');
+            if (e) e.style.display = 'none';
+            if (s) s.style.display = 'none';
+        }
+
+        function toggleEmojiPicker() {
+            const panel = document.getElementById('emojiPicker');
+            const other = document.getElementById('stickerPicker');
+            if (!panel) return;
+            if (other) other.style.display = 'none';
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function toggleStickerPicker() {
+            const panel = document.getElementById('stickerPicker');
+            const other = document.getElementById('emojiPicker');
+            if (!panel) return;
+            if (other) other.style.display = 'none';
+            panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function insertEmoji(emoji) {
+            const input = document.getElementById('chatInput');
+            if (!input) return;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            input.value = input.value.slice(0, start) + emoji + input.value.slice(end);
+            const pos = start + emoji.length;
+            input.setSelectionRange(pos, pos);
+            input.focus();
+        }
+
+        function sendSticker(stickerUrl) {
+            if (!stompClient || !activeConversationId) return;
+            const conv = conversationsData.find(c => c.id == activeConversationId);
+            const isGroup = conv && conv.type === 'GROUP';
+            const payload = {
+                senderId: currentUser.id,
+                recipientId: isGroup ? activeConversationId : activeRecipientId,
+                conversationId: activeConversationId,
+                content: '',
+                mediaUrl: stickerUrl,
+                parentId: replyingToId,
+                isGroup: isGroup,
+                isForwarded: false
+            };
+            stompClient.send("/app/chat.send", {}, JSON.stringify(payload));
+            cancelReply();
+            closePickers();
+        }
 
         function openNewGroupModal() {
             document.getElementById('newGroupModal').style.display = 'flex';
@@ -2024,6 +2278,7 @@
             console.log('[DEBUG] initialize() started');
             try {
                 connectWebSocket();
+                initPickers();
                 await loadConversations();
                 console.log('[DEBUG] initialize() completed successfully');
 
@@ -2060,6 +2315,36 @@
 
             // Polling for updates if WebSocket drops (fallback)
             setInterval(loadConversations, 10000);
+        }
+
+        function initPickers() {
+            const emojiGrid = document.getElementById('emojiGrid');
+            if (emojiGrid && emojiGrid.children.length === 0) {
+                emojiGrid.innerHTML = EMOJIS.map(e => `
+                    <div class="picker-item picker-emoji" onclick="insertEmoji('${e}')">${e}</div>
+                `).join('');
+            }
+
+            const stickerGrid = document.getElementById('stickerGrid');
+            if (stickerGrid && stickerGrid.children.length === 0) {
+                stickerGrid.innerHTML = STICKERS.map(u => `
+                    <div class="picker-item picker-sticker" onclick="sendSticker('${u}')">
+                        <img src="${u}" alt="sticker">
+                    </div>
+                `).join('');
+            }
+
+            // Close pickers when clicking outside
+            if (!window.__pickersInit) {
+                window.__pickersInit = true;
+                document.addEventListener('click', (e) => {
+                    const emojiPanel = document.getElementById('emojiPicker');
+                    const stickerPanel = document.getElementById('stickerPicker');
+                    const manageBtn = e.target && (e.target.closest && e.target.closest('[onclick="toggleEmojiPicker()"],[onclick="toggleStickerPicker()"]'));
+                    const insidePanel = (emojiPanel && emojiPanel.contains(e.target)) || (stickerPanel && stickerPanel.contains(e.target));
+                    if (!insidePanel && !manageBtn) closePickers();
+                });
+            }
         }
 
         function connectWebSocket() {
@@ -2260,10 +2545,6 @@
         }
 
         async function selectConversation(conv, partner) {
-            if (activeConversationId) {
-                await cleanupVanishMode();
-            }
-
             activeConversationId = conv.id;
             activeRecipientId = partner ? partner.id : null; // null for groups
             vanishActive = conv.vanishModeEnabled || false;
@@ -2277,6 +2558,13 @@
             }
 
             updateVanishUI();
+            
+            // Update header icon opacity based on vanish state
+            const headerIcon = document.getElementById('vanishHeaderIcon');
+            if (headerIcon) {
+                headerIcon.style.opacity = vanishActive ? '1' : '0.3';
+                headerIcon.style.filter = vanishActive ? 'grayscale(0%)' : 'grayscale(100%)';
+            }
 
             if (searchActive) toggleMessageSearch();
             if (galleryOpen) toggleMediaGallery();
@@ -2313,6 +2601,7 @@
 
             const convName = conv.type === 'GROUP' ? conv.name : (partner ? partner.username : 'Direct Chat');
             document.getElementById('activeUserName').innerText = convName;
+            updateManageGroupButton(conv);
 
             const avatarEl = document.getElementById('activeAvatar');
             if (conv.type === 'GROUP') {
@@ -2343,6 +2632,121 @@
             markAsSeen();
         }
 
+        function updateManageGroupButton(conv) {
+            const btn = document.getElementById('manageGroupBtn');
+            if (!btn) return;
+            const isGroup = conv && conv.type === 'GROUP';
+            btn.style.display = isGroup ? 'flex' : 'none';
+        }
+
+        async function openManageGroupModal() {
+            if (!activeConversationId) return;
+            const conv = conversationsData.find(c => String(c.id) === String(activeConversationId));
+            if (!conv || conv.type !== 'GROUP') return;
+
+            const modal = document.getElementById('manageGroupModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            await refreshManageGroupParticipants();
+        }
+
+        function closeManageGroupModal() {
+            const modal = document.getElementById('manageGroupModal');
+            if (modal) modal.style.display = 'none';
+            const input = document.getElementById('manageGroupUserSearch');
+            if (input) input.value = '';
+            const res = document.getElementById('manageGroupUserResults');
+            if (res) res.innerHTML = '';
+        }
+
+        async function refreshManageGroupParticipants() {
+            const res = await fetch(window.Zentrix.paths.groupBase + activeConversationId + '/participants');
+            if (!res.ok) return;
+            const data = await res.json();
+            manageGroupState.creatorId = data.creatorId;
+            manageGroupState.participants = data.participants || [];
+            manageGroupState.isAdmin = String(data.creatorId) === String(currentUser.id);
+
+            const adminOnly = document.getElementById('manageGroupAdminOnly');
+            const hint = document.getElementById('manageGroupAdminHint');
+            const results = document.getElementById('manageGroupUserResults');
+            if (adminOnly) adminOnly.style.display = manageGroupState.isAdmin ? 'block' : 'none';
+            if (hint) hint.style.display = manageGroupState.isAdmin ? 'none' : 'block';
+            if (results && !manageGroupState.isAdmin) results.innerHTML = '';
+            renderManageGroupMembers();
+        }
+
+        function renderManageGroupMembers() {
+            const container = document.getElementById('manageGroupMembers');
+            if (!container) return;
+            const creatorId = manageGroupState.creatorId;
+            container.innerHTML = (manageGroupState.participants || []).map(u => {
+                const isCreator = String(u.id) === String(creatorId);
+                const canRemove = manageGroupState.isAdmin && !isCreator;
+                return `
+                    <div class="search-result-item" style="cursor:default;">
+                        <div class="result-avatar">${(u.username || 'U').charAt(0)}</div>
+                        <div style="display:flex; flex-direction:column;">
+                            <div>${u.username || 'User'}</div>
+                            <div style="font-size:12px; opacity:0.7;">${isCreator ? 'Admin' : 'Member'}</div>
+                        </div>
+                        <div style="margin-left:auto;">
+                            ${canRemove ? `<button class="btn-new-msg" style="padding:6px 10px; font-size:12px;" onclick="removeMemberFromGroup(${u.id})">Remove</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function searchUsersToAddToGroup() {
+            if (!manageGroupState.isAdmin) return;
+            const input = document.getElementById('manageGroupUserSearch');
+            if (!input) return;
+            const query = input.value.trim();
+            if (query.length < 2) return;
+            const res = await fetch(window.Zentrix.paths.searchUsers + '?query=' + encodeURIComponent(query));
+            if (!res.ok) return;
+            const users = await res.json();
+
+            const existingIds = new Set((manageGroupState.participants || []).map(p => String(p.id)));
+            const container = document.getElementById('manageGroupUserResults');
+            if (!container) return;
+            container.innerHTML = users
+                .filter(u => !existingIds.has(String(u.id)))
+                .map(u => `
+                    <div class="search-result-item" onclick="addMemberToGroup(${u.id})">
+                        <div class="result-avatar">${u.username.charAt(0)}</div>
+                        <div>${u.username}</div>
+                        <div style="margin-left:auto;">+</div>
+                    </div>
+                `).join('');
+        }
+
+        async function addMemberToGroup(userId) {
+            if (!activeConversationId) return;
+            if (!manageGroupState.isAdmin) return;
+            const res = await fetch(window.Zentrix.paths.groupBase + activeConversationId + '/add-participants', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ participantIds: [userId] })
+            });
+            if (!res.ok) return;
+            await loadConversations();
+            await refreshManageGroupParticipants();
+            await searchUsersToAddToGroup();
+        }
+
+        async function removeMemberFromGroup(userId) {
+            if (!activeConversationId) return;
+            if (!manageGroupState.isAdmin) return;
+            const res = await fetch(window.Zentrix.paths.groupBase + activeConversationId + '/remove-participant/' + userId, {
+                method: 'POST'
+            });
+            if (!res.ok) return;
+            await loadConversations();
+            await refreshManageGroupParticipants();
+        }
+
         async function loadMessages(convId) {
             if (!convId) {
                 document.getElementById('messagesArea').innerHTML = '';
@@ -2370,7 +2774,8 @@
             const isSent = msg.sender.id == currentUser.id;
 
             const wrapper = document.createElement('div');
-            wrapper.className = `msg-bubble-wrapper ${isSent ? 'sent-wrapper' : ''} ${msg.isVanish ? 'vanish-msg' : ''}`;
+            const isVanish = msg.isVanish || msg.vanish;
+            wrapper.className = `msg-bubble-wrapper ${isSent ? 'sent-wrapper' : ''} ${isVanish ? 'vanish-msg' : ''}`;
             wrapper.id = `msg-wrapper-${msg.id}`;
 
             const bubble = document.createElement('div');
@@ -2411,6 +2816,10 @@
                 if (msg.content && msg.content.trim() !== '') mediaDiv.style.marginTop = '8px';
                 const lowerUrl = msg.mediaUrl.toLowerCase();
 
+                if (lowerUrl.includes('/stickers/')) {
+                    bubble.classList.add('sticker');
+                    mediaDiv.innerHTML = `<img src="${msg.mediaUrl}" alt="sticker">`;
+                } else
                 if (lowerUrl.endsWith('.mp4') || lowerUrl.endsWith('.webm') && !lowerUrl.includes('voice-message')) {
                     // Standard Video
                     mediaDiv.innerHTML = `<video src="${msg.mediaUrl}" controls></video>`;
@@ -3167,6 +3576,75 @@
 
         // Vanish Mode Logic
         let vanishActive = false;
+        let startY = 0;
+        let isPulling = false;
+        const PULL_THRESHOLD = 150;
+
+        function initVanishGestures() {
+            const area = document.getElementById('messagesArea');
+            if (!area) return;
+
+            const handleStart = (y) => {
+                // Only start pulling if scrolled to the bottom
+                if (area.scrollTop + area.clientHeight >= area.scrollHeight - 10) {
+                    startY = y;
+                    isPulling = true;
+                }
+            };
+
+            const handleMove = (y) => {
+                if (!isPulling) return;
+                const dist = startY - y;
+                if (dist > 0) { // Pulling up
+                    const pullIndicator = document.getElementById('vanishPullIndicator');
+                    const vanishHint = document.getElementById('vanishHint');
+                    
+                    const height = Math.min(dist, PULL_THRESHOLD + 50);
+                    pullIndicator.style.height = height + 'px';
+                    
+                    if (dist > PULL_THRESHOLD) {
+                        pullIndicator.classList.add('active');
+                        pullIndicator.innerText = vanishActive ? 'Release to turn off vanish mode' : 'Release to turn on vanish mode';
+                        vanishHint.style.display = 'block';
+                        vanishHint.style.opacity = Math.min((dist - PULL_THRESHOLD) / 50, 1);
+                    } else {
+                        pullIndicator.classList.remove('active');
+                        pullIndicator.innerText = vanishActive ? 'Pull up to turn off vanish mode' : 'Pull up to turn on vanish mode';
+                        vanishHint.style.display = 'none';
+                    }
+                }
+            };
+
+            const handleEnd = () => {
+                if (!isPulling) return;
+                const pullIndicator = document.getElementById('vanishPullIndicator');
+                const vanishHint = document.getElementById('vanishHint');
+                const dist = parseInt(pullIndicator.style.height || 0);
+
+                if (dist > PULL_THRESHOLD) {
+                    toggleVanishMode();
+                }
+
+                pullIndicator.style.height = '0';
+                pullIndicator.classList.remove('active');
+                vanishHint.style.display = 'none';
+                isPulling = false;
+            };
+
+            area.addEventListener('touchstart', e => handleStart(e.touches[0].pageY));
+            area.addEventListener('touchmove', e => {
+                if (isPulling) {
+                    handleMove(e.touches[0].pageY);
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            area.addEventListener('touchend', handleEnd);
+
+            // Mouse fallback
+            area.addEventListener('mousedown', e => handleStart(e.pageY));
+            window.addEventListener('mousemove', e => handleMove(e.pageY));
+            window.addEventListener('mouseup', handleEnd);
+        }
 
         function toggleVanishMode() {
             if (!activeConversationId) return;
@@ -3175,30 +3653,83 @@
             const payload = {
                 conversationId: activeConversationId,
                 enabled: vanishActive,
-                recipientId: activeRecipientId
+                recipientId: activeRecipientId,
+                senderId: currentUser.id
             };
             stompClient.send("/app/chat.vanish", {}, JSON.stringify(payload));
             updateVanishUI();
+
+            // When turning OFF, sync with server after a short delay to ensure empty state
+            if (!vanishActive) {
+                setTimeout(() => loadMessages(activeConversationId), 800);
+            }
         }
 
         function updateVanishUI() {
-            const chatMain = document.querySelector('.chat-main');
+            const chatArea = document.querySelector('.chat-area');
+            const pullIndicator = document.getElementById('vanishPullIndicator');
+            const headerIcon = document.getElementById('vanishHeaderIcon');
+            const messagesArea = document.getElementById('messagesArea');
+            
             if (vanishActive) {
-                chatMain.classList.add('vanish-active');
+                chatArea.classList.add('vanish-active');
+                pullIndicator.innerText = 'Pull up to turn off vanish mode';
+                if (headerIcon) {
+                    headerIcon.style.opacity = '1';
+                    headerIcon.style.filter = 'grayscale(0%)';
+                }
+                createVanishPattern(messagesArea);
             } else {
-                chatMain.classList.remove('vanish-active');
+                chatArea.classList.remove('vanish-active');
+                pullIndicator.innerText = 'Pull up to turn on vanish mode';
+                if (headerIcon) {
+                    headerIcon.style.opacity = '0.3';
+                    headerIcon.style.filter = 'grayscale(100%)';
+                }
+                const pattern = messagesArea.querySelector('.vanish-pattern-wrapper');
+                if (pattern) pattern.remove();
+
+                // INSTANT CLEAR: Remove vanish messages from DOM immediately
+                const vanishMsgs = messagesArea.querySelectorAll('.vanish-msg');
+                vanishMsgs.forEach(m => {
+                    // Also remove the meta (time) div that follows the wrapper
+                    const meta = m.nextElementSibling;
+                    if (meta && meta.classList.contains('msg-meta')) meta.remove();
+                    m.remove();
+                });
             }
+        }
+
+        function createVanishPattern(container) {
+            if (container.querySelector('.vanish-pattern-wrapper')) return;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'vanish-pattern-wrapper';
+            wrapper.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-wrap:wrap; justify-content:space-around; align-content:space-around; font-size:40px; opacity:0.03; pointer-events:none; z-index:0; padding:20px; line-height:80px; overflow:hidden;';
+            
+            const emojis = ["🤫", "🤫", "🤫", "🤫", "🤫", "🤫", "🤫", "🤫"];
+            for (let i = 0; i < 50; i++) {
+                const span = document.createElement('span');
+                span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                wrapper.appendChild(span);
+            }
+            container.appendChild(wrapper);
         }
 
         async function cleanupVanishMode() {
             if (!activeConversationId) return;
             try {
                 await fetch(window.Zentrix.paths.cleanupVanish + activeConversationId, { method: 'POST' });
+                // Re-load messages to reflect disappearance
+                await loadMessages(activeConversationId);
             } catch (e) { }
         }
 
+        // Initialize vanish gestures when conversation is selected
+        // We'll call this in initialize() or selectConversation
+
         // Initialize
         initialize();
+        initVanishGestures();
 
         function subscribeToVanish() {
             stompClient.subscribe('/user/queue/vanish', function (msg) {
@@ -3206,6 +3737,9 @@
                 if (data.conversationId === activeConversationId) {
                     vanishActive = data.enabled;
                     updateVanishUI();
+                    if (!vanishActive) {
+                        setTimeout(() => loadMessages(activeConversationId), 800);
+                    }
                 }
             });
         }
@@ -3236,7 +3770,8 @@
             const payload = {
                 conversationId: activeConversationId,
                 theme: theme,
-                recipientId: activeRecipientId
+                recipientId: activeRecipientId,
+                senderId: currentUser.id
             };
             stompClient.send("/app/chat.theme", {}, JSON.stringify(payload));
         }

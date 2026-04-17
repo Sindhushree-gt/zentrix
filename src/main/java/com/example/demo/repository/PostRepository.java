@@ -32,6 +32,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // Filter out STORY from main feed
     List<Post> findByPostTypeNotOrderByCreatedAtDesc(String postType);
 
+    // Filter out STORY + filter by category (dashboard filter)
+    List<Post> findByPostTypeNotAndCategoryIgnoreCaseOrderByCreatedAtDesc(String postType, String category);
+
+    // Reels-only feed
+    List<Post> findByPostTypeOrderByCreatedAtDesc(String postType);
+
     List<Post> findByUserAndPostTypeNotOrderByCreatedAtDesc(User user, String postType);
 
     // Find active stories (last 24 hours) for a user

@@ -4,10 +4,12 @@ import com.example.demo.model.*;
 import com.example.demo.repository.*;
 import com.example.demo.music.room.MusicRoom;
 import com.example.demo.music.room.MusicRoomRepository;
+import com.example.demo.service.FeedAlgorithmService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
@@ -53,6 +55,9 @@ public class MainController {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private FeedAlgorithmService feedAlgorithmService;
 
     @Autowired
     private PostCollaborationRepository postCollaborationRepository;
@@ -161,7 +166,11 @@ public class MainController {
 
     @Transactional
     @GetMapping("/dashboard")
-    public String dashboard(Model model, HttpSession session) {
+    public String dashboard(
+            Model model,
+            HttpSession session,
+            @RequestParam(required = false) String category
+    ) {
         Object sessionUser = session.getAttribute("user");
         // Admin should land on admin dashboard, not student dashboard
         if ("admin".equals(sessionUser))
@@ -176,13 +185,70 @@ public class MainController {
         session.setAttribute("user", user);
         session.setAttribute("userId", user.getId());
 
+        populateDashboardCommonModel(model, user);
+
         List<PostCollaboration> pendingRequests = postCollaborationRepository
                 .findByUserAndStatus(user, CollaborationStatus.PENDING);
         model.addAttribute("user", user);
         model.addAttribute("pendingCount", pendingRequests.size());
 
-        model.addAttribute("posts", postRepository.findByPostTypeNotOrderByCreatedAtDesc("STORY"));
+        String normalizedCategory = (category == null) ? null : category.trim();
+        if (normalizedCategory != null && normalizedCategory.isEmpty()) normalizedCategory = null;
+        if (normalizedCategory != null && "ALL".equalsIgnoreCase(normalizedCategory)) normalizedCategory = null;
 
+        // Personalized feed (based on VIEW/LIKE/SAVE/SHARE) with optional category filter
+        List<Post> personalized = feedAlgorithmService.getPersonalizedFeed(user.getId(), 0, 200);
+        if (normalizedCategory != null) {
+            final String catKey = normalizedCategory.trim().toUpperCase();
+            personalized = personalized.stream()
+                    .filter(p -> p.getCategory() != null && p.getCategory().trim().equalsIgnoreCase(catKey))
+                    .toList();
+        }
+        model.addAttribute("posts", personalized);
+        model.addAttribute("activeCategory", normalizedCategory);
+        model.addAttribute("isReelsPage", false);
+
+        List<User> allUsers = userRepository.findAll();
+        final User finalUser = user;
+        Set<User> following = user.getFollowing();
+        List<User> suggestions = allUsers.stream()
+                .filter(u -> !u.getId().equals(finalUser.getId()))
+                .filter(u -> !following.contains(u))
+                .limit(5)
+                .collect(Collectors.toList());
+        model.addAttribute("suggestions", suggestions);
+
+        return "dashboard";
+    }
+
+    @Transactional
+    @GetMapping("/reels")
+    public String reels(Model model, HttpSession session) {
+        Object sessionUser = session.getAttribute("user");
+        if ("admin".equals(sessionUser))
+            return "redirect:/admin";
+
+        User user = getUserFromSession(session);
+        if (user == null) return "redirect:/login";
+        user = userRepository.findById(user.getId()).orElse(user);
+        session.setAttribute("user", user);
+        session.setAttribute("userId", user.getId());
+
+        populateDashboardCommonModel(model, user);
+
+        List<PostCollaboration> pendingRequests = postCollaborationRepository
+                .findByUserAndStatus(user, CollaborationStatus.PENDING);
+        model.addAttribute("user", user);
+        model.addAttribute("pendingCount", pendingRequests.size());
+
+        model.addAttribute("posts", postRepository.findByPostTypeOrderByCreatedAtDesc("REEL"));
+        model.addAttribute("activeCategory", null);
+        model.addAttribute("isReelsPage", true);
+
+        return "dashboard";
+    }
+
+    private String populateDashboardCommonModel(Model model, User user) {
         List<User> allUsers = userRepository.findAll();
         final User finalUser = user;
         Set<User> following = user.getFollowing();
