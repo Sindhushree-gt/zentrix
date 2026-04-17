@@ -13,6 +13,7 @@ public class Zentrix1Application {
 
 	public static void main(String[] args) {
 		SpringApplication.run(Zentrix1Application.class, args);
+		System.out.println("Hello folks");
 	}
 
 }

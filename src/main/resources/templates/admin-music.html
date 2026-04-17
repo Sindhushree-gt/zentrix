@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Music | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 18px; padding: 16px; }
+        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px; }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="logo">Zentrix<span>Admin</span></div>
+    <div class="nav-links">
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/music" class="active"><i class="fas fa-music"></i> Music Approvals</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container" style="margin-top: 20px;">
+    <h1 style="margin-bottom: 10px;">Pending track approvals</h1>
+    <div style="color: rgba(255,255,255,0.55); font-size: 13px; margin-bottom: 18px;">
+        Approve only if the uploader owns rights / uses a valid license.
+    </div>
+
+    <div class="grid">
+        <div th:each="t : ${pendingTracks}" class="card">
+            <div style="display:flex; justify-content:space-between; gap: 12px; align-items:flex-start;">
+                <div>
+                    <div style="font-weight: 900; font-size: 16px;" th:text="${t.title}">Title</div>
+                    <div style="color: rgba(255,255,255,0.6); font-size: 12px;">
+                        <span th:text="${t.artistName}">Artist</span>
+                        <span style="opacity:0.6;"> • </span>
+                        <span th:text="${t.licenseName}">License</span>
+                    </div>
+                    <div style="color: rgba(255,255,255,0.45); font-size: 12px; margin-top: 6px;">
+                        Uploader:
+                        <span th:text="${t.uploader != null ? t.uploader.username : 'Unknown'}">uploader</span>
+                    </div>
+                    <div th:if="${t.licenseUrl != null and !#strings.isEmpty(t.licenseUrl)}" style="margin-top: 6px;">
+                        <a th:href="${t.licenseUrl}" target="_blank" style="font-size: 12px; color: var(--accent); text-decoration: none;">
+                            <i class="fas fa-link"></i> License link
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <audio controls preload="metadata" style="width: 100%; margin-top: 12px;">
+                <source th:src="@{'/admin/music/preview/' + ${t.id}}" th:type="${t.contentType}">
+            </audio>
+
+            <div style="display:flex; gap: 10px; margin-top: 12px;">
+                <form th:action="@{'/admin/music/' + ${t.id} + '/approve'}" method="post" style="flex:1;">
+                    <button class="nav-btn" type="submit" style="width:100%; background: rgba(16,185,129,0.18); border:1px solid rgba(16,185,129,0.35);">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                </form>
+                <form th:action="@{'/admin/music/' + ${t.id} + '/reject'}" method="post" style="flex:1;">
+                    <button class="nav-btn" type="submit" style="width:100%; background: rgba(231,76,60,0.16); border:1px solid rgba(231,76,60,0.35);">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div th:if="${pendingTracks == null or pendingTracks.isEmpty()}" class="card" style="grid-column: 1 / -1;">
+            <div style="color: rgba(255,255,255,0.6); text-align:center; padding: 10px;">
+                No pending uploads right now.
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

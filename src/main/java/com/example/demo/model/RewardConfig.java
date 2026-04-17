@@ -17,6 +17,7 @@ public class RewardConfig {
     private int runner = 30;
     private int referFriend = 20;
     private int talentPost = 5;
+    private int musicVote = 1;
 
     public RewardConfig() {}
 
@@ -46,4 +47,7 @@ public class RewardConfig {
 
     public int getTalentPost() { return talentPost; }
     public void setTalentPost(int talentPost) { this.talentPost = talentPost; }
+
+    public int getMusicVote() { return musicVote; }
+    public void setMusicVote(int musicVote) { this.musicVote = musicVote; }
 }

@@ -140,6 +140,7 @@
             <a href="/messages" class="sidebar-link"><i class="fas fa-comment-dots"></i> Chat</a>
             <a href="/profile" class="sidebar-link"><i class="fas fa-user"></i> Profile</a>
             <a href="/games" class="sidebar-link"><i class="fas fa-gamepad"></i> Games</a>
+            <a href="/music" class="sidebar-link"><i class="fas fa-music"></i> Music</a>
             <a href="#" class="sidebar-link" onclick="openCreateModal()"><i class="fas fa-plus-circle"
                     style="color: var(--accent);"></i> Create Post</a>
 
@@ -320,6 +321,30 @@
 
         <!-- Right Sidebar -->
         <aside class="widgets">
+            <!-- Ongoing Music Battles -->
+            <div class="widget-card" th:if="${ongoingMusicBattles != null and !ongoingMusicBattles.isEmpty()}">
+                <div class="widget-header">
+                    <h3>Ongoing Music Battles</h3>
+                    <a th:href="@{/music/rooms(auth=${auth})}" class="see-all">Create / Join</a>
+                </div>
+                <div th:each="r : ${ongoingMusicBattles}"
+                     style="display:flex; gap:10px; align-items:center; justify-content:space-between; padding:10px 0; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <span style="font-size:13px; font-weight:800;" th:text="${r.name}">Room</span>
+                        <span style="font-size:11px; color: rgba(255,255,255,0.5);">
+                            Code: <span th:text="${r.code}" style="font-weight:900; letter-spacing:0.5px;">CODE</span>
+                            <span style="opacity:0.6;"> • </span>
+                            <span th:text="${r.phase}">SUBMIT</span>
+                        </span>
+                    </div>
+                    <a class="nav-btn"
+                       th:href="@{/music/rooms/{code}(code=${r.code},auth=${auth})}"
+                       style="padding:6px 12px; font-size:12px; text-decoration:none;">
+                        Join
+                    </a>
+                </div>
+            </div>
+
             <!-- Trending Events Widget -->
             <div class="widget-card">
                 <div class="widget-header">

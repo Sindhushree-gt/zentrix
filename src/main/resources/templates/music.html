@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .music-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+        .music-card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 18px; padding: 16px; }
+        .pill { font-size: 11px; padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.65); }
+        .success { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.25); color: #34d399; }
+        .warn { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.25); color: #f59e0b; }
+
+        .toast {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 9999;
+            background: rgba(16,185,129,0.14);
+            border: 1px solid rgba(16,185,129,0.35);
+            color: #34d399;
+            padding: 14px 16px;
+            border-radius: 14px;
+            box-shadow: 0 14px 40px rgba(0,0,0,0.45);
+            display: none;
+            max-width: 420px;
+            font-weight: 700;
+        }
+        .toast .sub {
+            display:block;
+            margin-top: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="logo">Zentrix</div>
+    <div class="nav-links">
+        <a th:href="@{/dashboard(auth=${auth})}"><i class="fas fa-home"></i> Dashboard</a>
+        <a th:href="@{/music(auth=${auth})}" class="active"><i class="fas fa-music"></i> Music</a>
+        <a th:href="@{/music/rooms(auth=${auth})}"><i class="fas fa-users"></i> Rooms</a>
+        <a th:href="@{/music/leaderboard(auth=${auth})}"><i class="fas fa-trophy"></i> Leaderboard</a>
+        <a href="/shop" title="Coins" style="display:flex; align-items:center; gap:8px;">
+            <i class="fas fa-coins"></i> <span th:text="${user.coins}">0</span>
+        </a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container" style="margin-top: 22px;">
+    <div id="uploadToast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        Uploaded successfully
+        <span class="sub">Your track is pending admin approval.</span>
+    </div>
+
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 16px; flex-wrap: wrap;">
+        <div>
+            <h1 style="margin-bottom: 6px;">Campus Music</h1>
+            <div style="color: rgba(255,255,255,0.55); font-size: 13px;">
+                Upload royalty-free / original tracks. Admin approves before public streaming.
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span th:if="${param.success == 'uploaded'}" class="pill success"><i class="fas fa-check"></i> Uploaded (pending approval)</span>
+            <span th:if="${param.error == 'type'}" class="pill warn"><i class="fas fa-triangle-exclamation"></i> Upload an audio file</span>
+            <span th:if="${param.error == 'terms'}" class="pill warn"><i class="fas fa-triangle-exclamation"></i> Accept terms to upload</span>
+        </div>
+    </div>
+
+    <div class="music-card" style="margin-top: 18px;">
+        <h3 style="margin: 0 0 10px 0;">Upload a track</h3>
+        <form th:action="@{/music/upload}" method="post" enctype="multipart/form-data"
+              style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+            <input class="form-input" name="title" placeholder="Track title" required>
+            <input class="form-input" name="artistName" placeholder="Artist name (your name / band)" required>
+            <input class="form-input" name="licenseName" placeholder="License name (e.g., CC BY 4.0 / Original)" required>
+            <input class="form-input" name="licenseUrl" placeholder="License URL (optional)">
+            <input class="form-input" type="file" name="file" accept="audio/*" required>
+            <label style="display:flex; gap:8px; align-items:center; font-size: 13px; color: rgba(255,255,255,0.7);">
+                <input type="checkbox" name="acceptTerms" required>
+                I own the rights / have permission to stream this track on Zentrix.
+            </label>
+            <div style="grid-column: 1 / -1; display:flex; justify-content:flex-end;">
+                <button class="nav-btn" type="submit" style="padding: 10px 16px;"><i class="fas fa-upload"></i> Upload</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="music-card" style="margin-top: 18px; border: 1px solid rgba(59,130,246,0.25);">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+            <div>
+                <h3 style="margin: 0 0 6px 0;"><i class="fas fa-bolt" style="color:#3b82f6;"></i> Music Battle</h3>
+                <div style="color: rgba(255,255,255,0.55); font-size: 13px;">
+                    Create a room, share the code, let friends & spectators vote, earn coins.
+                </div>
+            </div>
+            <a class="nav-btn" th:href="@{/music/rooms(auth=${auth})}" style="padding: 10px 14px; text-decoration:none;">
+                <i class="fas fa-users"></i> Create / Join room
+            </a>
+        </div>
+    </div>
+
+    <h2 style="margin: 22px 0 12px 0;">Approved tracks</h2>
+    <div class="music-grid">
+        <div th:each="t : ${tracks}" class="music-card">
+            <div style="display:flex; justify-content:space-between; gap: 10px;">
+                <div>
+                    <div style="font-weight: 800; font-size: 15px;" th:text="${t.title}">Title</div>
+                    <div style="color: rgba(255,255,255,0.55); font-size: 12px;">
+                        <span th:text="${t.artistName}">Artist</span>
+                        <span style="opacity:0.6;"> • </span>
+                        <span th:text="${t.licenseName}">License</span>
+                    </div>
+                </div>
+                <form th:action="@{'/music/' + ${t.id} + '/like'}" method="post">
+                    <button class="nav-btn" type="submit" style="padding: 8px 12px; background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);">
+                        <i class="fas fa-heart" style="color:#f84464;"></i>
+                        <span th:text="${likeCounts[t.id]}">0</span>
+                    </button>
+                </form>
+            </div>
+
+            <audio controls preload="metadata" style="width: 100%; margin-top: 12px;"
+                   th:attr="data-track-id=${t.id}">
+                <source th:src="@{/music/stream/{id}(id=${t.id},auth=${auth})}" th:type="${t.contentType}">
+            </audio>
+
+            <div style="margin-top: 10px; color: rgba(255,255,255,0.5); font-size: 12px;">
+                Daily quest: listen 10 minutes → earn +3 coins.
+            </div>
+        </div>
+
+        <div th:if="${tracks == null or tracks.isEmpty()}" class="music-card" style="grid-column: 1 / -1;">
+            <div style="color: rgba(255,255,255,0.6); text-align:center; padding: 10px;">
+                No approved tracks yet. Upload one and ask admin to approve.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toast after upload redirect (?success=uploaded)
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('success') !== 'uploaded') return;
+
+        const toast = document.getElementById('uploadToast');
+        if (!toast) return;
+
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 4500);
+
+        // Clean the URL so refresh doesn't re-show the toast
+        params.delete('success');
+        const newQuery = params.toString();
+        const newUrl = window.location.pathname + (newQuery ? ('?' + newQuery) : '');
+        window.history.replaceState({}, '', newUrl);
+    })();
+
+    // Simple listening ping (anti-farm caps are server-side)
+    // Sends 30s pings while playing.
+    document.querySelectorAll('audio[data-track-id]').forEach(audio => {
+        const trackId = audio.getAttribute('data-track-id');
+        let timer = null;
+
+        function start() {
+            if (timer) return;
+            timer = setInterval(() => {
+                fetch(`/api/music/${trackId}/listen?seconds=30`, { method: 'POST' })
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (!data) return;
+                        // optionally update coins in navbar in future
+                    })
+                    .catch(() => {});
+            }, 30000);
+        }
+
+        function stop() {
+            if (!timer) return;
+            clearInterval(timer);
+            timer = null;
+        }
+
+        audio.addEventListener('play', start);
+        audio.addEventListener('pause', stop);
+        audio.addEventListener('ended', stop);
+    });
+</script>
+</body>
+</html>
+

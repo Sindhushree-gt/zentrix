@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,6 +58,11 @@ public class User implements Serializable {
     // Zentrix Coins & Rewards
     private Integer coins = 0;
     private LocalDate lastLoginDate;
+
+    // Music reward bookkeeping (Option C MVP)
+    private LocalDate lastMusicRewardDate;
+    private LocalDate musicSecondsDate;
+    private Integer musicRewardedSecondsToday = 0;
     
     // Premium Features
     private boolean isPremium = false;
@@ -238,6 +244,30 @@ public class User implements Serializable {
 
     public LocalDate getLastLoginDate() { return lastLoginDate; }
     public void setLastLoginDate(LocalDate lastLoginDate) { this.lastLoginDate = lastLoginDate; }
+
+    public LocalDate getLastMusicRewardDate() {
+        return lastMusicRewardDate;
+    }
+
+    public void setLastMusicRewardDate(LocalDate lastMusicRewardDate) {
+        this.lastMusicRewardDate = lastMusicRewardDate;
+    }
+
+    public LocalDate getMusicSecondsDate() {
+        return musicSecondsDate;
+    }
+
+    public void setMusicSecondsDate(LocalDate musicSecondsDate) {
+        this.musicSecondsDate = musicSecondsDate;
+    }
+
+    public Integer getMusicRewardedSecondsToday() {
+        return musicRewardedSecondsToday != null ? musicRewardedSecondsToday : 0;
+    }
+
+    public void setMusicRewardedSecondsToday(Integer musicRewardedSecondsToday) {
+        this.musicRewardedSecondsToday = musicRewardedSecondsToday;
+    }
 
     public boolean isPremium() { return isPremium; }
     public void setPremium(boolean isPremium) { this.isPremium = isPremium; }

@@ -394,6 +394,40 @@ footer {
     border-color: var(--accent);
 }
 
+/* Fix white select/file controls on dark theme */
+select.form-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: var(--glass-bg);
+    color: var(--text-primary);
+}
+
+select.form-input option {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+input[type="file"].form-input {
+    padding: 10px;
+}
+
+input[type="file"].form-input::file-selector-button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 600;
+}
+
+input[type="file"].form-input::file-selector-button:hover {
+    border-color: rgba(248, 68, 100, 0.55);
+}
+
 /* Dashboard Layout */
 .dashboard-container {
     display: grid;

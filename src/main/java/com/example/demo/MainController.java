@@ -2,6 +2,8 @@ package com.example.demo;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import com.example.demo.music.room.MusicRoom;
+import com.example.demo.music.room.MusicRoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -72,6 +74,9 @@ public class MainController {
 
     @Autowired
     private FollowRequestRepository followRequestRepository;
+
+    @Autowired
+    private MusicRoomRepository musicRoomRepository;
 
     @GetMapping("/")
     public String root() {
@@ -227,6 +232,10 @@ public class MainController {
                 .filter(e -> e.getVotingEndDate() == null || e.getVotingEndDate().isAfter(LocalDateTime.now()))
                 .collect(Collectors.toList());
         model.addAttribute("votingPolls", votingPolls);
+
+        // Ongoing music battles (rooms)
+        List<MusicRoom> ongoingBattles = musicRoomRepository.findTop5ByActiveTrueAndPhaseNotOrderByCreatedAtDesc("ENDED");
+        model.addAttribute("ongoingMusicBattles", ongoingBattles);
 
         return "dashboard";
     }

@@ -29,6 +29,11 @@ public class GlobalModelAttributeAdvice {
             model.addAttribute("unreadMessageCount", unreadCount);
             model.addAttribute("currentUser", user); // Add this for UI
         }
+
+        Object token = httpServletRequest.getAttribute("urlToken");
+        if (token instanceof String && !((String) token).isBlank()) {
+            model.addAttribute("auth", token);
+        }
     }
 
     private User getUserFromSession(HttpSession session) {
