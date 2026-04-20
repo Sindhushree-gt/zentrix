@@ -11,6 +11,15 @@
         var contextPath = /*[[@{/}]]*/ '';
         if(contextPath === '/') contextPath = '';
     </script>
+    <style>
+        .card-grid-app { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; }
+        .person-card-elite { background: white; padding: 40px 30px; border-radius: 25px; border: 1px solid var(--border); text-align: center; transition: all 0.3s; }
+        .person-card-elite:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-color: var(--primary); }
+        .avatar-circle { width: 80px; height: 80px; background: var(--secondary); color: var(--primary-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; margin: 0 auto 20px; }
+        .btn-follow-elite { width: 100%; margin-top: 20px; padding: 12px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer; border: none; transition: 0.3s; }
+        .btn-follow-elite.active { background: var(--primary); color: white; }
+        .btn-follow-elite.inactive { background: #F3F4F6; color: var(--text-muted); }
+    </style>
 </head>
 
 <body>
@@ -27,35 +36,35 @@
     </nav>
 
     <div class="app-wrapper">
-        <!-- RESTORED OLD SIDEBAR -->
         <aside class="sidebar">
             <a th:href="@{/dashboard}" class="sidebar-link"><i class="fas fa-home"></i> <span>Feed</span></a>
             <a th:href="@{/explore}" class="sidebar-link active"><i class="fas fa-compass"></i> <span>Explore</span></a>
+            <a th:href="@{/reels}" class="sidebar-link"><i class="fas fa-film"></i> <span>Reels</span></a>
             <a th:href="@{/events}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> <span>Events</span></a>
+            <a th:href="@{/games}" class="sidebar-link"><i class="fas fa-gamepad"></i> <span>Games</span></a>
+            <a th:href="@{/music}" class="sidebar-link"><i class="fas fa-music"></i> <span>Music</span></a>
             <a th:href="@{/achievements}" class="sidebar-link"><i class="fas fa-medal"></i> <span>Awards</span></a>
             <a th:href="@{/profile}" class="sidebar-link"><i class="fas fa-user-circle"></i> <span>Profile</span></a>
             <a th:href="@{/logout}" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> <span>Log Out</span></a>
         </aside>
 
         <main class="content-main">
-            <h2 style="font-size: 2rem; font-weight: 900; margin-bottom: 40px;">Discover the <span style="color: var(--primary);">Elite Squad</span></h2>
+            <h2 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 40px;">Discover the <span style="color: var(--primary);">Elite Squad</span></h2>
             
             <div class="card-grid-app">
-                <div th:each="u : ${allUsers}" style="background: white; padding: 30px; border-radius: 25px; border: 1px solid var(--border); text-align: center;">
-                    <div style="width: 70px; height: 70px; background: var(--secondary); color: var(--primary-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; margin: 0 auto 20px;" 
-                         th:text="${#strings.toUpperCase(#strings.substring(u.username, 0, T(java.lang.Math).min(2, u.username.length())))}">
-                    </div>
-                    <h4 th:text="${u.username}" style="font-weight: 900; margin-bottom: 5px;">Username</h4>
-                    <p style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;" th:text="${u.level != null ? u.level : 'Novice'}">Tier</p>
+                <div th:each="u : ${allUsers}" class="person-card-elite">
+                    <div class="avatar-circle" th:text="${#strings.toUpperCase(#strings.substring(u.username, 0, T(java.lang.Math).min(2, u.username.length())))}"></div>
+                    <h4 th:text="${u.username}" style="font-weight: 900; font-size: 18px; margin-bottom: 5px;">Username</h4>
+                    <p style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;" th:text="${u.level != null ? u.level : 'Novice'}">Tier</p>
                     
-                    <div th:id="'fw-' + ${u.id}" style="margin-top: 20px;">
-                        <button th:if="${followingUserIds != null and followingUserIds.contains(u.id)}" class="btn-primary-elite" style="background: #F3F4F6; color: var(--text-muted); box-shadow: none;" disabled>
+                    <div th:id="'fw-' + ${u.id}">
+                        <button th:if="${followingUserIds != null and followingUserIds.contains(u.id)}" class="btn-follow-elite inactive" disabled>
                             FOLLOWING
                         </button>
-                        <button th:if="${followingUserIds != null and !followingUserIds.contains(u.id) and requestedUserIds != null and requestedUserIds.contains(u.id)}" class="btn-primary-elite" style="background: #F3F4F6; color: var(--text-muted);" th:onclick="'followUserAjax(' + ${u.id} + ', this)'">
+                        <button th:if="${followingUserIds != null and !followingUserIds.contains(u.id) and requestedUserIds != null and requestedUserIds.contains(u.id)}" class="btn-follow-elite inactive" th:onclick="'followUserAjax(' + ${u.id} + ', this)'">
                             REQUESTED
                         </button>
-                        <button th:if="${followingUserIds == null or (!followingUserIds.contains(u.id) and (requestedUserIds == null or !requestedUserIds.contains(u.id)))}" class="btn-primary-elite" th:onclick="'followUserAjax(' + ${u.id} + ', this)'">
+                        <button th:if="${followingUserIds == null or (!followingUserIds.contains(u.id) and (requestedUserIds == null or !requestedUserIds.contains(u.id)))}" class="btn-follow-elite active" th:onclick="'followUserAjax(' + ${u.id} + ', this)'">
                             FOLLOW
                         </button>
                     </div>
@@ -73,15 +82,14 @@
                 const res = await fetch(endpoint, { method: 'POST' });
                 const data = await res.json();
                 if (data.status === 'FOLLOWING') {
-                    btnWrapper.innerHTML = `<button class="btn-primary-elite" style="background: #F3F4F6; color: var(--text-muted); box-shadow: none;" disabled>FOLLOWING</button>`;
+                    btnWrapper.innerHTML = `<button class="btn-follow-elite inactive" disabled>FOLLOWING</button>`;
                 } else if (data.status === 'REQUESTED') {
-                    btnWrapper.innerHTML = `<button class="btn-primary-elite" style="background: #F3F4F6; color: var(--text-muted);" onclick="followUserAjax(${userId}, this)">REQUESTED</button>`;
+                    btnWrapper.innerHTML = `<button class="btn-follow-elite inactive" onclick="followUserAjax(${userId}, this)">REQUESTED</button>`;
                 } else {
-                    btnWrapper.innerHTML = `<button class="btn-primary-elite" onclick="followUserAjax(${userId}, this)">FOLLOW</button>`;
+                    btnWrapper.innerHTML = `<button class="btn-follow-elite active" onclick="followUserAjax(${userId}, this)">FOLLOW</button>`;
                 }
             } catch (err) { console.error(err); }
         }
     </script>
 </body>
-
 </html>

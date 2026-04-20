@@ -2,12 +2,14 @@ package com.example.demo;
 
 import com.example.demo.model.*;
 import com.example.demo.repository.*;
+import com.example.demo.music.room.MusicRoom;
+import com.example.demo.music.room.MusicRoomRepository;
+import com.example.demo.service.FeedAlgorithmService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
@@ -18,7 +20,17 @@ import java.util.stream.Collectors;
 @Controller
 public class MainController {
 
+    @Autowired
+    private jakarta.servlet.http.HttpServletRequest httpServletRequest;
+
     private User getUserFromSession(HttpSession session) {
+        // First check the request attribute (set by Interceptor)
+        Object authUser = httpServletRequest.getAttribute("authenticatedUser");
+        if (authUser instanceof User) {
+            return (User) authUser;
+        }
+
+        // Fallback to session (existing logic)
         Object sessionUser = session.getAttribute("user");
         if (sessionUser instanceof User) {
             return (User) sessionUser;
@@ -45,6 +57,9 @@ public class MainController {
     private PostRepository postRepository;
 
     @Autowired
+    private FeedAlgorithmService feedAlgorithmService;
+
+    @Autowired
     private PostCollaborationRepository postCollaborationRepository;
 
     @Autowired
@@ -64,6 +79,9 @@ public class MainController {
 
     @Autowired
     private FollowRequestRepository followRequestRepository;
+
+    @Autowired
+    private MusicRoomRepository musicRoomRepository;
 
     @GetMapping("/")
     public String root() {
@@ -147,8 +165,12 @@ public class MainController {
     }
 
     @Transactional
-    @RequestMapping(value = "/dashboard", method = RequestMethod.GET)
-    public String dashboard(Model model, HttpSession session) {
+    @GetMapping("/dashboard")
+    public String dashboard(
+            Model model,
+            HttpSession session,
+            @RequestParam(required = false) String category
+    ) {
         Object sessionUser = session.getAttribute("user");
         // Admin should land on admin dashboard, not student dashboard
         if ("admin".equals(sessionUser))
@@ -163,13 +185,70 @@ public class MainController {
         session.setAttribute("user", user);
         session.setAttribute("userId", user.getId());
 
+        populateDashboardCommonModel(model, user);
+
         List<PostCollaboration> pendingRequests = postCollaborationRepository
                 .findByUserAndStatus(user, CollaborationStatus.PENDING);
         model.addAttribute("user", user);
         model.addAttribute("pendingCount", pendingRequests.size());
 
-        model.addAttribute("posts", postRepository.findByPostTypeNotOrderByCreatedAtDesc("STORY"));
+        String normalizedCategory = (category == null) ? null : category.trim();
+        if (normalizedCategory != null && normalizedCategory.isEmpty()) normalizedCategory = null;
+        if (normalizedCategory != null && "ALL".equalsIgnoreCase(normalizedCategory)) normalizedCategory = null;
 
+        // Personalized feed (based on VIEW/LIKE/SAVE/SHARE) with optional category filter
+        List<Post> personalized = feedAlgorithmService.getPersonalizedFeed(user.getId(), 0, 200);
+        if (normalizedCategory != null) {
+            final String catKey = normalizedCategory.trim().toUpperCase();
+            personalized = personalized.stream()
+                    .filter(p -> p.getCategory() != null && p.getCategory().trim().equalsIgnoreCase(catKey))
+                    .toList();
+        }
+        model.addAttribute("posts", personalized);
+        model.addAttribute("activeCategory", normalizedCategory);
+        model.addAttribute("isReelsPage", false);
+
+        List<User> allUsers = userRepository.findAll();
+        final User finalUser = user;
+        Set<User> following = user.getFollowing();
+        List<User> suggestions = allUsers.stream()
+                .filter(u -> !u.getId().equals(finalUser.getId()))
+                .filter(u -> !following.contains(u))
+                .limit(5)
+                .collect(Collectors.toList());
+        model.addAttribute("suggestions", suggestions);
+
+        return "dashboard";
+    }
+
+    @Transactional
+    @GetMapping("/reels")
+    public String reels(Model model, HttpSession session) {
+        Object sessionUser = session.getAttribute("user");
+        if ("admin".equals(sessionUser))
+            return "redirect:/admin";
+
+        User user = getUserFromSession(session);
+        if (user == null) return "redirect:/login";
+        user = userRepository.findById(user.getId()).orElse(user);
+        session.setAttribute("user", user);
+        session.setAttribute("userId", user.getId());
+
+        populateDashboardCommonModel(model, user);
+
+        List<PostCollaboration> pendingRequests = postCollaborationRepository
+                .findByUserAndStatus(user, CollaborationStatus.PENDING);
+        model.addAttribute("user", user);
+        model.addAttribute("pendingCount", pendingRequests.size());
+
+        model.addAttribute("posts", postRepository.findByPostTypeOrderByCreatedAtDesc("REEL"));
+        model.addAttribute("activeCategory", null);
+        model.addAttribute("isReelsPage", true);
+
+        return "dashboard";
+    }
+
+    private String populateDashboardCommonModel(Model model, User user) {
         List<User> allUsers = userRepository.findAll();
         final User finalUser = user;
         Set<User> following = user.getFollowing();
@@ -219,6 +298,10 @@ public class MainController {
                 .filter(e -> e.getVotingEndDate() == null || e.getVotingEndDate().isAfter(LocalDateTime.now()))
                 .collect(Collectors.toList());
         model.addAttribute("votingPolls", votingPolls);
+
+        // Ongoing music battles (rooms)
+        List<MusicRoom> ongoingBattles = musicRoomRepository.findTop5ByActiveTrueAndPhaseNotOrderByCreatedAtDesc("ENDED");
+        model.addAttribute("ongoingMusicBattles", ongoingBattles);
 
         return "dashboard";
     }
@@ -323,6 +406,9 @@ public class MainController {
 
     /** True if any valid session (student or admin) exists */
     private boolean isLoggedIn(HttpSession session) {
+        Object authUser = httpServletRequest.getAttribute("authenticatedUser");
+        if (authUser != null) return true;
+        
         Object u = session.getAttribute("user");
         return u instanceof User || "admin".equals(u);
     }

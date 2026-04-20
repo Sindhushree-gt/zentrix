@@ -7,6 +7,29 @@
     <title th:text="${user.username + ' • Profile'}">Profile</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script th:inline="javascript">
+        var contextPath = /*[[@{/}]]*/ '';
+        if(contextPath === '/') contextPath = '';
+    </script>
+    <style>
+        .profile-hero { background: white; padding: 60px; border-radius: 30px; border: 1px solid var(--border); display: flex; gap: 50px; align-items: center; margin-bottom: 50px; }
+        .profile-avatar { width: 160px; height: 160px; border-radius: 50%; border: 4px solid var(--secondary); padding: 5px; object-fit: cover; }
+        .stats-grid { display: flex; gap: 40px; margin-top: 20px; }
+        .stat-item { text-align: center; }
+        .stat-val { display: block; font-size: 24px; font-weight: 900; color: var(--primary); }
+        .stat-lbl { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
+        .talent-badge { background: var(--secondary); color: var(--primary-dark); padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; }
+        .tab-nav { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin-bottom: 30px; }
+        .tab-link { padding-bottom: 15px; text-decoration: none; color: var(--text-muted); font-weight: 800; font-size: 13px; position: relative; cursor: pointer; }
+        .tab-link.active { color: var(--primary); }
+        .tab-link.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: var(--primary); border-radius: 3px; }
+        .posts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .grid-post { aspect-ratio: 1; border-radius: 20px; overflow: hidden; background: #eee; position: relative; cursor: pointer; }
+        .grid-post img, .grid-post video { width: 100%; height: 100%; object-fit: cover; }
+        .grid-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; color: white; gap: 15px; font-weight: 800; }
+        .grid-post:hover .grid-overlay { opacity: 1; }
+        .btn-edit { background: var(--secondary); color: var(--primary-dark); border: none; padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 11px; cursor: pointer; }
+    </style>
 </head>
 
 <body>
@@ -23,51 +46,115 @@
     </nav>
 
     <div class="app-wrapper">
-        <!-- RESTORED OLD SIDEBAR -->
         <aside class="sidebar">
             <a th:href="@{/dashboard}" class="sidebar-link"><i class="fas fa-home"></i> <span>Feed</span></a>
             <a th:href="@{/explore}" class="sidebar-link"><i class="fas fa-compass"></i> <span>Explore</span></a>
+            <a th:href="@{/reels}" class="sidebar-link"><i class="fas fa-film"></i> <span>Reels</span></a>
             <a th:href="@{/events}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> <span>Events</span></a>
+            <a th:href="@{/games}" class="sidebar-link"><i class="fas fa-gamepad"></i> <span>Games</span></a>
+            <a th:href="@{/music}" class="sidebar-link"><i class="fas fa-music"></i> <span>Music</span></a>
             <a th:href="@{/achievements}" class="sidebar-link"><i class="fas fa-medal"></i> <span>Awards</span></a>
             <a th:href="@{/profile}" class="sidebar-link active"><i class="fas fa-user-circle"></i> <span>Profile</span></a>
             <a th:href="@{/logout}" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> <span>Log Out</span></a>
         </aside>
 
         <main class="content-main">
-            <!-- Profile Hero Area -->
-            <div style="background: white; padding: 50px; border-radius: 30px; border: 1px solid var(--border); display: flex; gap: 40px; align-items: center; margin-bottom: 50px;">
-                <img th:src="${user.profilePhotoUrl != null} ? ${user.profilePhotoUrl} : 'https://ui-avatars.com/api/?name=' + ${user.username} + '&background=10B981&color=fff'" 
-                     style="width: 140px; height: 140px; border-radius: 50%; border: 4px solid var(--secondary); padding: 4px;">
+            <div class="profile-hero">
+                <img th:src="${user.profilePhotoUrl != null} ? ${user.profilePhotoUrl} : 'https://ui-avatars.com/api/?name=' + ${user.username} + '&background=10B981&color=fff'" class="profile-avatar">
                 <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 5px;">
                         <h1 style="font-size: 2.5rem; font-weight: 900;" th:text="${user.username}">Username</h1>
-                        <button th:if="${isOwnProfile}" class="btn-primary-elite" style="background: var(--secondary); color: var(--primary-dark); padding: 8px 20px; font-size: 12px;">EDIT PROFILE</button>
+                        <i th:if="${user.premium}" class="fas fa-crown" style="color: var(--accent); font-size: 20px;"></i>
+                        <button th:if="${isOwnProfile}" class="btn-edit" onclick="document.getElementById('editModal').style.display='block'; document.getElementById('overlay').style.display='block';">EDIT PROFILE</button>
+                        <div th:if="${!isOwnProfile}" th:id="'fw-' + ${user.id}">
+                            <button th:if="${isFollowing}" class="btn-edit" th:onclick="'followUserAjax(' + ${user.id} + ', this)'">FOLLOWING</button>
+                            <button th:if="${!isFollowing}" class="cta-btn" style="padding: 8px 20px; font-size: 11px;" th:onclick="'followUserAjax(' + ${user.id} + ', this)'">FOLLOW</button>
+                        </div>
                     </div>
-                    <p style="color: var(--text-main); font-weight: 500; margin-bottom: 25px;" th:text="${user.aboutMe != null ? user.aboutMe : 'An elite member of the Zentrix community.'}">Bio</p>
-                    <div style="display: flex; gap: 40px;">
-                        <div style="text-align: center;"><span style="display: block; font-size: 24px; font-weight: 900; color: var(--primary);" th:text="${#lists.size(posts)}">0</span><span style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Posts</span></div>
-                        <div style="text-align: center;"><span style="display: block; font-size: 24px; font-weight: 900; color: var(--primary);" th:text="${followersCount}">0</span><span style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Followers</span></div>
+                    
+                    <div class="talent-badge">
+                        <i class="fas fa-medal"></i> 
+                        <span th:text="${user.premium ? '👑 Premium Elite' : (userBadge != null ? userBadge : 'Novice')}">Novice</span>
+                        <span style="opacity: 0.5;">•</span>
+                        <span th:text="'Rank #' + ${userRank != null ? userRank : '—'}">Rank #1</span>
+                    </div>
+
+                    <p style="margin-top: 20px; font-weight: 500; color: var(--text-main); max-width: 600px;" th:text="${user.aboutMe != null and !user.aboutMe.isEmpty()} ? ${user.aboutMe} : 'No bio yet.'">Bio text...</p>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item"><span class="stat-val" th:text="${#lists.size(posts)}">0</span><span class="stat-lbl">Posts</span></div>
+                        <div class="stat-item"><span class="stat-val" th:text="${followersCount}">0</span><span class="stat-lbl">Followers</span></div>
+                        <div class="stat-item"><span class="stat-val" th:text="${followingCount}">0</span><span class="stat-lbl">Following</span></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Posts Area -->
-            <h2 style="font-size: 1.5rem; font-weight: 900; margin-bottom: 30px;">Zentrix <span style="color: var(--primary);">Timeline</span></h2>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                <div th:each="post : ${posts}" style="aspect-ratio: 1; border-radius: 20px; overflow: hidden; background: #eee;">
-                    <img th:if="${post.mediaUrl != null and post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}" style="width: 100%; height: 100%; object-fit: cover;">
-                    <video th:if="${post.mediaUrl != null and post.mediaType == 'VIDEO'}" th:src="@{${post.mediaUrl}}" style="width: 100%; height: 100%; object-fit: cover;"></video>
-                    <div th:if="${post.mediaUrl == null}" style="padding: 20px; display: flex; align-items: center; justify-content: center; height: 100%; text-align: center;">
-                        <p style="font-size: 12px; font-weight: 700;" th:text="${post.content}">Post text...</p>
+            <div class="tab-nav">
+                <a class="tab-link active">POSTS</a>
+                <a class="tab-link">REELS</a>
+                <a th:if="${isOwnProfile}" class="tab-link">SETTINGS</a>
+            </div>
+
+            <div class="posts-grid">
+                <div th:each="post : ${posts}" class="grid-post">
+                    <img th:if="${post.mediaUrl != null and post.mediaType == 'IMAGE'}" th:src="@{${post.mediaUrl}}">
+                    <video th:if="${post.mediaUrl != null and post.mediaType == 'VIDEO'}" th:src="@{${post.mediaUrl}}"></video>
+                    <div th:if="${post.mediaUrl == null}" style="padding: 20px; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center;">
+                        <p style="font-size: 11px; font-weight: 700; color: var(--text-muted);" th:text="${#strings.abbreviate(post.content, 50)}"></p>
+                    </div>
+                    <div class="grid-overlay">
+                        <span><i class="fas fa-heart"></i> <span th:text="${post.likes != null ? post.likes.size() : 0}">0</span></span>
+                        <span><i class="fas fa-comment"></i> <span th:text="${post.comments != null ? post.comments.size() : 0}">0</span></span>
                     </div>
                 </div>
             </div>
-            <div th:if="${#lists.isEmpty(posts)}" style="text-align: center; padding: 100px 0; opacity: 0.5;">
-                <p>No moments shared yet.</p>
+            
+            <div th:if="${#lists.isEmpty(posts)}" style="text-align: center; padding: 100px 0; opacity: 0.3;">
+                <i class="fas fa-camera" style="font-size: 40px; margin-bottom: 20px; display: block;"></i>
+                <p style="font-weight: 800;">NEVER STOP SHARING</p>
             </div>
         </main>
     </div>
 
-</body>
+    <!-- Modals -->
+    <div id="editModal" class="widget-card" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 4000; width: 500px; padding: 40px; box-shadow: 0 0 100px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+        <div class="widget-header">
+            <h3>Edit Profile</h3>
+            <i class="fas fa-times" onclick="document.getElementById('editModal').style.display='none'; document.getElementById('overlay').style.display='none';" style="cursor: pointer;"></i>
+        </div>
+        <form th:action="@{/profile/update}" method="POST">
+            <div class="form-group">
+                <label style="display:block; font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:10px;">PHOTO URL</label>
+                <input type="text" name="profilePhotoUrl" th:value="${user.profilePhotoUrl}" class="form-input">
+            </div>
+            <div class="form-group">
+                <label style="display:block; font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:10px;">ABOUT ME</label>
+                <textarea name="aboutMe" class="form-input" th:text="${user.aboutMe}" style="height: 100px;"></textarea>
+            </div>
+            <div class="form-group">
+                <label style="display:block; font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:10px;">SKILLS</label>
+                <input type="text" name="skills" th:value="${user.skills}" class="form-input" placeholder="e.g. Design, Gaming">
+            </div>
+            <button type="submit" class="cta-btn" style="width: 100%; border: none; cursor: pointer; margin-top: 20px;">SAVE CHANGES</button>
+        </form>
+    </div>
+    <div id="overlay" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 3999;" onclick="document.getElementById('editModal').style.display='none'; document.getElementById('overlay').style.display='none';"></div>
 
+    <script th:inline="javascript">
+        async function followUserAjax(userId, btn) {
+            try {
+                const res = await fetch('/profile/' + userId + '/follow/ajax', { method: 'POST' });
+                const data = await res.json();
+                btn.textContent = data.status === 'FOLLOWING' ? 'FOLLOWING' : (data.status === 'REQUESTED' ? 'REQUESTED' : 'FOLLOW');
+                if (data.status === 'FOLLOWING' || data.status === 'REQUESTED') {
+                    btn.classList.remove('cta-btn');
+                    btn.classList.add('btn-edit');
+                } else {
+                    btn.classList.add('cta-btn');
+                    btn.classList.remove('btn-edit');
+                }
+            } catch (e) {}
+        }
+    </script>
+</body>
 </html>

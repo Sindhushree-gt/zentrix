@@ -26,6 +26,7 @@ public class FeedAlgorithmService {
     private static final double W_WATCH = 2.0;
     private static final double W_RECENCY = 100.0; // max recency bonus
     private static final double W_RELATION = 20.0; // bonus for followed creators
+    private static final double W_INTEREST = 30.0; // bonus for user's category interests
 
     @Autowired
     private PostRepository postRepository;
@@ -67,10 +68,14 @@ public class FeedAlgorithmService {
                 .map(a -> a.getPost().getUser().getId())
                 .collect(Collectors.toSet());
 
+        // Build category interest affinity (what user watches/likes/saves most)
+        Map<String, Double> categoryAffinity = buildCategoryAffinity(viewerActivity);
+
         // Score and sort
         List<Post> ranked = pool.stream()
+                .filter(p -> p.getPostType() == null || !"STORY".equalsIgnoreCase(p.getPostType()))
                 .sorted(Comparator.comparingDouble(
-                        (Post p) -> calcScore(p, followingIds, interactedAuthorIds)).reversed())
+                        (Post p) -> calcScore(p, followingIds, interactedAuthorIds, categoryAffinity)).reversed())
                 .skip((long) page * size)
                 .limit(size)
                 .collect(Collectors.toList());
@@ -120,7 +125,8 @@ public class FeedAlgorithmService {
 
     // ── Internal Scoring ────────────────────────────────────────────────────
 
-    private double calcScore(Post p, Set<Long> followingIds, Set<Long> interactedAuthorIds) {
+    private double calcScore(Post p, Set<Long> followingIds, Set<Long> interactedAuthorIds,
+            Map<String, Double> categoryAffinity) {
         double engagement = calcEngagement(p);
 
         // Recency: 100 / (1 + hours_old) — gives ~100 for brand-new, decays quickly
@@ -133,11 +139,17 @@ public class FeedAlgorithmService {
                 ? W_RELATION
                 : 0.0;
 
-        double finalScore = engagement + recency + relationship;
+        // Category interest bonus (0..W_INTEREST)
+        String cat = p.getCategory();
+        String catKey = (cat == null) ? "" : cat.trim().toUpperCase(Locale.ROOT);
+        double affinity = categoryAffinity.getOrDefault(catKey, 0.0); // normalized 0..1
+        double interestBonus = affinity * W_INTEREST;
+
+        double finalScore = engagement + recency + relationship + interestBonus;
 
         // Debug logging
-        System.out.printf("[FeedScore] postId=%d | engagement=%.1f | recency=%.2f | relationship=%.1f | TOTAL=%.2f%n",
-                p.getId(), engagement, recency, relationship, finalScore);
+        System.out.printf("[FeedScore] postId=%d | engagement=%.1f | recency=%.2f | relationship=%.1f | interest=%.1f | TOTAL=%.2f%n",
+                p.getId(), engagement, recency, relationship, interestBonus, finalScore);
 
         return finalScore;
     }
@@ -156,6 +168,47 @@ public class FeedAlgorithmService {
                 + (shares * W_SHARE)
                 + (saves * W_SAVE)
                 + (watchTime * W_WATCH);
+    }
+
+    private Map<String, Double> buildCategoryAffinity(List<UserActivity> viewerActivity) {
+        if (viewerActivity == null || viewerActivity.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Double> raw = new HashMap<>();
+        for (UserActivity a : viewerActivity) {
+            if (a == null || a.getPost() == null) continue;
+            String cat = a.getPost().getCategory();
+            if (cat == null || cat.trim().isEmpty()) continue;
+            String key = cat.trim().toUpperCase(Locale.ROOT);
+
+            double w;
+            switch (a.getActivityType()) {
+                case LIKE -> w = 3.0;
+                case SAVE -> w = 5.0;
+                case SHARE -> w = 4.0;
+                case COMMENT -> w = 4.0;
+                case VIEW -> {
+                    // Light weight from watch time; clamp so one long view doesn't dominate
+                    long secs = Math.max(0, a.getWatchTime());
+                    w = Math.min(10.0, secs / 3.0);
+                }
+                default -> w = 0.0;
+            }
+            if (w <= 0) continue;
+            raw.merge(key, w, Double::sum);
+        }
+
+        if (raw.isEmpty()) return Collections.emptyMap();
+
+        double max = raw.values().stream().mapToDouble(v -> v).max().orElse(0.0);
+        if (max <= 0) return Collections.emptyMap();
+
+        Map<String, Double> normalized = new HashMap<>();
+        for (Map.Entry<String, Double> e : raw.entrySet()) {
+            normalized.put(e.getKey(), Math.min(1.0, e.getValue() / max));
+        }
+        return normalized;
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────

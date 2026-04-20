@@ -22,7 +22,15 @@ import java.util.HashSet;
 @RequestMapping("/profile")
 public class ProfileController {
 
+    @Autowired
+    private jakarta.servlet.http.HttpServletRequest httpServletRequest;
+
     private User getUserFromSession(HttpSession session) {
+        Object authUser = httpServletRequest.getAttribute("authenticatedUser");
+        if (authUser instanceof User) {
+            return (User) authUser;
+        }
+        
         Object sessionUser = session.getAttribute("user");
         if (sessionUser instanceof User) {
             return (User) sessionUser;
@@ -262,7 +270,11 @@ public class ProfileController {
         }
 
         if (user != null) {
-            user = userRepository.findById(user.getId()).orElse(user);
+            user = userRepository.findById(user.getId()).orElse(null);
+        }
+
+        if (user == null) {
+            return "redirect:/login";
         }
 
         Post post = new Post(content, user, mediaUrl, mediaType, hashtags, postType, category);

@@ -93,7 +93,9 @@
         <div class="nav-links">
             <a th:href="@{/events/admin/manage}" style="color: var(--accent); font-weight: 700;"><i
                     class="fas fa-calendar-alt"></i> Manage Events</a>
+            <a th:href="@{/admin/music}"><i class="fas fa-music"></i> Music Approvals</a>
             <a th:href="@{/events/admin/create}" class="nav-btn" style="padding: 8px 18px; text-decoration: none;"><i
+
                     class="fas fa-plus"></i> Create Event</a>
             <a th:href="@{/dashboard}">Return to App</a>
             <a th:href="@{/logout}">Logout</a>
@@ -111,6 +113,15 @@
                 <div>
                     <h3 style="font-size: 24px;" th:text="${users.size()}">0</h3>
                     <span style="color: var(--text-secondary); font-size: 14px;">Total Users</span>
+                </div>
+            </div>
+            <div class="stat-card" style="cursor:pointer;" onclick="location.href='/admin/music'">
+                <div class="stat-icon" style="background: rgba(59,130,246,0.12);">
+                    <i class="fas fa-music" style="color:#3b82f6;"></i>
+                </div>
+                <div>
+                    <h3 style="font-size: 24px;">Review</h3>
+                    <span style="color: var(--text-secondary); font-size: 14px;">Music uploads</span>
                 </div>
             </div>
             <div class="stat-card" style="cursor:pointer;" onclick="location.href='/events/admin/manage'">
@@ -332,6 +343,13 @@
                         style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Talent
                         Post</label>
                     <input type="number" name="talentPost" th:value="${rewardConfig.talentPost}" class="form-input"
+                        style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
+                </div>
+                <div class="field-grp">
+                    <label
+                        style="display:block; font-size:12px; font-weight:700; color:rgba(255,255,255,0.4); margin-bottom:8px; text-transform:uppercase;">Music
+                        Vote</label>
+                    <input type="number" name="musicVote" th:value="${rewardConfig.musicVote}" class="form-input"
                         style="width:100%; padding:12px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; font-weight:700;">
                 </div>
 

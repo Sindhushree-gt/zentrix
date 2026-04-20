@@ -15,7 +15,25 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
         List<ChatMessage> findByConversationAndMediaUrlIsNotNullOrderByTimestampDesc(Conversation conversation);
 
-        void deleteByConversationAndIsVanishTrueAndStatus(Conversation conv, MessageStatus status);
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.transaction.annotation.Transactional
+        @Query("DELETE FROM ChatMessage m WHERE m.conversation = :conv AND m.isVanish = true AND m.status = :status")
+        void deleteByConversationAndIsVanishTrueAndStatus(@Param("conv") Conversation conv, @Param("status") MessageStatus status);
+
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.transaction.annotation.Transactional
+        @Query("DELETE FROM ChatMessage m WHERE m.conversation = :conv AND m.isVanish = true")
+        void deleteByConversationAndIsVanishTrue(@Param("conv") Conversation conv);
+
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.transaction.annotation.Transactional
+        @Query(value = "DELETE FROM message_reactions WHERE message_id IN (SELECT id FROM chat_message WHERE conversation_id = :convId AND is_vanish = true)", nativeQuery = true)
+        void deleteReactionsByConversationAndIsVanishTrue(@Param("convId") Long convId);
+
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.transaction.annotation.Transactional
+        @Query(value = "DELETE FROM message_reactions WHERE message_id IN (SELECT id FROM chat_message WHERE conversation_id = :convId AND is_vanish = true AND status = :status)", nativeQuery = true)
+        void deleteReactionsByConversationAndIsVanishTrueAndStatus(@Param("convId") Long convId, @Param("status") String status);
 
         List<ChatMessage> findByConversationAndIsPinnedTrueOrderByTimestampDesc(Conversation conversation);
 

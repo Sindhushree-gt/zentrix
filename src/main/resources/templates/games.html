@@ -12,7 +12,6 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Override / ensure grid layout for game cards */
         .games-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -130,7 +129,7 @@
                     class="game-img" alt="Chess">
                 <div class="game-content">
                     <h3>Chess Royale</h3>
-                    <p>Master the game of kings. Challenge your mind in this strategic battle.</p>
+                    <p>Master the game of kings. Challenge your mind in this strategic battle of wits.</p>
                     <div class="game-footer">
                         <span style="color: var(--accent); font-weight: 600;">Strategy Classic</span>
                         <a th:href="@{/play-chess}" class="nav-btn"
@@ -145,7 +144,8 @@
                 <img th:src="@{/images/uno.jpg}" class="game-img" alt="Uno">
                 <div class="game-content">
                     <h3>Uno Realistic</h3>
-                    <p>The ultimate card showdown. Play against the AI in this high-stakes realistic version.</p>
+                    <p>The ultimate card showdown. Play against the AI in this high-stakes realistic version.
+                    </p>
                     <div class="game-footer">
                         <span style="color: var(--accent); font-weight: 600;">Card Battle</span>
                         <a th:href="@{/play-uno}" class="nav-btn"

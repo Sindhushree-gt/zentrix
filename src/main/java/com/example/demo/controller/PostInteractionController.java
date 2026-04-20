@@ -72,7 +72,7 @@ public class PostInteractionController {
         long count = postLikeRepository.countByPost(post);
         Map<String, Object> resp = new HashMap<>();
         resp.put("liked", liked);
-        resp.put("count", count);
+        resp.put("likeCount", count);
         return ResponseEntity.ok(resp);
     }
 
@@ -80,7 +80,7 @@ public class PostInteractionController {
     @PostMapping("/{postId}/comment")
     public ResponseEntity<Map<String, Object>> addComment(
             @PathVariable Long postId,
-            @RequestBody Map<String, String> body,
+            @RequestParam String content,
             HttpSession session) {
 
         User user = getUserFromSession(session);
@@ -92,11 +92,10 @@ public class PostInteractionController {
         if (post == null)
             return ResponseEntity.notFound().build();
 
-        String content = body.getOrDefault("content", "").trim();
-        if (content.isEmpty())
+        if (content == null || content.trim().isEmpty())
             return ResponseEntity.badRequest().build();
 
-        PostComment comment = postCommentRepository.save(new PostComment(post, user, content));
+        PostComment comment = postCommentRepository.save(new PostComment(post, user, content.trim()));
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("id", comment.getId());

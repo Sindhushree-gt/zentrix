@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Leaderboard | Zentrix</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .card { background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 18px; padding: 16px; }
+        .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+        .row { display:flex; justify-content:space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .row:last-child { border-bottom: none; }
+        .rank { width: 28px; height: 28px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-weight: 900; background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="logo">Zentrix</div>
+    <div class="nav-links">
+        <a href="/music"><i class="fas fa-music"></i> Music</a>
+        <a href="/music/rooms"><i class="fas fa-users"></i> Rooms</a>
+        <a href="/music/leaderboard" class="active"><i class="fas fa-trophy"></i> Leaderboard</a>
+        <a href="/shop" title="Coins" style="display:flex; align-items:center; gap:8px;">
+            <i class="fas fa-coins"></i> <span th:text="${user.coins}">0</span>
+        </a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container" style="margin-top: 22px;">
+    <h1 style="margin-bottom: 6px;">Music Leaderboard</h1>
+    <div style="color: rgba(255,255,255,0.55); font-size: 13px; margin-bottom: 18px;">
+        Based on rooms created and votes cast (MVP).
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3 style="margin:0 0 12px 0;"><i class="fas fa-thumbs-up" style="color:#3b82f6;"></i> Top voters</h3>
+            <div th:if="${topVoters == null or topVoters.isEmpty()}" style="color: rgba(255,255,255,0.6); text-align:center; padding: 10px;">
+                No votes yet.
+            </div>
+            <div th:each="r,iter : ${topVoters}" class="row">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <div class="rank" th:text="${iter.index + 1}">1</div>
+                    <div style="font-weight: 800;" th:text="${r.username}">user</div>
+                </div>
+                <div class="pill">
+                    <i class="fas fa-star" style="color:#ffd700;"></i>
+                    <span th:text="${r.count}">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin:0 0 12px 0;"><i class="fas fa-microphone" style="color: var(--accent);"></i> Top hosts</h3>
+            <div th:if="${topHosts == null or topHosts.isEmpty()}" style="color: rgba(255,255,255,0.6); text-align:center; padding: 10px;">
+                No rooms yet.
+            </div>
+            <div th:each="r,iter : ${topHosts}" class="row">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <div class="rank" th:text="${iter.index + 1}">1</div>
+                    <div style="font-weight: 800;" th:text="${r.username}">user</div>
+                </div>
+                <div class="pill">
+                    <i class="fas fa-users"></i>
+                    <span th:text="${r.count}">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

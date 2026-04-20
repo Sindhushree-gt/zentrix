@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <script th:inline="javascript">
     var contextPath = /*[[@{/}]]*/ '';
@@ -8,187 +7,60 @@
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPS Battle | Zentrix</title>
+    <title>RPS Multiplayer | Zentrix</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <style>
-        .game-container {
-            max-width: 800px;
-            margin: 120px auto 60px;
-            padding: 40px;
-            background: var(--card-bg);
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        @import url('https://fonts.googleapis.com/css2?family=Unna:wght@700&family=Inter:wght@400;700;900&display=swap');
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --card-bg: #161616;
+            --input-bg: #222222;
+            --accent: #f84464;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
         }
 
-        .game-title {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            background: var(--gradient-1);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .turn-box {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: var(--accent);
-            border: 1px solid var(--glass-border);
-        }
-
-        .choices-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .choice-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 30px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .choice-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent);
-            background: rgba(248, 68, 100, 0.05);
-        }
-
-        .choice-card.locked {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .choice-card i {
-            font-size: 48px;
-            color: var(--accent);
-        }
-
-        .choice-card span {
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .result-section {
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 12px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .choice-display {
-            display: flex;
-            justify-content: center;
-            gap: 50px;
-            margin-bottom: 20px;
-        }
-
-        .display-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .display-item span {
-            color: var(--text-secondary);
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .display-choice {
-            font-size: 24px;
-            font-weight: 700;
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
             color: var(--text-primary);
-        }
-
-        .final-result {
-            font-size: 36px;
-            font-weight: 800;
-            margin-top: 10px;
-            min-height: 54px;
-        }
-
-        .score-board {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-bottom: 30px;
             font-family: 'Inter', sans-serif;
+            min-height: 100vh;
         }
 
-        .score-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .score-val {
-            font-size: 24px;
-            font-weight: 800;
-            color: #fff;
-        }
-
-        .score-label {
-            font-size: 12px;
-            color: var(--text-secondary);
+        .zentrix-logo {
+            font-family: 'Unna', serif;
+            font-size: 64px;
+            letter-spacing: 12px;
+            text-align: center;
+            margin-top: 60px;
             text-transform: uppercase;
         }
 
-        .btn-action {
-            display: inline-block;
-            background: var(--accent);
-            color: #fff;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-weight: 700;
-            text-decoration: none;
-            margin-top: 20px;
-            cursor: pointer;
-            border: none;
-            transition: transform 0.2s;
-        }
-
-        .btn-action:hover {
-            transform: scale(1.05);
-        }
-
-        .back-btn {
-            display: inline-block;
-            margin-top: 30px;
-            color: var(--text-secondary);
+        .game-subtitle {
+            text-align: center;
+            letter-spacing: 6px;
+            color: #556677;
             font-size: 14px;
-            transition: color 0.3s;
+            font-weight: 700;
+            margin-top: 10px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
         }
 
-        .back-btn:hover {
-            color: var(--accent);
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
-
 <body>
-
     <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">Zentrix</div>
@@ -202,129 +74,191 @@
         <a th:href="@{/dashboard}" class="nav-btn">Dashboard</a>
     </nav>
 
-    <div class="container" style="padding-top: 0;">
-        <div class="game-container">
-            <h1 class="game-title">RPS Local Battle</h1>
+    <div id="root"></div>
 
-            <div class="score-board">
-                <div class="score-item">
-                    <span class="score-label">Player 1</span>
-                    <span id="p1Score" class="score-val">0</span>
-                </div>
-                <div class="score-val">:</div>
-                <div class="score-item">
-                    <span class="score-label">Player 2</span>
-                    <span id="p2Score" class="score-val">0</span>
-                </div>
-            </div>
+    <script type="text/babel" th:inline="none">
+        /*<![CDATA[*/
+        const { useState, useEffect, useRef, useCallback } = React;
 
-            <div id="turnIndicator" class="turn-box">
-                Player 1: Make your choice
-            </div>
+        function Lobby({ gameName, onEnterGame }) {
+            const [activeTab, setActiveTab] = useState("create");
+            const [playerName, setPlayerName] = useState("");
+            const [joinCode, setJoinCode] = useState("");
+            const [loading, setLoading] = useState(false);
 
-            <div id="choicesGrid" class="choices-grid">
-                <div class="choice-card" onclick="makeChoice('Rock')">
-                    <i class="fas fa-hand-rock"></i>
-                    <span>Rock</span>
-                </div>
-                <div class="choice-card" onclick="makeChoice('Paper')">
-                    <i class="fas fa-hand-paper"></i>
-                    <span>Paper</span>
-                </div>
-                <div class="choice-card" onclick="makeChoice('Scissors')">
-                    <i class="fas fa-hand-scissors"></i>
-                    <span>Scissors</span>
-                </div>
-            </div>
+            const handleAction = async () => {
+                if (!playerName.trim()) return alert("Please enter your name");
+                setLoading(true);
+                try {
+                    const endpoint = activeTab === "create" ? `/api/rps/create` : `/api/rps/join`;
+                    const body = activeTab === "create" ? { playerName } : { playerName, roomId: joinCode };
+                    const res = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    const data = await res.json();
+                    if (data.error) alert(data.error);
+                    else onEnterGame(data.roomId, data.playerNum, playerName);
+                } catch (e) { alert("Connection error"); }
+                setLoading(false);
+            };
 
-            <div id="resultSection" class="result-section">
-                <div class="choice-display">
-                    <div class="display-item">
-                        <span>P1 Chose</span>
-                        <div id="p1Display" class="display-choice">—</div>
+            const styles = {
+                card: { background: "var(--card-bg)", borderRadius: 32, width: 440, padding: "40px 30px", margin: "0 auto", animation: "fadeIn 0.6s ease" },
+                tabs: { display: "flex", background: "#0f0f0f", borderRadius: 16, padding: 6, marginBottom: 35 },
+                tab: (active) => ({ flex: 1, padding: "14px", borderRadius: 12, border: "none", cursor: "pointer", background: active ? "#333" : "transparent", color: active ? "#fff" : "#666", fontWeight: 900, fontSize: 13, textTransform: "uppercase", letterSpacing: 1, transition: "all 0.2s" }),
+                label: { display: "block", color: "#8899aa", fontSize: 12, fontWeight: 700, marginBottom: 15, textAlign: "left" },
+                input: { width: "100%", background: "var(--input-bg)", border: "1px solid #333", borderRadius: 16, padding: "18px 20px", color: "#fff", fontSize: 16, outline: "none", marginBottom: 30, boxSizing: "border-box" },
+                desc: { color: "#667788", fontSize: 13, lineHeight: "1.6", marginBottom: 30, textAlign: "left" },
+                btn: { width: "100%", background: "#fff", color: "#000", border: "none", borderRadius: 18, padding: "22px", fontSize: 15, fontWeight: 900, textTransform: "uppercase", letterSpacing: 2, cursor: "pointer", transition: "transform 0.1s" }
+            };
+
+            return (
+                <div style={{ padding: 20 }}>
+                    <div className="zentrix-logo">Zentrix</div>
+                    <div className="game-subtitle">{gameName} Multiplayer</div>
+                    <div style={styles.card}>
+                        <div style={styles.tabs}>
+                            <button style={styles.tab(activeTab === "create")} onClick={() => setActiveTab("create")}>Create Room</button>
+                            <button style={styles.tab(activeTab === "join")} onClick={() => setActiveTab("join")}>Join Room</button>
+                        </div>
+                        <label style={styles.label}>Your Name</label>
+                        <input style={styles.input} value={playerName} onChange={e => setPlayerName(e.target.value)} placeholder="What should we call you?" />
+                        
+                        {activeTab === "join" && (
+                            <React.Fragment>
+                                <label style={styles.label}>Room Code</label>
+                                <input style={{...styles.input, textTransform: "uppercase", textAlign: "center", fontSize: 24, letterSpacing: 8}} value={joinCode} onChange={e => setJoinCode(e.target.value)} placeholder="000000" maxLength={6} />
+                            </React.Fragment>
+                        )}
+
+                        <div style={styles.desc}>
+                            {activeTab === "create" 
+                                ? "Generate a unique room code and share it with a friend to start a duel."
+                                : "Enter the code shared by your friend to join their battle arena."}
+                        </div>
+
+                        <button style={styles.btn} onClick={handleAction} disabled={loading} onMouseDown={e => e.target.style.transform="scale(0.98)"} onMouseUp={e => e.target.style.transform="scale(1)"}>
+                            {loading ? "Initializing..." : activeTab === "create" ? "Create Room Code" : "Join Room Now"}
+                        </button>
+                        <div style={{marginTop: "20px", textAlign: "center"}}>
+                             <a th:href="@{/games}" style={{color: "var(--accent)", textDecoration: "none", fontSize: "14px", fontWeight: "700"}}>← Back to Games</a>
+                        </div>
                     </div>
-                    <div class="display-item">
-                        <span>P2 Chose</span>
-                        <div id="p2Display" class="display-choice">—</div>
-                    </div>
                 </div>
-                <div id="result" class="final-result"></div>
-                <button class="btn-action" onclick="nextRound()">Next Round</button>
-            </div>
+            );
+        }
 
-            <a th:href="@{/games}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Games</a>
-        </div>
-    </div>
+        function Game({ roomId, playerNum, playerName }) {
+            const [state, setState] = useState(null);
+            const stompRef = useRef(null);
 
-    <script>
-        let p1Choice = null;
-        let p2Choice = null;
-        let p1Score = 0;
-        let p2Score = 0;
-        let currentTurn = 1;
-
-        function makeChoice(choice) {
-            if (currentTurn === 1) {
-                p1Choice = choice;
-                currentTurn = 2;
-                document.getElementById('turnIndicator').innerText = "Player 2: Make your choice";
-                document.getElementById('turnIndicator').style.color = "#00f3ff"; // P2 Blue
-
-                // Temporary visual feedback
-                const cards = document.querySelectorAll('.choice-card');
-                cards.forEach(card => {
-                    card.style.borderColor = "var(--accent)";
-                    setTimeout(() => card.style.borderColor = "var(--glass-border)", 200);
+            useEffect(() => {
+                const socket = new SockJS('/ws-chat');
+                const stomp = Stomp.over(socket);
+                stomp.debug = () => {};
+                stomp.connect({}, () => {
+                    stomp.subscribe(`/topic/rps/${roomId}`, (msg) => setState(JSON.parse(msg.body)));
+                    stomp.send(`/app/rps/${roomId}/subscribe`, {}, "{}");
                 });
-            } else if (currentTurn === 2) {
-                p2Choice = choice;
-                showResult();
-            }
-        }
+                stompRef.current = stomp;
+                return () => stomp.disconnect();
+            }, [roomId]);
 
-        function showResult() {
-            document.getElementById('choicesGrid').style.display = 'none';
-            document.getElementById('turnIndicator').style.display = 'none';
-            document.getElementById('resultSection').style.display = 'block';
+            const makeChoice = (choice) => {
+                if (state?.status !== 'active' || state?.myChoice) return;
+                stompRef.current.send(`/app/rps/${roomId}/choice`, {}, JSON.stringify({ playerNum, choice }));
+            };
 
-            document.getElementById('p1Display').innerText = p1Choice;
-            document.getElementById('p2Display').innerText = p2Choice;
+            const nextRound = () => stompRef.current.send(`/app/rps/${roomId}/next`, {}, "{}");
 
-            const resultElement = document.getElementById('result');
+            if (!state) return (
+                <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 40, height: 40, border: "3px solid #333", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                    <p style={{ marginTop: 20, color: "#666", letterSpacing: 2 }}>ESTABLISHING DUEL...</p>
+                </div>
+            );
 
-            if (p1Choice === p2Choice) {
-                resultElement.innerText = "It's a Draw 🤝";
-                resultElement.style.color = "var(--text-secondary)";
-            } else if (
-                (p1Choice === 'Rock' && p2Choice === 'Scissors') ||
-                (p1Choice === 'Paper' && p2Choice === 'Rock') ||
-                (p1Choice === 'Scissors' && p2Choice === 'Paper')
-            ) {
-                resultElement.innerText = "Player 1 Wins! 🏆";
-                resultElement.style.color = "var(--accent)";
-                p1Score++;
-            } else {
-                resultElement.innerText = "Player 2 Wins! 🏆";
-                resultElement.style.color = "#00f3ff";
-                p2Score++;
+            if (state.status === 'waiting') {
+                return (
+                    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ background: "#161616", borderRadius: 32, padding: 60, textAlign: "center", width: "90%", maxWidth: 500 }}>
+                            <div style={{ color: "var(--accent)", fontSize: 24, fontWeight: 900, letterSpacing: 4, marginBottom: 15 }}>ARENA CREATED</div>
+                            <div style={{ fontSize: 64, fontWeight: 900, letterSpacing: 12, padding: 30, background: "#000", borderRadius: 20, marginBottom: 40, fontFamily: "monospace" }}>{roomId}</div>
+                            <div style={{ color: "#666", fontSize: 13, letterSpacing: 2, textTransform: "uppercase" }}>Waiting for opponent...</div>
+                        </div>
+                    </div>
+                );
             }
 
-            document.getElementById('p1Score').innerText = p1Score;
-            document.getElementById('p2Score').innerText = p2Score;
+            const isResult = state.status === 'result';
+            const winnerText = state.lastResult === 'draw' ? "IT'S A DRAW!" : ((state.lastResult === 'p1' && playerNum === 1) || (state.lastResult === 'p2' && playerNum === 2)) ? "YOU WON! 🏆" : "YOU LOST! 💀";
+
+            return (
+                <div style={{ padding: 40, textAlign: "center", maxWidth: 800, margin: "0 auto" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 60, opacity: 0.8 }}>
+                        <div style={{ textAlign: "left" }}>
+                            <div style={{ color: "#666", fontSize: 12, fontWeight: 900 }}>{state.p1Name || "???"}</div>
+                            <div style={{ fontSize: 32, fontWeight: 900 }}>{state.p1Score}</div>
+                        </div>
+                        <div style={{ fontSize: 24, fontWeight: 900, alignSelf: "center", color: "var(--accent)" }}>VS</div>
+                        <div style={{ textAlign: "right" }}>
+                            <div style={{ color: "#666", fontSize: 12, fontWeight: 900 }}>{state.p2Name || "???"}</div>
+                            <div style={{ fontSize: 32, fontWeight: 900 }}>{state.p2Score}</div>
+                        </div>
+                    </div>
+
+                    {!isResult ? (
+                        <div>
+                            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 40, color: "#aaa" }}>
+                                {state.myChoice ? "Waiting for opponent..." : "Make your move!"}
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "center", gap: 20 }}>
+                                {['Rock', 'Paper', 'Scissors'].map(c => (
+                                    <div key={c} onClick={() => makeChoice(c)} style={{
+                                        width: 140, height: 180, background: state.myChoice === c ? "var(--accent)" : "#161616",
+                                        borderRadius: 24, border: "2px solid #333", display: "flex", flexDirection: "column",
+                                        alignItems: "center", justifyContent: "center", cursor: state.myChoice ? "default" : "pointer",
+                                        transition: "all 0.2s", opacity: (state.myChoice && state.myChoice !== c) ? 0.3 : 1
+                                    }}>
+                                        <i className={`fas fa-hand-${c.toLowerCase()}`} style={{ fontSize: 48, marginBottom: 15 }}></i>
+                                        <div style={{ fontWeight: 900, fontSize: 14, textTransform: "uppercase" }}>{c}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ animation: "fadeIn 0.5s ease" }}>
+                            <div style={{ fontSize: 48, fontWeight: 900, marginBottom: 40, color: state.lastResult === 'draw' ? "#fff" : "var(--accent)" }}>{winnerText}</div>
+                            <div style={{ display: "flex", justifyContent: "center", gap: 60, marginBottom: 60 }}>
+                                <div>
+                                    <div style={{ color: "#666", marginBottom: 15 }}>YOU CHOSE</div>
+                                    <i className={`fas fa-hand-${(playerNum === 1 ? state.p1Choice : state.p2Choice).toLowerCase()}`} style={{ fontSize: 80 }}></i>
+                                </div>
+                                <div>
+                                    <div style={{ color: "#666", marginBottom: 15 }}>OPPONENT CHOSE</div>
+                                    <i className={`fas fa-hand-${(playerNum === 1 ? state.p2Choice : state.p1Choice).toLowerCase()}`} style={{ fontSize: 80 }}></i>
+                                </div>
+                            </div>
+                            <button onClick={nextRound} style={{ background: "#fff", color: "#000", border: "none", borderRadius: 14, padding: "18px 40px", fontSize: 14, fontWeight: 900, textTransform: "uppercase", cursor: "pointer" }}>Next Round</button>
+                        </div>
+                    )}
+                </div>
+            );
         }
 
-        function nextRound() {
-            p1Choice = null;
-            p2Choice = null;
-            currentTurn = 1;
+        function App() {
+            const [view, setView] = useState("lobby");
+            const [gameData, setGameData] = useState(null);
 
-            document.getElementById('choicesGrid').style.display = 'grid';
-            document.getElementById('turnIndicator').style.display = 'block';
-            document.getElementById('turnIndicator').innerText = "Player 1: Make your choice";
-            document.getElementById('turnIndicator').style.color = "var(--accent)";
-            document.getElementById('resultSection').style.display = 'none';
+            if (view === "lobby") return <Lobby gameName="Rock Paper Scissors" onEnterGame={(roomId, playerNum, playerName) => { setGameData({ roomId, playerNum, playerName }); setView("game"); }} />;
+            return <Game {...gameData} />;
         }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+        /*]]>*/
     </script>
 </body>
-
 </html>

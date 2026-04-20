@@ -18,16 +18,31 @@ public class GlobalModelAttributeAdvice {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private jakarta.servlet.http.HttpServletRequest httpServletRequest;
+
     @ModelAttribute
     public void addGlobalAttributes(HttpSession session, Model model) {
         User user = getUserFromSession(session);
         if (user != null) {
             long unreadCount = chatService.getUnreadCount(user);
             model.addAttribute("unreadMessageCount", unreadCount);
+            model.addAttribute("currentUser", user); // Add this for UI
+        }
+
+        Object token = httpServletRequest.getAttribute("urlToken");
+        if (token instanceof String && !((String) token).isBlank()) {
+            model.addAttribute("auth", token);
         }
     }
 
     private User getUserFromSession(HttpSession session) {
+        // First check request attribute from JWT
+        Object authUser = httpServletRequest.getAttribute("authenticatedUser");
+        if (authUser instanceof User) {
+            return (User) authUser;
+        }
+
         if (session == null)
             return null;
         Object sessionUser = session.getAttribute("user");
