@@ -1,152 +1,188 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
 <head>
-    <script th:inline="javascript">
-    var contextPath = /*[[@{/}]]*/ '';
-    if(contextPath === '/') contextPath = '';
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zentrix | Discover Experiences</title>
+    <title>Zentrix Elite Hub</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="icon" type="image/png" th:href="@{/favicon.png}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
 <body>
 
-    <!-- Navbar -->
     <nav class="navbar">
-        <div class="logo">Zentrix</div>
-        <div class="nav-links">
-            <a th:href="@{/home}" class="active">Home</a>
-            <a th:href="@{/events}">Events</a>
-            <a th:href="@{/games}">Games</a>
-            <a th:href="@{/about}">About Us</a>
-            <a th:href="@{/support}">Contact</a>
+        <div class="logo">
+           <i class="fas fa-bolt"></i> ZENTRIX
         </div>
-        <div style="display: flex; gap: 15px;">
-            <a th:href="@{/login}" class="nav-btn" style="background: transparent; border: 1px solid var(--accent);">Login</a>
-            <a th:href="@{/register}" class="nav-btn">Register</a>
+        <div class="nav-links">
+            <a th:href="@{/home}">Home</a>
+            <a th:href="@{/events}">Events</a>
+            <a th:href="@{/achievements}">Awards</a>
+            <a th:href="@{/profile}">Profile</a>
+            <a th:href="@{/shop}" class="coin-nav"><i class="fas fa-coins"></i> <span th:text="${user != null ? user.coins : 0}">0</span></a>
+            <a th:href="@{/logout}" class="nav-btn">Log Out</a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero"
-        style="background-image: linear-gradient(to right, rgba(15, 16, 20, 0.9), rgba(15, 16, 20, 0.4)), url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop');">
-        <div class="hero-content">
-            <h1>Discover Unforgettable Experiences</h1>
-            <p>From electric concerts to inspiring conferences, find the events that move you.</p>
-            <a th:href="@{/events}" class="cta-btn">Explore Events</a>
+    <section class="hero">
+        <div class="container hero-content">
+            <span class="badge badge-accent">#THE_FUTURE_IS_YOU</span>
+            <h1>UNLEASH YOUR <br>ELITE POTENTIAL.</h1>
+            <p>Join the most vibrant youth ecosystem. High-performance gaming, elite squads, and real-world lifestyle drops.</p>
+            <div class="hero-btns">
+                <a th:href="@{/register}" class="cta-btn">JOIN THE ELITE</a>
+            </div>
         </div>
     </section>
 
-    <!-- Trending Events -->
-    <section class="container">
+    <div class="container" style="padding: 100px 0;">
         <div class="section-header">
-            <h2>Trending Events</h2>
-            <a th:href="@{/events}" class="see-all">See All ›</a>
+            <h2>TRENDING <span>ARENAS</span></h2>
+            <a th:href="@{/games}" class="see-all">VIEW ALL GAMES &rarr;</a>
         </div>
-        <div class="events-grid">
+        
+        <div class="games-grid">
             <div class="card">
-                <img src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?q=80&w=1974&auto=format&fit=crop"
-                    class="card-img" alt="Concert">
-                <div class="card-content">
-                    <div class="event-date">AUG 24 | 7:00 PM</div>
-                    <div class="card-title">Neon Lights Music Fest</div>
-                    <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> Austin, TX</div>
-                    <div class="event-price">$120 onwards</div>
+                <div class="card-img"><img th:src="@{/images/gaming.png}"></div>
+                <div class="card-info">
+                    <span class="badge badge-primary">ESPORTS</span>
+                    <h3>Elite Combat Zone</h3>
+                    <p>Join the 24/7 battle arena. Climb rank and win weekly prizes.</p>
+                    <a th:href="@{/games}" class="play-link">PLAY NOW</a>
                 </div>
             </div>
             <div class="card">
-                <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?q=80&w=2012&auto=format&fit=crop"
-                    class="card-img" alt="Conference">
-                <div class="card-content">
-                    <div class="event-date">SEP 10 | 9:00 AM</div>
-                    <div class="card-title">Future Tech Summit</div>
-                    <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> San Francisco, CA</div>
-                    <div class="event-price">$499 onwards</div>
+                <div class="card-img"><img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2070"></div>
+                <div class="card-info">
+                    <span class="badge badge-primary">RACING</span>
+                    <h3>Neon Velocity</h3>
+                    <p>High-speed futuristic racing with customized tech cars.</p>
+                    <a th:href="@{/games}" class="play-link">PLAY NOW</a>
                 </div>
             </div>
             <div class="card">
-                <img src="https://images.unsplash.com/photo-1591115765373-5207764f72e7?q=80&w=2072&auto=format&fit=crop"
-                    class="card-img" alt="Workshop">
-                <div class="card-content">
-                    <div class="event-date">OCT 05 | 10:00 AM</div>
-                    <div class="card-title">Creative Design Workshop</div>
-                    <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> New York, NY</div>
-                    <div class="event-price">$50 onwards</div>
+                <div class="card-img"><img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=2070"></div>
+                <div class="card-info">
+                    <span class="badge badge-primary">STRATEGY</span>
+                    <h3>Chess Master Pro</h3>
+                    <p>The ultimate mental battleground. Compete with grandmasters.</p>
+                    <a th:href="@{/games}" class="play-link">PLAY NOW</a>
                 </div>
             </div>
             <div class="card">
-                <img src="https://images.unsplash.com/photo-1514525253440-b393452e3383?q=80&w=1974&auto=format&fit=crop"
-                    class="card-img" alt="Standup">
-                <div class="card-content">
-                    <div class="event-date">NOV 12 | 8:00 PM</div>
-                    <div class="card-title">Laugh Out Loud Comedy</div>
-                    <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> Chicago, IL</div>
-                    <div class="event-price">$35 onwards</div>
+                <div class="card-img"><img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=2070"></div>
+                <div class="card-info">
+                    <span class="badge badge-primary">ADVENTURE</span>
+                    <h3>World of Ludo</h3>
+                    <p>Traditional fun, reimagined. Play with your squad today.</p>
+                    <a th:href="@{/games}" class="play-link">PLAY NOW</a>
                 </div>
             </div>
-            <div class="card">
-                <img src="https://images.unsplash.com/photo-1551818255-e6e10975bc17?q=80&w=1973&auto=format&fit=crop"
-                    class="card-img" alt="Startup">
-                <div class="card-content">
-                    <div class="event-date">DEC 01 | 6:00 PM</div>
-                    <div class="card-title">Startup Networking Night</div>
-                    <div class="card-subtitle"><i class="fas fa-map-marker-alt"></i> Seattle, WA</div>
-                    <div class="event-price">Free Entry</div>
+        </div>
+    </div>
+
+    <section class="category-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>EXPLORE <span>SECTORS</span></h2>
+            </div>
+            <div class="category-grid">
+                <div class="cat-card">
+                    <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=600">
+                    <div class="cat-overlay"><h3>MUSIC</h3></div>
+                </div>
+                <div class="cat-card">
+                    <img src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&q=80&w=600">
+                    <div class="cat-overlay"><h3>TECH</h3></div>
+                </div>
+                <div class="cat-card">
+                    <img src="https://images.unsplash.com/photo-1585699324551-f6c309eedee5?auto=format&fit=crop&q=80&w=600">
+                    <div class="cat-overlay"><h3>COMEDY</h3></div>
+                </div>
+                <div class="cat-card">
+                    <img src="https://images.unsplash.com/photo-1461896756913-c3b476b75299?auto=format&fit=crop&q=80&w=600">
+                    <div class="cat-overlay"><h3>SPORTS</h3></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Categories -->
-    <section class="container">
-        <div class="section-header">
-            <h2>Browse by Category</h2>
-        </div>
-        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-            <a th:href="@{/events}" class="card"
-                style="height: 150px; display: flex; align-items: center; justify-content: center; background: linear-gradient(45deg, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%); color: #333;">
-                <h3 style="font-size: 24px;">Music</h3>
-            </a>
-            <a th:href="@{/events}" class="card"
-                style="height: 150px; display: flex; align-items: center; justify-content: center; background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%); color: #333;">
-                <h3 style="font-size: 24px;">Tech</h3>
-            </a>
-            <a th:href="@{/events}" class="card"
-                style="height: 150px; display: flex; align-items: center; justify-content: center; background: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%); color: #333;">
-                <h3 style="font-size: 24px;">Comedy</h3>
-            </a>
-            <a th:href="@{/events}" class="card"
-                style="height: 150px; display: flex; align-items: center; justify-content: center; background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%); color: white;">
-                <h3 style="font-size: 24px;">Sports</h3>
-            </a>
+    <section class="community-section">
+        <div class="container community-flex">
+            <div class="community-text">
+                <h2>JOIN THE SQUAD. <br>GO PRO.</h2>
+                <p>Zentrix isn't just a platform; it's a movement. Build your profile, earn achievements, and connect with thousands of like-minded enthusiasts.</p>
+                <a th:href="@{/register}" class="cta-btn">GET STARTED &rarr;</a>
+            </div>
+            <div class="community-img">
+                <img th:src="@{/images/community.png}">
+            </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <div class="footer-col">
-                <h3>Zentrix</h3>
-                <a th:href="@{/about}">About Us</a>
+    <section class="pricing-section">
+        <div class="container">
+            <div class="section-header" style="text-align: center;">
+                <h2>MEMBERSHIP <span>LEVELS</span></h2>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>STARTER</h3>
+                    <div class="price">$0<span>/mo</span></div>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Basic Games</li>
+                        <li><i class="fas fa-check"></i> Community Feed</li>
+                    </ul>
+                    <a th:href="@{/register}" class="price-btn">JOIN FREE</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="popular-tag">MOST POPULAR</div>
+                    <h3>PRO</h3>
+                    <div class="price">$19<span>/mo</span></div>
+                    <ul>
+                        <li><i class="fas fa-check"></i> All Pro Games</li>
+                        <li><i class="fas fa-check"></i> 2x XP Booster</li>
+                    </ul>
+                    <a th:href="@{/register}" class="price-btn">GET PRO</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>ELITE</h3>
+                    <div class="price">$49<span>/mo</span></div>
+                    <ul>
+                        <li><i class="fas fa-check"></i> VIP Events</li>
+                        <li><i class="fas fa-check"></i> Real-world Drops</li>
+                    </ul>
+                    <a th:href="@{/register}" class="price-btn">GO ELITE</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <div class="logo"><i class="fas fa-bolt"></i> ZENTRIX</div>
+                <p>The premier ecosystem for the next generation. Connect, create, and explore.</p>
+            </div>
+            <div class="footer-links">
+                <h3>Quick Links</h3>
+                <a th:href="@{/dashboard}">Dashboard</a>
                 <a th:href="@{/events}">Events</a>
-                <a th:href="@{/support}">Contact</a>
-                <a href="#">Organizers</a>
+                <a th:href="@{/shop}">Shop</a>
             </div>
-            <div class="footer-col">
-                <h3>Help</h3>
-                <a th:href="@{/support}">Contact Us</a>
-                <a href="#">FAQs</a>
-                <a href="#">Terms of Service</a>
-                <a href="#">Privacy Policy</a>
+            <div class="footer-social">
+                <h3>Follow Us</h3>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-discord"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-tiktok"></i></a>
+                </div>
             </div>
-
+        </div>
+        <div class="footer-bottom">
+            &copy; 2025 ZENTRIX YOUTH ECOSYSTEM. ALL RIGHTS RESERVED.
         </div>
     </footer>
 
 </body>
-
 </html>

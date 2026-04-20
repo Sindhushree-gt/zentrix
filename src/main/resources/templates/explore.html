@@ -4,291 +4,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Explore People | Zentrix</title>
+    <title>Explore Squad | Zentrix Elite</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .explore-container {
-            max-width: 900px;
-            margin: 100px auto 40px;
-            padding: 0 20px;
-        }
-
-        .explore-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .explore-header h1 {
-            font-size: 26px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #f84464, #ff8c69);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .search-bar-wrapper {
-            position: relative;
-            flex: 1;
-            max-width: 340px;
-        }
-
-        .search-bar-wrapper i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        #searchInput {
-            width: 100%;
-            padding: 10px 14px 10px 38px;
-            border-radius: 20px;
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--text-primary);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        #searchInput:focus {
-            border-color: var(--accent);
-        }
-
-        .people-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 18px;
-        }
-
-        .person-card {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 18px;
-            padding: 24px 20px;
-            text-align: center;
-            transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
-        }
-
-        .person-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(248, 68, 100, 0.35);
-            box-shadow: 0 12px 30px rgba(248, 68, 100, 0.08);
-        }
-
-        .person-avatar {
-            width: 68px;
-            height: 68px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
-            background: linear-gradient(135deg, #f84464, #ff8c69);
-            margin: 0 auto 14px;
-            letter-spacing: 1px;
-        }
-
-        .person-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .person-name a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .person-name a:hover {
-            color: var(--accent);
-        }
-
-        .person-meta {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-        }
-
-        .person-follow-btn {
-            width: 100%;
-            padding: 8px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
-        }
-
-        .person-follow-btn.follow {
-            background: var(--accent);
-            color: white;
-        }
-
-        .person-follow-btn.follow:hover {
-            opacity: 0.88;
-        }
-
-        .person-follow-btn.requested {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            color: var(--text-secondary);
-        }
-
-        .person-follow-btn.following {
-            background: transparent;
-            border: 1px solid rgba(248, 68, 100, 0.3);
-            color: var(--accent);
-        }
-
-        .no-results {
-            grid-column: 1 / -1;
-            text-align: center;
-            color: var(--text-secondary);
-            padding: 60px 20px;
-            font-size: 15px;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script th:inline="javascript">
+        var contextPath = /*[[@{/}]]*/ '';
+        if(contextPath === '/') contextPath = '';
+    </script>
 </head>
 
 <body>
 
-    <!-- Navbar -->
     <nav class="navbar">
-        <div class="logo">Zentrix</div>
-        <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
-            <input type="text" id="searchInput" placeholder="Search people..." class="form-input"
-                style="background: var(--card-bg); border-radius: 20px; padding: 8px 15px 8px 38px; width: 100%; border: 1px solid var(--glass-border); color: var(--text-primary); outline: none;">
-        </div>
-        <div class="nav-links">
-            <a href="/dashboard"><i class="fas fa-home"></i></a>
-            <a href="/messages"><i class="fas fa-comment-dots"></i></a>
-            <a href="/explore" class="active"><i class="fas fa-compass"></i></a>
-            <a href="/profile">
-                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format&fit=crop"
-                    class="user-avatar" style="width: 32px; height: 32px; border: none;">
+        <div class="logo"><i class="fas fa-bolt"></i> ZENTRIX</div>
+        <div style="flex: 1; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 20px;">
+            <a th:href="@{/logout}" style="color: var(--text-muted); font-weight: 800; text-decoration: none; font-size: 13px;">LOGOUT</a>
+            <a th:href="@{/profile}">
+                <img th:src="${user != null and user.profilePhotoUrl != null ? user.profilePhotoUrl : 'https://ui-avatars.com/api/?name=User&background=10B981&color=fff'}" 
+                     style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--secondary);">
             </a>
         </div>
     </nav>
 
-    <div class="explore-container">
-        <div class="explore-header">
-            <h1><i class="fas fa-users" style="font-size:22px; -webkit-text-fill-color: var(--accent);"></i>
-                &nbsp;Discover People</h1>
-            <span style="font-size: 13px; color: var(--text-secondary);"
-                th:text="${totalPeopleCount} + ' people on Zentrix'"></span>
-        </div>
+    <div class="app-wrapper">
+        <!-- RESTORED OLD SIDEBAR -->
+        <aside class="sidebar">
+            <a th:href="@{/dashboard}" class="sidebar-link"><i class="fas fa-home"></i> <span>Feed</span></a>
+            <a th:href="@{/explore}" class="sidebar-link active"><i class="fas fa-compass"></i> <span>Explore</span></a>
+            <a th:href="@{/events}" class="sidebar-link"><i class="fas fa-calendar-alt"></i> <span>Events</span></a>
+            <a th:href="@{/achievements}" class="sidebar-link"><i class="fas fa-medal"></i> <span>Awards</span></a>
+            <a th:href="@{/profile}" class="sidebar-link"><i class="fas fa-user-circle"></i> <span>Profile</span></a>
+            <a th:href="@{/logout}" class="sidebar-link" style="margin-top: auto;"><i class="fas fa-sign-out-alt"></i> <span>Log Out</span></a>
+        </aside>
 
-        <div class="people-grid" id="peopleGrid">
-            <div th:each="u : ${allUsers}" class="person-card" th:attr="data-username=${u.username}">
-
-                <div class="person-avatar"
-                    th:text="${#strings.toUpperCase(#strings.substring(u.username, 0, T(java.lang.Math).min(2, u.username.length())))}">
-                </div>
-
-                <div class="person-name">
-                    <a th:href="@{'/profile/' + ${u.username}}" th:text="${u.username}">Username</a>
-                </div>
-                <div class="person-meta">
-                    <span th:text="${u.level != null ? u.level : 'Novice'}">Novice</span>
-                    &bull; <span th:text="${followersCount.get(u.id) != null ? followersCount.get(u.id) : 0}">0</span>
-                    followers
-                </div>
-
-                <div th:id="'fw-' + ${u.id}">
-                    <!-- Already Following -->
-                    <button th:if="${followingUserIds != null and followingUserIds.contains(u.id)}"
-                        class="person-follow-btn following" disabled>
-                        <i class="fas fa-user-check"></i> Following
-                    </button>
-
-                    <!-- Already Requested -->
-                    <button
-                        th:if="${followingUserIds != null and !followingUserIds.contains(u.id) and requestedUserIds != null and requestedUserIds.contains(u.id)}"
-                        class="person-follow-btn requested" th:onclick="'followUserAjax(' + ${u.id} + ', this)'">
-                        Requested
-                    </button>
-
-                    <!-- Follow -->
-                    <button
-                        th:if="${followingUserIds == null or (!followingUserIds.contains(u.id) and (requestedUserIds == null or !requestedUserIds.contains(u.id)))}"
-                        class="person-follow-btn follow" th:onclick="'followUserAjax(' + ${u.id} + ', this)'">
-                        <i class="fas fa-user-plus"></i> Follow
-                    </button>
+        <main class="content-main">
+            <h2 style="font-size: 2rem; font-weight: 900; margin-bottom: 40px;">Discover the <span style="color: var(--primary);">Elite Squad</span></h2>
+            
+            <div class="card-grid-app">
+                <div th:each="u : ${allUsers}" style="background: white; padding: 30px; border-radius: 25px; border: 1px solid var(--border); text-align: center;">
+                    <div style="width: 70px; height: 70px; background: var(--secondary); color: var(--primary-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; margin: 0 auto 20px;" 
+                         th:text="${#strings.toUpperCase(#strings.substring(u.username, 0, T(java.lang.Math).min(2, u.username.length())))}">
+                    </div>
+                    <h4 th:text="${u.username}" style="font-weight: 900; margin-bottom: 5px;">Username</h4>
+                    <p style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;" th:text="${u.level != null ? u.level : 'Novice'}">Tier</p>
+                    
+                    <div th:id="'fw-' + ${u.id}" style="margin-top: 20px;">
+                        <button th:if="${followingUserIds != null and followingUserIds.contains(u.id)}" class="btn-primary-elite" style="background: #F3F4F6; color: var(--text-muted); box-shadow: none;" disabled>
+                            FOLLOWING
+                        </button>
+                        <button th:if="${followingUserIds != null and !followingUserIds.contains(u.id) and requestedUserIds != null and requestedUserIds.contains(u.id)}" class="btn-primary-elite" style="background: #F3F4F6; color: var(--text-muted);" th:onclick="'followUserAjax(' + ${u.id} + ', this)'">
+                            REQUESTED
+                        </button>
+                        <button th:if="${followingUserIds == null or (!followingUserIds.contains(u.id) and (requestedUserIds == null or !requestedUserIds.contains(u.id)))}" class="btn-primary-elite" th:onclick="'followUserAjax(' + ${u.id} + ', this)'">
+                            FOLLOW
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <div class="no-results" id="noResults" style="display:none;">
-                <i class="fas fa-search" style="font-size: 40px; margin-bottom: 15px; opacity: 0.3;"></i>
-                <p>No people found matching your search.</p>
-            </div>
-        </div>
+        </main>
     </div>
 
-    <script>
-        // Live search filter
-        document.getElementById('searchInput').addEventListener('input', function () {
-            const q = this.value.toLowerCase().trim();
-            const cards = document.querySelectorAll('.person-card');
-            let visibleCount = 0;
-            cards.forEach(card => {
-                const username = (card.getAttribute('data-username') || '').toLowerCase();
-                if (!q || username.includes(q)) {
-                    card.style.display = '';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-            document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
-        });
-
-        // Reuse same AJAX follow logic from dashboard
+    <script th:inline="javascript">
         async function followUserAjax(userId, btn) {
             const btnWrapper = document.getElementById('fw-' + userId);
-            if (!btnWrapper) return;
-
-            const btnEl = btnWrapper.querySelector('button');
-            const isRequested = btnEl && btnEl.innerText.trim().includes('Requested');
-            const endpoint = isRequested ? `/profile/${userId}/cancel-follow/ajax` : `/profile/${userId}/follow/ajax`;
-            const originalContent = btnWrapper.innerHTML;
-
-            // Optimistic update
-            btnWrapper.innerHTML = `<button class="person-follow-btn requested" disabled>...</button>`;
-
+            const isRequested = btn.innerText.trim() === 'REQUESTED';
+            const endpoint = isRequested ? `${contextPath}/profile/${userId}/cancel-follow/ajax` : `${contextPath}/profile/${userId}/follow/ajax`;
             try {
                 const res = await fetch(endpoint, { method: 'POST' });
-                if (!res.ok) throw new Error(await res.text() || 'Failed');
                 const data = await res.json();
-
                 if (data.status === 'FOLLOWING') {
-                    btnWrapper.innerHTML = `<button class="person-follow-btn following" disabled><i class="fas fa-user-check"></i> Following</button>`;
+                    btnWrapper.innerHTML = `<button class="btn-primary-elite" style="background: #F3F4F6; color: var(--text-muted); box-shadow: none;" disabled>FOLLOWING</button>`;
                 } else if (data.status === 'REQUESTED') {
-                    btnWrapper.innerHTML = `<button class="person-follow-btn requested" onclick="followUserAjax(${userId}, this)">Requested</button>`;
-                } else if (data.status === 'FOLLOW') {
-                    btnWrapper.innerHTML = `<button class="person-follow-btn follow" onclick="followUserAjax(${userId}, this)"><i class="fas fa-user-plus"></i> Follow</button>`;
+                    btnWrapper.innerHTML = `<button class="btn-primary-elite" style="background: #F3F4F6; color: var(--text-muted);" onclick="followUserAjax(${userId}, this)">REQUESTED</button>`;
+                } else {
+                    btnWrapper.innerHTML = `<button class="btn-primary-elite" onclick="followUserAjax(${userId}, this)">FOLLOW</button>`;
                 }
-            } catch (err) {
-                console.error(err);
-                btnWrapper.innerHTML = originalContent;
-            }
+            } catch (err) { console.error(err); }
         }
     </script>
-
 </body>
 
 </html>

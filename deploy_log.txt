@@ -1,0 +1,41 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260309120319
+Username: LAPTOP-GTVU4DNT\admin
+RunAs User: LAPTOP-GTVU4DNT\admin
+Configuration Name: 
+Machine: LAPTOP-GTVU4DNT (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -File C:\Users\admin\Desktop\projects\zentrix\deploy_and_start.ps1
+Process ID: 24388
+PSVersion: 5.1.26100.7705
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7705
+BuildVersion: 10.0.26100.7705
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\admin\Desktop\projects\zentrix\deploy_log.txt
+Starting deployment...
+Copied WAR file
+Start-Service : Failed to start service 'Apache Tomcat 10.1 Tomcat10 (Tomcat10)'.
+At C:\Users\admin\Desktop\projects\zentrix\deploy_and_start.ps1:6 char:1
++ Start-Service -Name Tomcat10
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OpenError: (System.ServiceProcess.ServiceController:ServiceController) [Start-Service], 
+ServiceCommandException
+    + FullyQualifiedErrorId : StartServiceFailed,Microsoft.PowerShell.Commands.StartServiceCommand
+Start-Service : Failed to start service 'Apache Tomcat 10.1 Tomcat10 (Tomcat10)'.
+At C:\Users\admin\Desktop\projects\zentrix\deploy_and_start.ps1:6 char:1
++ Start-Service -Name Tomcat10
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OpenError: (System.ServiceProcess.ServiceController:ServiceController) [Start-Service],
+   ServiceCommandException
+    + FullyQualifiedErrorId : StartServiceFailed,Microsoft.PowerShell.Commands.StartServiceCommand
+
+Started Tomcat service
+**********************
+Windows PowerShell transcript end
+End time: 20260309120322
+**********************
